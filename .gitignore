@@ -1,0 +1,30 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Java / Maven
+target/
+*.class
+*.jar
+*.war
+*.ear
+dependency-reduced-pom.xml
+release.properties
+
+# IDEs
+.vscode/
+.idea/
+*.iml
+*.classpath
+*.project
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env / logs
+.env
+*.log
