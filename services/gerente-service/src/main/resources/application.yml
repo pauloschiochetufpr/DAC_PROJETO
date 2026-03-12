@@ -12,13 +12,11 @@ spring:
     driver-class-name: org.postgresql.Driver
 
   jpa:
-    generate-ddl: false
+    generate-ddl: true
     hibernate:
-      ddl-auto: none
+      ddl-auto: create
     properties:
       hibernate:
-        hbm2ddl:
-          auto: none
         format_sql: true
 
   sql:
