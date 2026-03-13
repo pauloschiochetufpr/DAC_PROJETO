@@ -2,6 +2,7 @@ package com.dac.conta.entity;
 
 import java.time.LocalDateTime;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -11,8 +12,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "movimentacoes")
-public class Movimentacao {
+@Table(name = "movimentacao")
+public class MovimentacaoCUD {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,12 +22,15 @@ public class Movimentacao {
     @Enumerated(EnumType.STRING)
     private TipoMovimentacao tipo;
 
+    @Column(name = "conta_origem")
     private String origem;
 
+    @Column(name = "conta_destino")
     private String destino;
 
     private Double valor;
 
+    @Column(name = "data_hora")
     private LocalDateTime data;
 
     public Long getId() {
