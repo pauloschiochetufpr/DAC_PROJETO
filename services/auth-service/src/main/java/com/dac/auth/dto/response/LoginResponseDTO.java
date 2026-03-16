@@ -1,8 +1,8 @@
 package com.dac.auth.dto.response;
 
-public class LogoutResponseDTO {
+public class LoginResponseDTO {
+
     private String cpf;
-    private String nome;
     private String email;
     private String tipo;
 
@@ -12,14 +12,6 @@ public class LogoutResponseDTO {
 
     public void setCpf(String cpf) {
         this.cpf = cpf;
-    }
-
-    public String getNome() {
-        return nome;
-    }
-
-    public void setNome(String nome) {
-        this.nome = nome;
     }
 
     public String getEmail() {
@@ -37,5 +29,4 @@ public class LogoutResponseDTO {
     public void setTipo(String tipo) {
         this.tipo = tipo;
     }
-
 }
