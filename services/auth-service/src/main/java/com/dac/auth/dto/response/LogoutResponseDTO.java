@@ -1,24 +1,11 @@
-package com.dac.auth.entity;
+package com.dac.auth.dto.response;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-
-@Document(collection = "auth")
-public class Usuario {
-
-    @Id
-    private String id;
-
+public class LogoutResponseDTO {
     private String cpf;
-
     private String nome;
-
     private String email;
-
-    private String senhaHash;
-
     private String tipo;
-    
+
     public String getCpf() {
         return cpf;
     }
@@ -27,28 +14,20 @@ public class Usuario {
         this.cpf = cpf;
     }
 
-    public String getNome(){
+    public String getNome() {
         return nome;
     }
 
-    public void setNome(String nome){
+    public void setNome(String nome) {
         this.nome = nome;
     }
-    
+
     public String getEmail() {
         return email;
     }
 
     public void setEmail(String email) {
         this.email = email;
-    }
-
-    public String getSenhaHash() {
-        return senhaHash;
-    }
-
-    public void setSenhaHash(String senhaHash) {
-        this.senhaHash = senhaHash;
     }
 
     public String getTipo() {
@@ -58,5 +37,4 @@ public class Usuario {
     public void setTipo(String tipo) {
         this.tipo = tipo;
     }
-
 }
