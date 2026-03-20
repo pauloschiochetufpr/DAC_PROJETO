@@ -81,4 +81,20 @@ public class ContaCUD {
         this.criacao = criacao;
     }
 
+    public String getClienteNome() {
+        return clienteNome;
+    }
+
+    public void setClienteNome(String clienteNome) {
+        this.clienteNome = clienteNome;
+    }
+
+    public String getGerenteNome() {
+        return gerenteNome;
+    }
+
+    public void setGerenteNome(String gerenteNome) {
+        this.gerenteNome = gerenteNome;
+    }
+
 }
