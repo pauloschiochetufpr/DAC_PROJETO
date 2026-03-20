@@ -1,6 +1,11 @@
 DROP TABLE IF EXISTS movimentacao;
 DROP TABLE IF EXISTS conta;
 
+-- Banco de leitura (CQRS - lado Read)
+-- Estrutura mais permissiva: sem constraints de NOT NULL em campos opcionais,
+-- pois os dados chegam via eventos do RabbitMQ publicados pelo lado CUD.
+-- NAO adicionar triggers de validacao aqui — regras de negocio ficam só no CUD.
+
 CREATE TABLE conta (
     numero VARCHAR(4) PRIMARY KEY,
     cliente_cpf VARCHAR(11),
@@ -29,6 +34,7 @@ CREATE TABLE movimentacao (
     valor NUMERIC(12,2) NOT NULL
 );
 
+-- Dados mock iniciais espelhando o estado inicial do CUD
 INSERT INTO conta VALUES
 ('1291','12912861012','Catharyna','98574307084','Geniéve',800,5000,'aprovado','2000-01-01'),
 ('0950','09506382000','Cleuddônio','64065268052','Godophredo',-10000,10000,'aprovado','1990-10-10'),

@@ -6,7 +6,7 @@ spring:
     name: gerente-service
 
   datasource:
-    url: jdbc:postgresql://postgres:5432/dac
+    url: jdbc:postgresql://postgres:5432/gerente_db
     username: dac
     password: dac
     driver-class-name: org.postgresql.Driver
@@ -14,14 +14,10 @@ spring:
   jpa:
     generate-ddl: true
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     properties:
       hibernate:
         format_sql: true
-
-  sql:
-    init:
-      mode: never
 
   rabbitmq:
     host: rabbitmq

@@ -44,4 +44,12 @@ public class Gerente {
         this.email = email;
     }
     
+    public TipoGerente getTipo() {
+        return tipo;
+    }
+
+    public void setTipo(TipoGerente tipo) {
+        this.tipo = tipo;
+    }
 }
+
