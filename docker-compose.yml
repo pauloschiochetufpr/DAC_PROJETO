@@ -11,7 +11,9 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./docker/postgres-init:/docker-entrypoint-initdb.d
+      - ./services/cliente-service/src/main/resources/create-cliente-db.sql:/docker-entrypoint-initdb.d/01-create-cliente-db.sql
+      - ./services/gerente-service/src/main/resources/create-gerente-db.sql:/docker-entrypoint-initdb.d/02-create-gerente-db.sql
+      - ./services/conta-service/src/main/resources/create-conta-db.sql:/docker-entrypoint-initdb.d/03-create-conta-db.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U dac"]
       interval: 10s
