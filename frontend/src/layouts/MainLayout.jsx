@@ -3,7 +3,7 @@ import Footer from "../components/Footer";
 
 export default function MainLayout({ children }) {
   return (
-    <div className="min-h-screen flex flex-col bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100">
+    <div className="overflow-x-hidden relative min-h-screen flex flex-col bg-contrast dark:bg-brandDark text-zinc-800 dark:text-contrast">
       <Header />
 
       <main className="flex-1">{children}</main>
