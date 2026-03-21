@@ -1,18 +1,25 @@
 const express = require("express");
 const { createProxyMiddleware } = require("http-proxy-middleware");
 const cors = require("cors");
+const amqp = require("amqplib");
+
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
+const RABBIT_URL = "amqp://guest:guest@rabbitmq:5672";
+const FILA_RESET = "saga.reset";
+
+// Rotas que nao precisam de token (publicas)
 const PUBLIC_ROUTES = [
   { path: "/auth/login",    method: "POST" },
   { path: "/auth/register", method: "POST" },
   { path: "/health",        method: "GET"  },
-  { path: "/dev/reset-all", method: "POST" },
+  { path: "/reboot",        method: "GET"  },
 ];
 
+// Middleware de verificacao JWT
 function authMiddleware(req, res, next) {
   const isPublic = PUBLIC_ROUTES.some(
     (route) =>
@@ -56,6 +63,7 @@ function authMiddleware(req, res, next) {
 
 app.use(authMiddleware);
 
+// Proxies para os microsservicos
 app.use(
   "/auth",
   createProxyMiddleware({
@@ -92,21 +100,27 @@ app.use(
   })
 );
 
+// Health endpoint
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok" });
 });
 
-app.post("/dev/reset-all", async (req, res) => {
+// Reboot — publica mensagem no RabbitMQ para o saga-service executar o reset geral
+app.get("/reboot", async (req, res) => {
   try {
-    await fetch("http://cliente-service:8080/dev/reset", { method: "POST" });
-    await fetch("http://gerente-service:8080/dev/reset", { method: "POST" });
-    await fetch("http://conta-service:8080/dev/reset",   { method: "POST" });
-    await fetch("http://auth-service:8080/dev/reset",    { method: "POST" });
+    const connection = await amqp.connect(RABBIT_URL);
+    const channel    = await connection.createChannel();
 
-    res.send("Todos os bancos foram recriados com os mocks");
+    await channel.assertQueue(FILA_RESET, { durable: true });
+    channel.sendToQueue(FILA_RESET, Buffer.from("reset"));
+
+    await channel.close();
+    await connection.close();
+
+    res.status(200).send("Banco de dados criado conforme especificação");
   } catch (error) {
-    console.error(error);
-    res.status(500).send("Erro ao resetar o sistema");
+    console.error("Erro ao publicar no RabbitMQ:", error);
+    res.status(500).send("Erro ao enviar solicitacao de reboot");
   }
 });
 

@@ -156,3 +156,18 @@ volumes:
 networks:
   dac-network:
     driver: bridge
+
+saga-service:
+  build: ./services/saga-service
+  container_name: saga-service
+  restart: unless-stopped
+  depends_on:
+    rabbitmq:
+      condition: service_healthy
+  healthcheck:
+    test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+    interval: 10s
+    timeout: 5s
+    retries: 5
+  networks:
+    - dac-network
