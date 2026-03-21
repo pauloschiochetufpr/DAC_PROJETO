@@ -1,0 +1,25 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: saga-service
+
+  rabbitmq:
+    host: rabbitmq
+    port: 5672
+    username: guest
+    password: guest
+
+saga:
+  services:
+    cliente: http://cliente-service:8080
+    gerente: http://gerente-service:8080
+    conta:   http://conta-service:8080
+    auth:    http://auth-service:8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
