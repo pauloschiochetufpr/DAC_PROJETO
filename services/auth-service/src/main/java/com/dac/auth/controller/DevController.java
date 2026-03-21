@@ -8,13 +8,13 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/dev")
+@RequestMapping("/reboot")
 public class DevController {
 
     @Autowired
     private MongoTemplate mongo;
 
-    @PostMapping("/reset")
+    @PostMapping
     public String resetDatabase() {
 
         // remove toda a coleção
