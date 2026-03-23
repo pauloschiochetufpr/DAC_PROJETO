@@ -2,5 +2,9 @@
   "home": {
     "title": "Welcome",
     "subtitle": "Reusable base template"
+  },
+  "Header": {
+    "title": "Don't fight the fees",
+    "subtitle": "Master the art of \"Effortless Investing\"!"
   }
 }

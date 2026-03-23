@@ -1,30 +1,29 @@
-import { useTheme } from "../hooks/useTheme";
+import Logo from "../assets/logo/logoEscura.svg";
 import { useLanguage } from "../hooks/useLanguage";
+import { t } from "../lib/i18n";
 
 export default function Header() {
-  const { theme, setTheme } = useTheme();
-  const { lang, setLang } = useLanguage();
+  const { lang } = useLanguage();
 
   return (
-    <header className="h-14 px-4 flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800">
+    <header className="h-[10rem] md:h-[12rem] px-4 md:px-14 flex items-center absolute top-0 left-0 w-full z-[10000]">
       {/* Identidade */}
-      <div className="font-semibold">ProjectName</div>
-
-      {/* Controles globais */}
-      <div className="flex items-center gap-2">
-        <button
-          className="text-sm px-2 py-1 border rounded"
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-        >
-          {theme}
-        </button>
-
-        <button
-          className="text-sm px-2 py-1 border rounded"
-          onClick={() => setLang(lang === "pt" ? "en" : "pt")}
-        >
-          {lang}
-        </button>
+      <div className="flex items-center md:justify-start justify-center h-full w-full select-none gap-8">
+        <img src={Logo} alt="MasterBank" className="h-32" />
+        <div className="flex-col justify-center items-start flex-1 hidden md:flex">
+          <h1
+            className="font-long-cang text-3xl lg:5xl 2xl:text-5xl text-secundary dark:text-secundary 
+                        ml-10"
+          >
+            {t(lang, "Header.title")}
+          </h1>
+          <h1
+            className="font-long-cang text-2xl lg:text-3xl 2xl:text-4xl text-secundary dark:text-secundary
+                      md:ml-16 lg:ml-32 xl:ml-48 mt-2"
+          >
+            {t(lang, "Header.subtitle")}
+          </h1>
+        </div>
       </div>
     </header>
   );

@@ -2,5 +2,9 @@
   "home": {
     "title": "Bem-vindo",
     "subtitle": "Template base reutilizável"
+  },
+  "Header": {
+    "title": "Não lute contra as taxas",
+    "subtitle": "Domine a técnica do \"Investimento Sem Esforço\"!"
   }
 }
