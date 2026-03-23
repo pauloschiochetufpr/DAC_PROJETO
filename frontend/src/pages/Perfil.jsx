@@ -4,6 +4,7 @@ import {
   updateClient,
   getPayloadFromToken,
 } from "../lib/clientService";
+import { MetalSurface } from "../components/MetalSurface";
 
 export default function Perfil() {
   const [isEditing, setIsEditing] = useState(false);
@@ -36,40 +37,6 @@ export default function Perfil() {
       ...f,
       limite: calcularLimiteParaSalario(f.salario, f.saldo),
     }));
-  }, []);
-
-  // 🪢 REF DA LANTERNA
-  const capRef = useRef(null);
-  const [ropeStyle, setRopeStyle] = useState({ left: 0, height: 0 });
-
-  useEffect(() => {
-    let frame;
-
-    function updateRope() {
-      cancelAnimationFrame(frame);
-
-      frame = requestAnimationFrame(() => {
-        if (!capRef.current) return;
-
-        const rect = capRef.current.getBoundingClientRect();
-
-        setRopeStyle({
-          left: rect.left + rect.width / 2,
-          height: Math.max(0, rect.top),
-        });
-      });
-    }
-
-    updateRope();
-
-    window.addEventListener("resize", updateRope);
-    window.addEventListener("scroll", updateRope, { passive: true });
-
-    return () => {
-      window.removeEventListener("resize", updateRope);
-      window.removeEventListener("scroll", updateRope);
-      cancelAnimationFrame(frame);
-    };
   }, []);
 
   function handleChange(e) {
@@ -129,44 +96,18 @@ export default function Perfil() {
   return (
     <div className="mt-56 p-6 max-w-3xl mx-auto relative flex flex-col md:flex-row gap-24">
       <div className="relative order-1 md:order-2 w-[40vw] flex flex-col items-center mx-auto">
-        {/* 🪢 CORDA */}
-        <div
-          className="fixed top-0 z-[5] pointer-events-none flex flex-col items-center"
-          style={{ left: ropeStyle.left, transform: "translateX(-50%)" }}
-        >
-          <div
-            className="w-1 bg-secundaryDark"
-            style={{ height: `${ropeStyle.height}px` }}
-          />
-          <div className="w-0 h-0 border-l-8 border-r-8 border-b-8 border-l-transparent border-r-transparent border-b-secundaryDark" />
-        </div>
-
-        <div className="relative flex flex-col items-center">
+        <div className="relative flex flex-col items-center justify-center">
           {/* WRAPPER DA LANTERNA */}
           <div className="flex flex-col items-center md:w-[26vw] w-[74vw]">
             {/* Top cap */}
-            <div
-              ref={capRef}
-              className="absolute -top-10 left-1/2 -translate-x-1/2 md:w-[20vw] w-[60vw] h-10 rounded-t-xl overflow-hidden z-[100]"
+            <MetalSurface
+              variant="top"
+              className="absolute md:w-[20vw] w-[60vw] h-10 rounded-t-xl z-[100]"
             >
-              {/* 1. BASE metálica */}
-              <div className="absolute inset-0 bg-secundary" />
-
-              {/* 2. Volume */}
-              <div className="absolute inset-0 bg-[linear-gradient(to_bottom,#00000030,transparent_40%,#ffffff10_60%,#00000040)]" />
-
-              {/* 3. Highlight metálico */}
-              <div className="absolute inset-0 bg-[linear-gradient(to_right,transparent_10%,rgba(255,255,255,0.25)_30%,rgba(255,255,255,0.35)_50%,rgba(255,255,255,0.25)_70%,transparent_90%)]" />
-
-              {/* 4. Bordas escuras */}
-              <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.35),transparent_30%,transparent_70%,rgba(0,0,0,0.35))]" />
-
-              {/* 5. 🔥 LUZ DA LANTERNA (PRINCIPAL) */}
-              <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(255,110,70,0.45),transparent_65%)] pointer-events-none" />
-
-              {/* 6. 🔥 HOTSPOT (faz diferença real) */}
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center_bottom,rgba(255,140,90,0.35),transparent_60%)] pointer-events-none" />
-            </div>
+              {/* luz */}
+              <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(255,110,70,0.45),transparent_65%)]" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center_bottom,rgba(255,140,90,0.35),transparent_60%)]" />
+            </MetalSurface>
           </div>
 
           {/* Lantern body (red) */}
@@ -319,73 +260,64 @@ export default function Perfil() {
             </div>
           </div>
 
-          {/* Bottom cap - smaller than body (yellow) */}
-          <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 md:w-[20vw] w-[60vw] h-8 rounded-b-xl overflow-hidden z-[100]">
-            {/* 1. BASE metálica */}
-            <div className="absolute inset-0 bg-secundary" />
+          {/* Bottom cap */}
+          <MetalSurface
+            variant="bottom"
+            className="absolute md:w-[20vw] w-[60vw] h-8 rounded-b-xl z-[100]"
+          >
+            <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(255,110,70,0.45),transparent_65%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center_top,rgba(255,140,90,0.35),transparent_60%)]" />
+          </MetalSurface>
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 flex flex-col items-center z-[10]">
+            {/* 🌑 CONTACT SHADOW (entre cap e botão) */}
+            <ContactShadow className="relative -bottom-1 md:w-[18vw] w-[54vw] h-4 z-[90]" />
+            {/* Edit/Save buttons estilizado como parte da lanterna */}
+            <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 z-[10]">
+              <div className="relative w-[48vw] sm:w-40 md:w-48 h-10 rounded-b-2xl overflow-hidden">
+                {/* 1. BASE (mais escura que o cap) */}
+                <div className="absolute inset-0 bg-secundaryDark" />
 
-            {/* 2. Volume invertido */}
-            <div className="absolute inset-0 bg-[linear-gradient(to_top,#00000040,transparent_40%,#ffffff10_60%,#00000030)]" />
+                {/* 2. SOMBRA SUPERIOR (oclusão do bottom cap) */}
+                <div className="absolute inset-0 bg-[linear-gradient(to_bottom,#00000090,#00000040_40%,transparent_80%)]" />
 
-            {/* 3. Highlight metálico */}
-            <div className="absolute inset-0 bg-[linear-gradient(to_right,transparent_10%,rgba(255,255,255,0.25)_30%,rgba(255,255,255,0.35)_50%,rgba(255,255,255,0.25)_70%,transparent_90%)]" />
+                {/* 3. VOLUME leve (forma arredondada) */}
+                <div className="absolute inset-0 bg-[linear-gradient(to_top,#00000040,transparent_50%,#ffffff05)]" />
 
-            {/* 4. Bordas */}
-            <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.35),transparent_30%,transparent_70%,rgba(0,0,0,0.35))]" />
+                {/* 4. REFLEXO LATERAL (luz indireta ambiente) */}
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.08),transparent_30%,transparent_70%,rgba(255,255,255,0.08))]" />
 
-            {/* 5. 🔥 LUZ DA LANTERNA */}
-            <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(255,110,70,0.45),transparent_65%)] pointer-events-none" />
+                {/* 5. ESCURECIMENTO DAS BORDAS */}
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.5),transparent_30%,transparent_70%,rgba(0,0,0,0.5))]" />
 
-            {/* 6. 🔥 HOTSPOT */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center_top,rgba(255,140,90,0.35),transparent_60%)] pointer-events-none" />
-          </div>
-
-          {/* Edit/Save buttons estilizado como parte da lanterna */}
-          <div className="absolute -bottom-16 left-1/2 -translate-x-1/2 z-[10]">
-            <div className="relative w-[48vw] sm:w-40 md:w-48 h-10 rounded-b-2xl overflow-hidden">
-              {/* 1. BASE (mais escura que o cap) */}
-              <div className="absolute inset-0 bg-secundaryDark" />
-
-              {/* 2. SOMBRA SUPERIOR (oclusão do bottom cap) */}
-              <div className="absolute inset-0 bg-[linear-gradient(to_bottom,#00000090,#00000040_40%,transparent_80%)]" />
-
-              {/* 3. VOLUME leve (forma arredondada) */}
-              <div className="absolute inset-0 bg-[linear-gradient(to_top,#00000040,transparent_50%,#ffffff05)]" />
-
-              {/* 4. REFLEXO LATERAL (luz indireta ambiente) */}
-              <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.08),transparent_30%,transparent_70%,rgba(255,255,255,0.08))]" />
-
-              {/* 5. ESCURECIMENTO DAS BORDAS */}
-              <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.5),transparent_30%,transparent_70%,rgba(0,0,0,0.5))]" />
-
-              {/* CONTEÚDO */}
-              <div className="relative z-10 flex h-full">
-                {!isEditing ? (
-                  <button
-                    onClick={handleEdit}
-                    className="flex-1 text-sm text-brand hover:bg-white/5 transition"
-                  >
-                    Editar
-                  </button>
-                ) : (
-                  <>
+                {/* CONTEÚDO */}
+                <div className="relative z-10 flex h-full">
+                  {!isEditing ? (
                     <button
-                      onClick={handleSave}
-                      className="flex-1 text-green-400 text-xs md:text-sm hover:bg-white/5 transition"
+                      onClick={handleEdit}
+                      className="flex-1 text-sm text-brand hover:bg-white/5 transition"
                     >
-                      Salvar
+                      Editar
                     </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={handleSave}
+                        className="flex-1 text-green-400 text-xs md:text-sm hover:bg-white/5 transition"
+                      >
+                        Salvar
+                      </button>
 
-                    <div className="w-[1px] bg-white/10" />
+                      <div className="w-[1px] bg-white/10" />
 
-                    <button
-                      onClick={handleCancel}
-                      className="flex-1 text-brand text-xs md:text-sm hover:bg-white/5 transition"
-                    >
-                      Cancelar
-                    </button>
-                  </>
-                )}
+                      <button
+                        onClick={handleCancel}
+                        className="flex-1 text-brand text-xs md:text-sm hover:bg-white/5 transition"
+                      >
+                        Cancelar
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -399,6 +331,15 @@ export default function Perfil() {
           <h2 className="text-2xl font-semibold mb-4">Informações da Conta</h2>
         </div>
       </div>
+    </div>
+  );
+}
+
+function ContactShadow({ className = "" }) {
+  return (
+    <div className={`absolute pointer-events-none ${className}`}>
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.7),rgba(0,0,0,0.4)_50%,transparent_80%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_bottom,#00000080,transparent_70%)]" />
     </div>
   );
 }
