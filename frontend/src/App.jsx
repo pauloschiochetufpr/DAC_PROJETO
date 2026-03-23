@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import MainLayout from "./layouts/MainLayout";
 
 import Home from "./pages/HomeGerente";
+import Perfil from "./pages/Perfil";
 import NotFound from "./pages/NotFound";
 
 {
@@ -15,6 +16,7 @@ export default function App() {
     <MainLayout>
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/perfil" element={<Perfil />} />
 
         {/* Guard global para rotas inexistentes */}
         <Route path="*" element={<NotFound />} />
