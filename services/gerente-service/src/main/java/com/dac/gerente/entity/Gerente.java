@@ -20,6 +20,8 @@ public class Gerente {
     @Enumerated(EnumType.STRING)
     private TipoGerente tipo;
 
+    private String telefone;
+
     public String getCpf() {
         return cpf;
     }
@@ -51,5 +53,13 @@ public class Gerente {
     public void setTipo(TipoGerente tipo) {
         this.tipo = tipo;
     }
-}
 
+    public String getTelefone() {
+        return telefone;
+    }
+
+    public void setTelefone(String telefone) {
+        this.telefone = telefone;
+    }
+
+}
