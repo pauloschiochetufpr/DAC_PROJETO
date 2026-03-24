@@ -177,3 +177,24 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Sombra dourada reutilizável */
+:root {
+  --color-secundary: #d8bf00;
+  --shadow-dourado:
+    0 10px 30px rgba(216, 191, 0, 0.4), 0 4px 8px rgba(216, 191, 0, 0.12);
+  --drop-shadow-dourado: drop-shadow(0 8px 24px rgba(216, 191, 0, 0.22));
+}
+
+/* Utilitários reutilizáveis */
+.shadow-dourado {
+  box-shadow: var(--shadow-dourado);
+}
+
+.drop-shadow-dourado {
+  filter: var(--drop-shadow-dourado);
+}
+
+.shadow-dourado-sutil {
+  box-shadow: 0 6px 18px rgba(216, 191, 0, 0.12);
+}
