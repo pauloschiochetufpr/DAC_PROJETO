@@ -5,6 +5,7 @@ import {
   getPayloadFromToken,
 } from "../lib/clientService";
 import { MetalSurface } from "../components/MetalSurface";
+import WaveSimpleRed from "../components/WaveSimpleRed";
 
 export default function Perfil() {
   const [isEditing, setIsEditing] = useState(false);
@@ -94,8 +95,8 @@ export default function Perfil() {
   }
 
   return (
-    <div className="mt-56 p-6 max-w-3xl mx-auto relative flex flex-col md:flex-row gap-24">
-      <div className="relative order-1 md:order-2 w-[40vw] flex flex-col items-center mx-auto">
+    <div className="mt-56 p-6 mx-auto relative flex flex-col justify-center md:flex-row gap-24">
+      <div className="relative order-1 md:order-2 w-[36vw] flex flex-col items-center mx-auto md:mx-0">
         <div className="relative flex flex-col items-center justify-center">
           {/* WRAPPER DA LANTERNA */}
           <div className="flex flex-col items-center md:w-[26vw] w-[74vw]">
@@ -135,7 +136,6 @@ export default function Perfil() {
                     { key: "cpf", label: "CPF", alwaysDisabled: true },
                     { key: "email", label: "E-mail" },
                     { key: "telefone", label: "Telefone" },
-                    { key: "saldo", label: "Saldo Atual (R$)" },
                   ].map((f) => {
                     const isReadOnly = !!f.readOnly;
                     const isAlwaysDisabled = !!f.alwaysDisabled;
@@ -151,13 +151,13 @@ export default function Perfil() {
                         }}
                         className={`
                       group
-                      py-3 px-3
+                      md:py-5 py-3 px-3
                       flex flex-col md:flex-row md:items-center md:justify-between
-                      gap-2 md:gap-6
+                      gap-2 md:gap-8
                       `}
                       >
                         {/* LABEL */}
-                        <label className="text-sm font-medium text-secundary text-center md:text-left md:w-1/3">
+                        <label className="text-lg font-medium text-secundary text-center md:text-left md:w-1/3">
                           {f.label}
                         </label>
 
@@ -185,7 +185,7 @@ export default function Perfil() {
                             disabled={!isFieldEditable}
                             readOnly={isReadOnly}
                             className={`
-                            w-full bg-transparent outline-none text-sm text-center md:text-left
+                            w-full bg-transparent outline-none text-lg text-center md:text-left
                             ${isFieldEditable ? "text-zinc-100" : "text-zinc-300"}
                             `}
                           />
@@ -201,7 +201,7 @@ export default function Perfil() {
                       className="flex-1 group flex flex-col md:flex-row md:items-center gap-2 md:gap-4"
                       onClick={() => handleFieldClick("salario")}
                     >
-                      <label className="text-sm text-secundary text-center md:text-left md:w-1/3">
+                      <label className="text-lg text-secundary text-center md:text-left md:w-2/3">
                         Salário (R$)
                       </label>
 
@@ -217,23 +217,41 @@ export default function Perfil() {
                       >
                         <input
                           name="salario"
-                          type="number"
-                          step="0.01"
+                          type="text"
+                          inputMode="decimal"
                           value={
                             isEditing
-                              ? (form.salario ?? "")
-                              : (client.salario ?? "")
+                              ? (form.salario ?? "").toString()
+                              : Number(client.salario).toFixed(2)
                           }
-                          onChange={handleChange}
+                          onChange={(e) => {
+                            let value = e.target.value;
+
+                            // Permite apenas números e ponto
+                            value = value.replace(",", "."); // suporte BR
+                            if (!/^\d*\.?\d*$/.test(value)) return;
+
+                            setForm((prev) => ({
+                              ...prev,
+                              salario: value,
+                            }));
+                          }}
+                          onBlur={() => {
+                            // Ao sair do campo → formata para 2 casas
+                            setForm((prev) => ({
+                              ...prev,
+                              salario: Number(prev.salario || 0).toFixed(2),
+                            }));
+                          }}
                           disabled={!isEditing}
-                          className="w-full bg-transparent outline-none text-sm text-center md:text-left text-zinc-100"
+                          className="w-full bg-transparent outline-none text-lg text-center md:text-left text-zinc-100"
                         />
                       </div>
                     </div>
 
                     {/* LIMITE */}
                     <div className="flex-1 flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
-                      <label className="text-sm text-secundary text-center md:text-left md:w-1/3">
+                      <label className="text-lg text-secundary text-center md:text-left md:w-1/3">
                         Limite (R$)
                       </label>
 
@@ -250,7 +268,7 @@ export default function Perfil() {
                           ).toFixed(2)}
                           readOnly
                           disabled
-                          className="w-full bg-transparent outline-none text-sm text-center md:text-left text-zinc-300"
+                          className="w-full bg-transparent outline-none text-lg text-center md:text-left text-zinc-300"
                         />
                       </div>
                     </div>
@@ -324,11 +342,80 @@ export default function Perfil() {
         </div>
       </div>
       <div
-        className="order-2 md:order-1 w-[45rem] h-[35rem] bg-gradient-to-b from-secundaryDark to-secundary
-                    shadow-lg shadow-secundaryDark/30 rounded-2xl p-2 flex flex-col z-[100]"
+        className="order-2 md:order-1 w-[45rem] h-[35rem] 
+  border-[0.4rem] border-secundaryDark rounded-[21px]
+  flex flex-col z-[100] shadow-dourado overflow-hidden"
       >
-        <div className="bg-brandDark flex-1 rounded-b-xl gap-6 p-6 flex flex-col">
-          <h2 className="text-2xl font-semibold mb-4">Informações da Conta</h2>
+        {/* HEADER DECORATIVO */}
+        <div className="relative overflow-hidden w-full h-[5rem] md:h-[6rem]">
+          {/* camadas de brilho */}
+          <div className="absolute inset-0 bg-white/[0.05] z-[14]" />
+
+          <div className="absolute inset-0 flex z-[13]">
+            <div className="w-1/2 bg-gradient-to-r from-transparent to-white/[0.14]" />
+            <div className="flex-1 bg-gradient-to-l from-transparent to-white/[0.14]" />
+          </div>
+
+          <div className="absolute inset-0 flex z-[13]">
+            <div className="w-1/2 bg-gradient-to-l from-transparent to-black/[0.32]" />
+            <div className="flex-1 bg-gradient-to-r from-transparent to-black/[0.32]" />
+          </div>
+
+          <div className="absolute inset-0 bg-gradient-to-t from-transparent to-black/40 z-[12]" />
+
+          <WaveSimpleRed className="z-[10]" />
+
+          {/* título */}
+          <div className="absolute inset-0 flex items-center justify-center z-[20]">
+            <h2 className="text-xl md:text-2xl font-semibold text-secundary">
+              Informações da Conta
+            </h2>
+          </div>
+        </div>
+
+        {/* CORPO */}
+        <div className="relative flex-1 bg-gradient-to-b from-brandDark/70 to-brand/60 flex flex-col items-center justify-start px-6 pt-10 gap-10">
+          {/* overlays */}
+          <div className="absolute inset-0 bg-gradient-to-t from-transparent to-black/25 z-[11]" />
+          <div className="absolute inset-0 bg-white/[0.02] z-[12]" />
+
+          {/* CONTEÚDO */}
+          <div className="relative z-[20] w-full flex flex-col items-center gap-10">
+            {/* SALDO */}
+            <div
+              className="relative w-[80%] h-[5rem] flex items-center justify-center
+        border-y-[3px] border-secundary group"
+            >
+              {/* efeito fundo */}
+              <div className="absolute inset-0 bg-white/[0.05]" />
+              <div className="absolute inset-0 flex">
+                <div className="w-1/2 bg-gradient-to-r from-transparent to-brand/60" />
+                <div className="flex-1 bg-gradient-to-l from-transparent to-brand/60" />
+              </div>
+
+              <span className="relative z-[5] text-secundary text-3xl font-semibold">
+                R$ {client.saldo.toFixed(2)}
+              </span>
+            </div>
+
+            {/* NÚMERO DA CONTA */}
+            <div className="w-full flex flex-col items-center gap-2">
+              <span className="text-secundary text-sm opacity-70">
+                Número da Conta
+              </span>
+              <span className="text-xl font-medium text-zinc-100">
+                00012345-6
+              </span>
+            </div>
+
+            {/* GERENTE */}
+            <div className="w-full flex flex-col items-center gap-2">
+              <span className="text-secundary text-sm opacity-70">Gerente</span>
+              <span className="text-xl font-medium text-zinc-100">
+                Maria Oliveira
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

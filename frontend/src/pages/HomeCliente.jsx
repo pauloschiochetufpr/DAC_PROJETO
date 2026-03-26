@@ -122,7 +122,7 @@ export default function HomeGerente() {
                   <div className="absolute left-0 top-0 w-full h-full bg-gradient-to-t from-transparent to-black/40 z-[12]"></div>
                   <WaveSimpleRed className="w-full h-full" />
                 </div>
-                <span className="relative z-10">TRANSAÇÕES</span>
+                <span className="relative z-10 ">TRANSAÇÕES</span>
               </button>
             </div>
           </div>
