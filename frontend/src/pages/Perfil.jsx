@@ -6,6 +6,7 @@ import {
 } from "../lib/clientService";
 import { MetalSurface } from "../components/MetalSurface";
 import WaveSimpleRed from "../components/WaveSimpleRed";
+import SecundaryBorder from "../assets/icons/SecundaryBorder.svg";
 
 export default function Perfil() {
   const [isEditing, setIsEditing] = useState(false);
@@ -95,7 +96,7 @@ export default function Perfil() {
   }
 
   return (
-    <div className="mt-56 p-6 mx-auto relative flex flex-col justify-center md:flex-row gap-24">
+    <div className="mt-56 p-6 mx-auto relative flex flex-col justify-center items-end md:flex-row gap-24">
       <div className="relative order-1 md:order-2 w-[36vw] flex flex-col items-center mx-auto md:mx-0">
         <div className="relative flex flex-col items-center justify-center">
           {/* WRAPPER DA LANTERNA */}
@@ -342,7 +343,7 @@ export default function Perfil() {
         </div>
       </div>
       <div
-        className="order-2 md:order-1 w-[45rem] h-[35rem] 
+        className="order-2 md:order-1 w-[40rem] h-[30rem] 
   border-[0.4rem] border-secundaryDark rounded-[21px]
   flex flex-col z-[100] shadow-dourado overflow-hidden"
       >
@@ -367,7 +368,7 @@ export default function Perfil() {
 
           {/* título */}
           <div className="absolute inset-0 flex items-center justify-center z-[20]">
-            <h2 className="text-xl md:text-2xl font-semibold text-secundary">
+            <h2 className="text-xl md:text-4xl font-orienta text-secundary">
               Informações da Conta
             </h2>
           </div>
@@ -383,7 +384,7 @@ export default function Perfil() {
           <div className="relative z-[20] w-full flex flex-col items-center gap-10">
             {/* SALDO */}
             <div
-              className="relative w-[80%] h-[5rem] flex items-center justify-center
+              className="font-long-cang relative w-[80%] h-[5rem] flex items-center justify-center
         border-y-[3px] border-secundary group"
             >
               {/* efeito fundo */}
@@ -392,17 +393,28 @@ export default function Perfil() {
                 <div className="w-1/2 bg-gradient-to-r from-transparent to-brand/60" />
                 <div className="flex-1 bg-gradient-to-l from-transparent to-brand/60" />
               </div>
+              <img
+                src={SecundaryBorder}
+                alt="Borda esquerda"
+                className="absolute left-0 top-1/2 -translate-x-[45%] -translate-y-1/2 h-[7rem] w-auto object-contain
+                                select-none pointer-events-none"
+              />
 
-              <span className="relative z-[5] text-secundary text-3xl font-semibold">
+              <img
+                src={SecundaryBorder}
+                alt="Borda direita"
+                className="absolute right-0 top-1/2 translate-x-[45%] -translate-y-1/2 h-[7rem] w-auto object-contain
+                                scale-x-[-1] select-none pointer-events-none"
+              />
+
+              <span className="relative z-[5] text-3xl sm:text-5xl md:text-6xl  text-secundary font-semibold">
                 R$ {client.saldo.toFixed(2)}
               </span>
             </div>
 
             {/* NÚMERO DA CONTA */}
             <div className="w-full flex flex-col items-center gap-2">
-              <span className="text-secundary text-sm opacity-70">
-                Número da Conta
-              </span>
+              <span className="text-secundary text-xl">Número da Conta</span>
               <span className="text-xl font-medium text-zinc-100">
                 00012345-6
               </span>
@@ -410,7 +422,7 @@ export default function Perfil() {
 
             {/* GERENTE */}
             <div className="w-full flex flex-col items-center gap-2">
-              <span className="text-secundary text-sm opacity-70">Gerente</span>
+              <span className="text-secundary text-xl">Gerente</span>
               <span className="text-xl font-medium text-zinc-100">
                 Maria Oliveira
               </span>
