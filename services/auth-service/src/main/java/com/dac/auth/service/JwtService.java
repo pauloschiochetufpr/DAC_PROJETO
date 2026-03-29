@@ -22,17 +22,18 @@ public class JwtService {
         return Keys.hmacShaKeyFor(secret.getBytes());
     }
 
-    public String generateToken(String cpf, String email, String tipo) {
-        return Jwts.builder()
-                .setSubject(cpf)
-                .claim("role", tipo)
-                .claim("email", email)
-                .claim("jti", UUID.randomUUID().toString())
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + expiration))
-                .signWith(getKey(), SignatureAlgorithm.HS256)
-                .compact();
-    }
+    public String generateToken(String cpf, String email, String tipo, String deviceId) {
+    return Jwts.builder()
+            .setSubject(cpf)
+            .claim("role", tipo)
+            .claim("email", email)
+            .claim("jti", UUID.randomUUID().toString())
+            .claim("deviceId", deviceId)
+            .setIssuedAt(new Date())
+            .setExpiration(new Date(System.currentTimeMillis() + expiration))
+            .signWith(getKey(), SignatureAlgorithm.HS256)
+            .compact();
+}
 
     public Claims validateToken(String token) {
         return Jwts.parserBuilder()
