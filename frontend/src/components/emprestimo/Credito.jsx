@@ -107,7 +107,7 @@ export default function Credito() {
             <button
               className="bg-secundaryDark hover:bg-secundary text-white/95 p-6 xl:p-5  rounded-full absolute
                          -bottom-1 xl:bottom-[1.6rem]
-                          transition-all duration-300 easy-in hover:shadow-sm hover:shadow-secundaryDark select-none"
+                          transition-all duration-300 easy-in hover:shadow-md hover:shadow-secundaryDark select-none"
             >
               <MessageCircleMore className="inline-block w-auto h-[5rem] xl:h-[3.4rem]" />
             </button>

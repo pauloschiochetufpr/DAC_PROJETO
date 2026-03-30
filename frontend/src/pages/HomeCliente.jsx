@@ -5,6 +5,7 @@ import { useState } from "react";
 // componentes
 /// Credito
 import Credito from "../components/emprestimo/Credito";
+import Extrato from "../components/listas/Extrato";
 
 export default function HomeGerente() {
   const [isHovering, setIsHovering] = useState(false);
@@ -19,10 +20,12 @@ export default function HomeGerente() {
                   px-3 pt-[20rem] md:p-20 md:px-24 xl:px-16 2xl:px-32 md:pt-[29rem]"
       >
         {/* Extrato tela grande */}
-        <div className="bg-purple-400 w-[40rem] 2xl:w-[42%] h-[30rem] hidden xl:block relative"></div>
+        <div className="bg-purple-400 w-[46%] 2xl:w-[42%] h-[30rem] hidden xl:block relative">
+          <Extrato />
+        </div>
         {/* Container do saldo */}
         <div
-          className="w-[80rem] xl:w-[30rem] md:w-[45rem] 2xl:w-[45rem] h-[30rem] bg-transparent border-[0.5rem]
+          className="w-[80rem] xl:w-[30rem] md:w-[45rem] 2xl:w-[45rem] h-[25rem] md:h-[30rem] bg-transparent border-[0.5rem]
           border-secundaryDark
           rounded-[21px] flex flex-col z-[100] shadow-dourado"
         >
@@ -131,10 +134,12 @@ export default function HomeGerente() {
       {/* Segunda parte */}
       <div
         className="w-full h-fit bg-gradient-to-t from-brandDark to-red-700 flex xl:flex-row md:items-center
-                    flex-col items-center justify-center xl:px-40 py-24 xl:pt-36 md:justify-end"
+                    flex-col items-center justify-center xl:px-[1.8rem] py-24 xl:pt-36 md:justify-end"
       >
         {/* Extrato tela pequena */}
-        <div className="w-[90%] h-[40rem] bg-purple-400 xl:hidden "></div>
+        <div className="w-[90%] h-[70rem] bg-purple-400 xl:hidden ">
+          <Extrato />
+        </div>
         {/* Crédito */}
         <div
           className="xl:w-[40rem] w-[90%] xl:h-[40rem] h-[70rem]
