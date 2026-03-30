@@ -2,57 +2,53 @@ package com.dac.saga.service;
 
 import com.dac.saga.config.RabbitMQConfig;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
-
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 
 @Service
 public class ResetService {
 
-    @Value("${saga.services.cliente}")
-    private String clienteUrl;
+    private static final String EVENTO_RESET = "reset";
+    private static final boolean CONSUMIDORES_REBOOT_IMPLEMENTADOS = false;
+    private static final String MOTIVO_CONSUMIDORES_AUSENTES =
+        "Consumidores Rabbit de reboot ainda nao implementados nos servicos: " +
+        "cliente-service, gerente-service, conta-service, auth-service";
 
-    @Value("${saga.services.gerente}")
-    private String gerenteUrl;
+    private final RabbitTemplate rabbitTemplate;
 
-    @Value("${saga.services.conta}")
-    private String contaUrl;
+    public ResetService(RabbitTemplate rabbitTemplate) {
+        this.rabbitTemplate = rabbitTemplate;
+    }
 
-    @Value("${saga.services.auth}")
-    private String authUrl;
+    public void solicitarResetOrquestrado() {
+        if (!CONSUMIDORES_REBOOT_IMPLEMENTADOS) {
+            throw new IllegalStateException(MOTIVO_CONSUMIDORES_AUSENTES);
+        }
 
-    private final HttpClient httpClient = HttpClient.newHttpClient();
+        rabbitTemplate.convertAndSend(RabbitMQConfig.FILA_RESET, EVENTO_RESET);
+        System.out.println("Saga: solicitacao de reset publicada na fila " + RabbitMQConfig.FILA_RESET);
+    }
 
     @RabbitListener(queues = RabbitMQConfig.FILA_RESET)
     public void executarReset(String mensagem) {
-        System.out.println("Saga: iniciando reset geral...");
+        if (mensagem == null || mensagem.isBlank()) {
+            throw new IllegalArgumentException("Mensagem de reset invalida: payload vazio");
+        }
 
-        chamarReset("cliente-service", clienteUrl + "/reboot");
-        chamarReset("gerente-service", gerenteUrl + "/reboot");
-        chamarReset("conta-service",   contaUrl   + "/reboot");
-        chamarReset("auth-service",    authUrl    + "/reboot");
+        if (!EVENTO_RESET.equalsIgnoreCase(mensagem.trim())) {
+            throw new IllegalArgumentException("Mensagem de reset invalida: payload desconhecido '" + mensagem + "'");
+        }
 
-        System.out.println("Saga: reset geral concluido.");
+        executarResetOrquestrado();
     }
 
-    private void chamarReset(String servico, String url) {
-        try {
-            HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .POST(HttpRequest.BodyPublishers.noBody())
-                .build();
-
-            HttpResponse<String> response = httpClient.send(
-                request, HttpResponse.BodyHandlers.ofString()
+    public void executarResetOrquestrado() {
+        if (!CONSUMIDORES_REBOOT_IMPLEMENTADOS) {
+            throw new UnsupportedOperationException(
+                "Reset orquestrado indisponivel: " + MOTIVO_CONSUMIDORES_AUSENTES
             );
-
-            System.out.println("Saga: " + servico + " -> " + response.statusCode());
-        } catch (Exception e) {
-            System.err.println("Saga: erro ao resetar " + servico + ": " + e.getMessage());
         }
+
+        System.out.println("Saga: reset geral iniciado via mensageria RabbitMQ.");
     }
 }
