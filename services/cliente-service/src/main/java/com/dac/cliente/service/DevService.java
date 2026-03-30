@@ -15,6 +15,7 @@ public class DevService {
     @Autowired
     private ClienteRepository clienteRepository;
 
+    @SuppressWarnings("null")
     @Transactional
     public void resetComMocks() {
         clienteRepository.deleteAll();
