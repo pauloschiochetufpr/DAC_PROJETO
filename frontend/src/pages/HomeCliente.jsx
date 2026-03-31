@@ -16,11 +16,12 @@ export default function HomeGerente() {
     <div className="relative flex flex-col items-center">
       {/* Primeira parte */}
       <div
-        className="h-[50rem] w-full flex items-center md:justify-center xl:justify-between justify-end bg-gradient-to-tr from-brand/40 to-transparent relative
-                  px-3 pt-[20rem] md:p-20 md:px-24 xl:px-16 2xl:px-32 md:pt-[29rem]"
+        className="h-[50rem] w-full flex items-center md:justify-center xl:justify-between justify-end 
+        bg-gradient-to-tr from-brand/40 to-transparent relative
+        px-3 pt-[20rem] md:p-20 md:px-24 xl:px-16 2xl:px-32 md:pt-[29rem]"
       >
         {/* Extrato tela grande */}
-        <div className="bg-purple-400 w-[46%] 2xl:w-[42%] h-[30rem] hidden xl:block relative">
+        <div className="w-[46%] 2xl:w-[42%] h-[30rem] hidden xl:block relative">
           <Extrato />
         </div>
         {/* Container do saldo */}
@@ -42,6 +43,9 @@ export default function HomeGerente() {
             </div>
             <div className="absolute left-0 top-0 w-full h-full bg-gradient-to-t from-transparent to-black/40 z-[12]"></div>
             <WaveSimpleRed className="z-[10]" />
+            <div className="z-[19] flex flex-row absolute left-10 top-10">
+              <h1>Conta: 11.1234-5</h1>
+            </div>
           </div>
           {/* Inicio da parte inferior do componente */}
           <div className="bg-gradient-to-b from-brandDark/70 to-brand/60 flex-1 rounded-b-xl relative flex overflow-hidden">
@@ -137,9 +141,7 @@ export default function HomeGerente() {
                     flex-col items-center justify-center xl:px-[1.8rem] py-24 xl:pt-36 md:justify-end"
       >
         {/* Extrato tela pequena */}
-        <div className="w-[90%] h-[70rem] bg-purple-400 xl:hidden ">
-          <Extrato />
-        </div>
+        <div className="w-[90%] h-[70rem] bg-purple-400 xl:hidden "></div>
         {/* Crédito */}
         <div
           className="xl:w-[40rem] w-[90%] xl:h-[40rem] h-[70rem]
