@@ -7,6 +7,7 @@ import HomeGerente from "./pages/HomeGerente";
 import HomeCliente from "./pages/HomeCliente";
 import HomeAdmin from "./pages/HomeAdmin";
 import NotFound from "./pages/NotFound";
+import OperationsCli from "./pages/OperationsCli";
 
 {
   /* O route guard do Home é mais robusto e visa detectar qual o tipo de usuário toda vez
@@ -34,6 +35,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={HomeCorreto} />
         <Route path="/perfil" element={<Perfil />} />
+        <Route path="/operations" element={<OperationsCli />} />
 
         {/* Guard global para rotas inexistentes */}
         <Route path="*" element={<NotFound />} />
