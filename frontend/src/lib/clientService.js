@@ -38,7 +38,7 @@ export function buildClientDTO(payloadFromToken, formData) {
 // Função para atualizar os dados do cliente, usando o DTO construído a partir do token e do formulário
 export async function updateClient(dto) {
   const token = getAuthToken();
-  const res = await fetch("/api/clients", {
+  const res = await fetch("/api/clients", { // Mudar endpont para o correto quando a API estiver implementada
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
