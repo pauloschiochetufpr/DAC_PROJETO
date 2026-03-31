@@ -1,4 +1,4 @@
-/*package com.dac.gerente.controller;
+package com.dac.gerente.controller;
 
 import com.dac.gerente.dto.request.GerenteInsercao;
 import com.dac.gerente.dto.response.DadoGerente;
@@ -26,4 +26,3 @@ public class GerenteController {
     }
 }
 
-*/

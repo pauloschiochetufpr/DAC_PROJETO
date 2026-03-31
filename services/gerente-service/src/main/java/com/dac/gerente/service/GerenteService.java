@@ -1,6 +1,6 @@
-/*package com.dac.gerente.service;
+package com.dac.gerente.service;
 
-import com.dac.gerente.dto.request.GerenteInsercao; // tem que corrigir a porra do get e sets 
+import com.dac.gerente.dto.request.GerenteInsercao; 
 import com.dac.gerente.dto.response.DadoGerente;
 import com.dac.gerente.entity.Gerente;
 import com.dac.gerente.entity.TipoGerente;
@@ -45,6 +45,22 @@ public class GerenteService {
         }
 
         gerenteRepository.save(gerente);
+
+        Map<String, Object> mensagem = new HashMap<>();
+        mensagem.put("cpf", dto.getCpf());
+        mensagem.put("nome", dto.getNome());
+        mensagem.put("email", dto.getEmail());
+        mensagem.put("senha", dto.getSenha());
+        mensagem.put("tipo", dto.getTipo());
+
+        rabbitTemplate.convertAndSend("gerente.criado", mensagem);
+
+        DadoGerente response = new DadoGerente();
+        response.setCpf(gerente.getCpf());
+        response.setNome(gerente.getNome());
+        response.setEmail(gerente.getEmail());
+        response.setTipo(gerente.getTipo().name());
+
+        return response;
     }
 }
-*/
