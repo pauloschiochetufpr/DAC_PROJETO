@@ -6,13 +6,13 @@ spring:
     name: conta-service
 
   datasource:
-    url: jdbc:postgresql://postgres:5432/conta_cud_db
+    jdbc-url: jdbc:postgresql://postgres:5432/conta_cud_db
     username: dac
     password: dac
     driver-class-name: org.postgresql.Driver
 
   datasource-read:
-    url: jdbc:postgresql://postgres:5432/conta_r_db
+    jdbc-url: jdbc:postgresql://postgres:5432/conta_r_db
     username: dac
     password: dac
     driver-class-name: org.postgresql.Driver
