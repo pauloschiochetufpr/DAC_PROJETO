@@ -1,0 +1,24 @@
+{
+  "properties": [
+    {
+      "name": "spring.datasource-read.jdbc-url",
+      "type": "java.lang.String",
+      "description": "URL de conexão para o banco de leitura."
+    },
+    {
+      "name": "spring.datasource-read.username",
+      "type": "java.lang.String",
+      "description": "Usuário do banco de leitura."
+    },
+    {
+      "name": "spring.datasource-read.password",
+      "type": "java.lang.String",
+      "description": "Senha do banco de leitura."
+    },
+    {
+      "name": "spring.datasource-read.driver-class-name",
+      "type": "java.lang.String",
+      "description": "Driver JDBC para o banco de leitura."
+    }
+  ]
+}

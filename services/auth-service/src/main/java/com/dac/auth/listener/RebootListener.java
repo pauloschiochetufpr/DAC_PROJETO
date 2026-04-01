@@ -1,0 +1,36 @@
+package com.dac.auth.listener;
+
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Map;
+
+@Component
+public class RebootListener {
+
+    @Autowired
+    private MongoTemplate mongo;
+
+    @RabbitListener(queues = "saga.reset")
+    public void onReboot(String mensagem) {
+        mongo.dropCollection("auth");
+
+        List<Map<String, Object>> usuarios = List.of(
+            Map.of("cpf","12912861012","email","cli1@bantads.com.br","senha","tads","tipo","cliente"),
+            Map.of("cpf","09506382000","email","cli2@bantads.com.br","senha","tads","tipo","cliente"),
+            Map.of("cpf","85733854057","email","cli3@bantads.com.br","senha","tads","tipo","cliente"),
+            Map.of("cpf","58872160006","email","cli4@bantads.com.br","senha","tads","tipo","cliente"),
+            Map.of("cpf","76179646090","email","cli5@bantads.com.br","senha","tads","tipo","cliente"),
+            Map.of("cpf","98574307084","email","ger1@bantads.com.br","senha","tads","tipo","gerente"),
+            Map.of("cpf","64065268052","email","ger2@bantads.com.br","senha","tads","tipo","gerente"),
+            Map.of("cpf","23862179060","email","ger3@bantads.com.br","senha","tads","tipo","gerente"),
+            Map.of("cpf","40501740066","email","adm1@bantads.com.br","senha","tads","tipo","administrador")
+        );
+
+        mongo.insert(usuarios, "auth");
+        System.out.println("auth-service: reboot executado via RabbitMQ");
+    }
+}
