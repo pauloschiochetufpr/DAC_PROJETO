@@ -1,21 +1,21 @@
-package com.dac.auth.controller;
+package com.dac.auth.listener;
 
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
 
-@RestController
-@RequestMapping("/reboot")
-public class DevController {
+@Component
+public class RebootListener {
 
     @Autowired
     private MongoTemplate mongo;
 
-    @PostMapping
-    public String resetDatabase() {
+    @RabbitListener(queues = "saga.reset")
+    public void onReboot(String mensagem) {
         mongo.dropCollection("auth");
 
         List<Map<String, Object>> usuarios = List.of(
@@ -31,6 +31,6 @@ public class DevController {
         );
 
         mongo.insert(usuarios, "auth");
-        return "Banco auth recriado com mocks";
+        System.out.println("auth-service: reboot executado via RabbitMQ");
     }
 }

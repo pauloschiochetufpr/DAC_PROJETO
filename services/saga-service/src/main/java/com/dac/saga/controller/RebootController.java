@@ -22,19 +22,12 @@ public class RebootController {
             resetService.solicitarResetOrquestrado();
             return ResponseEntity.accepted().body(Map.of(
                 "status", "accepted",
-                "message", "Solicitacao de reset enviada para a Saga via RabbitMQ"
+                "message", "Reset iniciado — todos os bancos serao recriados com os dados mock"
             ));
-        } catch (IllegalStateException | UnsupportedOperationException ex) {
-            return ResponseEntity.status(501).body(Map.of(
+        } catch (Exception ex) {
+            return ResponseEntity.status(500).body(Map.of(
                 "status", "error",
-                "errorCode", "RESET_ORQUESTRACAO_INDISPONIVEL",
-                "message", ex.getMessage()
-            ));
-        } catch (IllegalArgumentException ex) {
-            return ResponseEntity.badRequest().body(Map.of(
-                "status", "error",
-                "errorCode", "RESET_REQUISICAO_INVALIDA",
-                "message", ex.getMessage()
+                "message", "Falha ao publicar solicitacao de reset: " + ex.getMessage()
             ));
         }
     }
