@@ -11,9 +11,15 @@ public class RebootListener {
     @Autowired
     private DevService devService;
 
-    @RabbitListener(queues = "saga.reset")
+    @RabbitListener(queues = "${rabbitmq.fila.reset:saga.reset}",
+                    containerFactory = "rabbitListenerContainerFactory")
     public void onReboot(String mensagem) {
-        devService.resetComMocks();
-        System.out.println("conta-service: reboot executado via RabbitMQ");
+        try {
+            devService.resetComMocks();
+            System.out.println("conta-service: reboot concluido com sucesso");
+        } catch (Exception e) {
+            System.err.println("conta-service: erro no reboot - " + e.getMessage());
+            throw e;
+        }
     }
 }
