@@ -1,8 +1,9 @@
 import { useRef, useEffect, useState } from "react";
 import { gsap } from "gsap";
+import waves from "../../assets/pattern/NotDone/waves.svg";
 import ScrollOperation from "./ScrollOperation";
 
-export default function ScrollBox({ title, isOpen, onToggle, setIsAnimating }) {
+export default function ScrollBox({ title, isOpen, onToggle }) {
   const lidRef = useRef(null);
   const boxRef = useRef(null);
   const scrollRef = useRef(null);
@@ -25,6 +26,30 @@ export default function ScrollBox({ title, isOpen, onToggle, setIsAnimating }) {
 
   const currentFlow = flow[title] || [];
   const visibleSteps = currentFlow.slice(0, step);
+
+  // 💰 FORMATADOR
+  const formatCurrency = (value) => {
+    const number = Number(value) / 100;
+
+    return number.toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    });
+  };
+
+  const handleValorChange = (e) => {
+    let raw = e.target.value.replace(/\D/g, ""); // só números
+
+    if (!raw) {
+      setForm({ ...form, valor: "" });
+      return;
+    }
+
+    setForm({
+      ...form,
+      valor: formatCurrency(raw),
+    });
+  };
 
   const handleNext = () => {
     const currentStepType = currentFlow[step - 1];
@@ -51,10 +76,7 @@ export default function ScrollBox({ title, isOpen, onToggle, setIsAnimating }) {
   };
 
   const openAnimation = () => {
-    // 🔥 mata animação anterior
-    if (tlRef.current) {
-      tlRef.current.kill();
-    }
+    if (tlRef.current) tlRef.current.kill();
 
     setIsAtCenter(false);
 
@@ -71,7 +93,7 @@ export default function ScrollBox({ title, isOpen, onToggle, setIsAnimating }) {
       },
     });
 
-    tlRef.current = tl; // 🔥 salva referência
+    tlRef.current = tl;
 
     gsap.set(scrollRef.current, {
       transformOrigin: "top center",
@@ -101,21 +123,13 @@ export default function ScrollBox({ title, isOpen, onToggle, setIsAnimating }) {
   };
 
   const closeAnimation = () => {
-    // 🔥 mata animação anterior
-    if (tlRef.current) {
-      tlRef.current.kill();
-    }
+    if (tlRef.current) tlRef.current.kill();
 
     setIsAtCenter(false);
 
-    const tl = gsap.timeline({
-      onComplete: () => {
-        setStep(0);
-        setForm({ valor: "", conta: "" });
-      },
-    });
+    const tl = gsap.timeline();
 
-    tlRef.current = tl; // 🔥 salva referência
+    tlRef.current = tl;
 
     tl.to(scrollRef.current, { zIndex: 5 })
       .to(scrollRef.current, { scale: 1, duration: 0.3 })
@@ -138,86 +152,169 @@ export default function ScrollBox({ title, isOpen, onToggle, setIsAnimating }) {
     if (isOpen) openAnimation();
     else closeAnimation();
   }, [isOpen]);
+
   return (
     <div className="flex justify-center items-center perspective-[1000px]">
       <div
         ref={boxRef}
-        className="relative min-w-80 h-32 cursor-pointer"
+        className="relative min-w-80 h-32 cursor-pointer select-none"
         onClick={!isOpen ? onToggle : undefined}
       >
-        {/* BASE */}
-        <div className="absolute inset-0 bg-red-800 rounded-xl border border-red-900 shadow-inner" />
+        {/* BASE 3D */}
+        <div className="absolute inset-0 rounded-xl overflow-hidden">
+          {/* COR BASE */}
+          <div className="absolute inset-0 bg-gradient-to-br from-red-700 via-red-800 to-red-950" />
+
+          {/* LUZ (top-left) */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent pointer-events-none" />
+
+          {/* SOMBRA INTERNA */}
+          <div className="absolute inset-0 shadow-[inset_0_6px_12px_rgba(0,0,0,0.6)] pointer-events-none" />
+
+          {/* BORDA INTERNA (profundidade) */}
+          <div className="absolute inset-0 rounded-xl border border-red-950/80 pointer-events-none" />
+
+          {/* FUNDO DA CAIXA (efeito 3D) */}
+          <div className="absolute inset-2 rounded-lg bg-gradient-to-b from-red-900 to-black/30 shadow-inner" />
+
+          {/* SOMBRA GLOBAL (flutuando) */}
+          <div className="absolute inset-0 rounded-xl shadow-[0_20px_40px_rgba(0,0,0,0.6)] pointer-events-none" />
+        </div>
 
         {/* PERGAMINHO */}
         <div
           ref={scrollRef}
-          className="absolute left-1/2 top-1/2"
+          className="absolute left-1/2 top-[22%]"
           style={{
             transform: "translate(-50%, -60%)",
           }}
         >
-          <ScrollOperation isActive={isAtCenter}>
-            <h1 className="text-center font-semibold">{title}</h1>
-
-            {visibleSteps.includes("conta") && (
-              <input
-                type="text"
-                placeholder="Conta destino"
-                className="w-full border p-1"
-                value={form.conta}
-                onChange={(e) => setForm({ ...form, conta: e.target.value })}
-                onBlur={handleNext}
-              />
-            )}
-
-            {visibleSteps.includes("valor") && (
-              <input
-                type="number"
-                placeholder="Valor"
-                className="w-full border p-1"
-                value={form.valor}
-                onChange={(e) => setForm({ ...form, valor: e.target.value })}
-                onBlur={handleNext}
-              />
-            )}
-
-            {visibleSteps.includes("confirmar") && (
-              <div className="flex gap-2 justify-center">
+          <ScrollOperation
+            isActive={isAtCenter}
+            isOpen={isOpen}
+            onCloseComplete={() => {
+              setStep(0);
+              setForm({ valor: "", conta: "" });
+            }}
+          >
+            <div className="flex flex-col h-full">
+              {/* BOTÃO FIXO */}
+              <div className="py-1 flex justify-center">
                 <button
-                  className="text-green-600"
-                  onClick={() => setStep(step + 1)}
+                  className="text-secundaryDark font-semibold hover:text-secundary transition-colors select-none"
+                  onClick={onToggle}
                 >
-                  Confirmar
-                </button>
-                <button className="text-gray-500" onClick={onToggle}>
                   Cancelar
                 </button>
               </div>
-            )}
 
-            {visibleSteps.includes("resultado") && (
-              <div className="text-sm text-center">
-                <p>Operação: {title}</p>
-                {title === "Transferência" && <p>Conta: {form.conta}</p>}
-                <p>Valor: {form.valor}</p>
+              {/* CONTEÚDO */}
+              <div className="flex-1 w-full relative border-t border-secundary">
+                <div className="relative z-10 mx-3 p-2 flex flex-col gap-2 overflow-y-auto border-x border-secundary">
+                  <h1 className="text-center font-orienta text-secundary font-semibold select-none">
+                    {title}
+                  </h1>
 
-                <button
-                  className="mt-2 bg-red-600 text-white px-2 py-1"
-                  onClick={onToggle}
-                >
-                  Fechar
-                </button>
+                  {/* CONTA */}
+                  {visibleSteps.includes("conta") && (
+                    <div className="flex flex-col">
+                      <label className="text-xs text-secundaryDark select-none">
+                        Conta Destino
+                      </label>
+                      <input
+                        type="text"
+                        className="w-full border text-xs border-secundary bg-contrastDark/25 text-secundary rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-secundary"
+                        value={form.conta}
+                        onChange={(e) =>
+                          setForm({ ...form, conta: e.target.value })
+                        }
+                        onBlur={handleNext}
+                      />
+                    </div>
+                  )}
+
+                  {/* VALOR */}
+                  {visibleSteps.includes("valor") && (
+                    <div className="flex flex-col">
+                      <label className="text-xs text-secundaryDark select-none">
+                        Valor
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="R$ 00,00"
+                        inputMode="numeric"
+                        className="w-full border text-xs border-secundary bg-contrastDark/25 text-secundary rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-secundary"
+                        value={form.valor}
+                        onChange={handleValorChange}
+                        onBlur={handleNext}
+                      />
+                    </div>
+                  )}
+
+                  {/* CONFIRMAR */}
+                  {visibleSteps.includes("confirmar") && (
+                    <button
+                      className="text-green-600 rounded hover:text-green-500 select-none"
+                      onClick={() => setStep(step + 1)}
+                    >
+                      Confirmar
+                    </button>
+                  )}
+
+                  {/* RESULTADO */}
+                  {visibleSteps.includes("resultado") && (
+                    <div className="text-sm text-center bg-contrastDark/25 text-secundary p-1 rounded">
+                      <p className="select-none">Operação: {title}</p>
+                      {title === "Transferência" && (
+                        <p className="select-none">Conta: {form.conta}</p>
+                      )}
+                      <p className="select-none">Valor: {form.valor}</p>
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
+
+              {/* FECHAR */}
+              {visibleSteps.includes("resultado") && (
+                <div className="border-t py-1 border-secundary flex justify-center">
+                  <button
+                    className="text-secundaryDark text-sm font-semibold hover:text-secundary transition-colors select-none"
+                    onClick={onToggle}
+                  >
+                    Fechar
+                  </button>
+                </div>
+              )}
+            </div>
           </ScrollOperation>
         </div>
 
         {/* TAMPA */}
         <div
           ref={lidRef}
-          className="absolute inset-0 flex items-center justify-center bg-red-600 rounded-xl text-secundary font-long-cang text-3xl z-10"
+          className="absolute inset-0 flex items-center justify-center rounded-xl text-secundary font-long-cang text-3xl z-10 select-none overflow-hidden"
         >
-          {title}
+          {/* BASE */}
+          <div className="absolute inset-0 bg-gradient-to-br from-red-500 via-red-600 to-red-900" />
+          <div
+            className="absolute inset-0 bg-center bg-cover"
+            style={{
+              backgroundImage: `url(${waves})`,
+            }}
+          />
+          {/* LUZ */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-transparent" />
+
+          {/* SOMBRA */}
+          <div className="absolute inset-0 shadow-[inset_0_-6px_12px_rgba(0,0,0,0.7)]" />
+
+          {/* BORDA */}
+          <div className="absolute inset-0 rounded-xl border border-red-950/80" />
+
+          {/* TEXTO */}
+          <span className="relative z-10 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+            {title}
+          </span>
         </div>
       </div>
     </div>
