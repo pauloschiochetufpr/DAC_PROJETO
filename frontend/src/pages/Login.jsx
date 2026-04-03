@@ -1,7 +1,7 @@
 import { useState } from "react";
 import FormLogin from "../components/FormLogin";
 import FormCad from "../components/FormCad";
-import templeBg from "../assets/temple2.jpg";
+import templeBg from "../assets/temple.jpg";
 import WaveSimpleRed from "../components/WaveSimpleRed";
 
 export default function Login() {
