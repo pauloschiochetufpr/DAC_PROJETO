@@ -7,14 +7,16 @@ import App from "./App";
 
 import { ThemeProvider } from "./context/theme.provider";
 import { LanguageProvider } from "./context/language.provider";
-
+import { BancoProvider } from "./context/banco.provider";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
       <ThemeProvider>
         <LanguageProvider>
-          <App />
+          <BancoProvider>
+            <App />
+          </BancoProvider>
         </LanguageProvider>
       </ThemeProvider>
     </BrowserRouter>
