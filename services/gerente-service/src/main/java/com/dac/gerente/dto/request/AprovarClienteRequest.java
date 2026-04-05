@@ -4,11 +4,11 @@ public class AprovarClienteRequest {
 
     private String cpfCliente;
 
-    public String getCpfString(){
+    public String getCpfCliente() {
         return cpfCliente;
     }
 
-    public void setCpfString(String cpfCliente) {
+    public void setCpfCliente(String cpfCliente) {
         this.cpfCliente = cpfCliente;
     }
 }
