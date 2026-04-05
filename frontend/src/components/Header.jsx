@@ -1,4 +1,4 @@
-import Logo from "../assets/logo/logoEscura.svg";
+import Logo from "../assets/logo/LogoEscura.svg";
 import { useLanguage } from "../hooks/useLanguage";
 import { t } from "../lib/i18n";
 
