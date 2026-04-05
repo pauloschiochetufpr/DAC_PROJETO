@@ -59,7 +59,7 @@ export default function HomeCliente() {
         </div>
         {/* Container do saldo */}
         <div
-          className="w-[80rem] xl:w-[30rem] md:w-[45rem] 2xl:w-[45rem] h-[25rem] md:h-[30rem] bg-transparent border-[0.5rem]
+          className="w-[80rem] xl:w-[30rem] md:w-[45rem] 2xl:w-[45rem] h-[25rem] md:h-[31rem] xl:h-[35rem] 2xl:h-[30rem] bg-transparent border-[0.5rem]
           border-secundaryDark
           rounded-[21px] flex flex-col z-[100] shadow-dourado"
         >
@@ -90,7 +90,7 @@ export default function HomeCliente() {
                           font-bold font-istok-web select-none
                           "
               >
-                <div className="bg-black/40 rounded-lg px-6 py-2 pt-3 select-none text-nowrap font-istok-web">
+                <div className="bg-black/50 shadow-inner shadow-black rounded-lg px-4 py-2 select-none text-nowrap font-orienta">
                   Número da conta: {conta}
                 </div>
               </h1>
@@ -162,9 +162,9 @@ export default function HomeCliente() {
 
               {/* Segunda fita do conteúdo (informações adicionais) */}
               <div
-                className="flex flex-col xl:flex-row
+                className="flex flex-col 2xl:flex-row
                               gap-[1.3rem] mt-[2.3rem]
-                              md:mt-[3rem] md:gap-[2rem]
+                              md:mt-[3rem] md:gap-[2rem] xl:gap-[1rem]
                               xl:mt-[5rem]"
               >
                 <Link
@@ -195,7 +195,7 @@ export default function HomeCliente() {
                 </Link>
                 <Link
                   className="text-2xl xl:text-4xl font-orienta flex items-center justify-center
-                    h-fit w-fit min-w-[15rem]
+                    h-fit w-fit 2xl:min-w-[15rem] xl:min-w-[20rem] min-w-[15rem]
                     px-12 py-3 xl:px-12 xl:py-4 rounded-md relative overflow-hidden group
                     select-none border-2 border-secundaryDark
                     xl:duration-200 xl:ease-out xl:transition-all

@@ -169,6 +169,7 @@ export default function ListaClientes({ idGerente }) {
                         key={c.cpf}
                         onClick={() => toggleExpandido(c.cpf)}
                         className={`border-b border-brandDark/60 cursor-pointer transition-colors select-none
+                                    
                       ${expandido === c.cpf ? "bg-brand/25" : "hover:bg-brand/15"}`}
                       >
                         <td className=" py-3 text-contrast font-mono text-xs md:text-sm whitespace-nowrap">

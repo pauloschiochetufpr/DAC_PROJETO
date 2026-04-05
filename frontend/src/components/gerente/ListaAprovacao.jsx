@@ -94,7 +94,7 @@ export default function ListaAprovacao({ idGerente }) {
           <div className="absolute left-0 top-0 w-full h-full bg-gradient-to-t from-transparent to-black/40 z-[12]"></div>
           <WaveSimpleRed className="z-[-3]" />
           <div
-            className="font-orienta text-xl md:text-3xl text-secundary
+            className="font-orienta text-xl md:text-3xl 2xl:text-3xl xl:text-2xl text-secundary
                       select-none text-center z-[19] px-5 py-2 pb-3 bg-black/50 rounded-md
                       shadow-inner shadow-black"
           >
