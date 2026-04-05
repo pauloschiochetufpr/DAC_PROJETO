@@ -1,5 +1,6 @@
 // SVG's
 import WaveSimpleRed from "../components/WaveSimpleRed";
+import WaveSimpleRedReverse from "../components/WaveSimpleRedReverse";
 import SecundaryBorder from "../assets/icons/SecundaryBorder.svg";
 
 // Lucide icon's
@@ -161,22 +162,22 @@ export default function HomeCliente() {
 
               {/* Segunda fita do conteúdo (informações adicionais) */}
               <div
-                className="flex flex-col 
+                className="flex flex-col xl:flex-row
                               gap-[1.3rem] mt-[2.3rem]
                               md:mt-[3rem] md:gap-[2rem]
                               xl:mt-[5rem]"
               >
                 <Link
                   className=" text-2xl xl:text-4xl font-orienta flex items-center justify-center h-fit w-fit
-                    px-12 py-3 xl:px-12 xl:py-4 rounded-full relative overflow-hidden
-                    select-none border-2 border-secundaryDark
-                    xl:duration-200 xl:ease-out xl:transition-all xl:hover:shadow-lg xl:hover:shadow-brandDark
-                    xl:active:shadow-none font-extrabold"
+                    px-12 py-3 xl:px-12 xl:py-4 rounded-md relative overflow-hidden
+                    select-none border-2 border-secundaryDark group
+                    xl:duration-200 xl:ease-out xl:transition-all
+                    font-extrabold"
                   to="/operations"
                 >
                   <div
                     className="absolute inset-0 w-full h-full z-0 pointer-events-none overflow-hidden
-                                "
+                                opacity-65 group-hover:opacity-100 transition-opacity duration-300"
                   >
                     <div className="absolute left-0 top-0 w-full h-full bg-white/[0.05] z-[14]"></div>
                     <div className="absolute left-0 top-0 w-full h-full flex flex-row z-[13]">
@@ -188,22 +189,22 @@ export default function HomeCliente() {
                       <div className=" flex-1 bg-gradient-to-r from-transparent to-black/[0.32] z-[13]"></div>
                     </div>
                     <div className="absolute left-0 top-0 w-full h-full bg-gradient-to-t from-transparent to-black/40 z-[12]"></div>
-                    <WaveSimpleRed className="w-full h-full" />
+                    <WaveSimpleRedReverse className="w-full h-full" />
                   </div>
                   <span className="relative z-10 ">TRANSAÇÕES</span>
                 </Link>
                 <Link
                   className="text-2xl xl:text-4xl font-orienta flex items-center justify-center
                     h-fit w-fit min-w-[15rem]
-                    px-12 py-3 xl:px-12 xl:py-4 rounded-full relative overflow-hidden
+                    px-12 py-3 xl:px-12 xl:py-4 rounded-md relative overflow-hidden group
                     select-none border-2 border-secundaryDark
-                    xl:duration-200 xl:ease-out xl:transition-all xl:hover:shadow-lg xl:hover:shadow-brandDark
-                    xl:active:shadow-none xl:hidden font-extrabold"
+                    xl:duration-200 xl:ease-out xl:transition-all
+                    font-extrabold"
                   to="/extrato"
                 >
                   <div
                     className="absolute inset-0 w-full h-full z-0 pointer-events-none overflow-hidden
-                                "
+                                opacity-65 group-hover:opacity-100 transition-opacity duration-300"
                   >
                     <div className="absolute left-0 top-0 w-full h-full bg-white/[0.05] z-[14]"></div>
                     <div className="absolute left-0 top-0 w-full h-full flex flex-row z-[13]">
@@ -215,7 +216,7 @@ export default function HomeCliente() {
                       <div className=" flex-1 bg-gradient-to-r from-transparent to-black/[0.32] z-[13]"></div>
                     </div>
                     <div className="absolute left-0 top-0 w-full h-full bg-gradient-to-t from-transparent to-black/40 z-[12]"></div>
-                    <WaveSimpleRed className="w-full h-full" />
+                    <WaveSimpleRedReverse className="w-full h-full" />
                   </div>
                   <span className="relative z-10 ">EXTRATO</span>
                 </Link>

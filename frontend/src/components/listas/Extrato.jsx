@@ -132,7 +132,7 @@ export default function Extrato({ showInfo }) {
           ></div>
           <div
             className="extrato-scroll h-full w-full overflow-x-hidden overflow-y-auto text-xs
-          z-[15] absolute"
+          z-[15] absolute md:overscroll-none"
           >
             {movimentacoes.map((item) => {
               const { dataFormatada, horario } = formatarData(item.data);

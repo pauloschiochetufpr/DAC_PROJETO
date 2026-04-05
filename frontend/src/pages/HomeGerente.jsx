@@ -25,7 +25,8 @@ export default function HomeGerente() {
       >
         {/* Aprovação de Autocadastros */}
         <div
-          className="xl:h-[68vh] 2xl:h-[73vh] w-full xl:w-[40%] 2xl:w-[30%] bg-brandDark/50 backdrop-blur-lg
+          className="xl:h-[68vh] 2xl:h-[73vh] w-full xl:min-w-[30%] xl:w-[30%] 2xl:min-w-[30%] 2xl:w-[30%]
+           bg-brandDark/50 backdrop-blur-lg
                       rounded-2xl border border-secundary/70 shadow-dourado-sutil
                       "
         >
@@ -34,9 +35,9 @@ export default function HomeGerente() {
 
         {/* Consulta de Clientes */}
         <div
-          className="flex-1 bg-brandDark/50 backdrop-blur-lg
+          className="w-full xl:h-[68vh] 2xl:h-[73vh] bg-brandDark/50 backdrop-blur-lg
                       rounded-2xl border border-secundary/70 shadow-dourado-sutil
-                      p-5 md:p-7"
+                      "
         >
           <ListaClientes idGerente={GERENTE_ID} />
         </div>

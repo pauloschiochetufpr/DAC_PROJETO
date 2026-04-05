@@ -95,7 +95,7 @@ export default function ListaAprovacao({ idGerente }) {
           <WaveSimpleRed className="z-[-3]" />
           <div
             className="font-orienta text-xl md:text-3xl text-secundary
-                      select-none text-center z-[19] px-5 py-2 pb-3 bg-black/50 rounded-xl
+                      select-none text-center z-[19] px-5 py-2 pb-3 bg-black/50 rounded-md
                       shadow-inner shadow-black"
           >
             Aprovação de Clientes
@@ -106,9 +106,9 @@ export default function ListaAprovacao({ idGerente }) {
       {/* Feedback de ação */}
       {feedback && (
         <div
-          className={`my-4 px-4 py-2 rounded-lg text-sm font-inter font-medium text-center transition-all z-[200]
-            absolute bottom-[85%]
-            ${feedback.tipo === "sucesso" ? "bg-green-800/90 text-green-200" : "bg-red-800/90 text-red-200"}`}
+          className={`my-4 px-4 py-2 rounded-sm text-sm font-inter font-medium text-center transition-all z-[200]
+            absolute bottom-[85%] select-none
+            ${feedback.tipo === "sucesso" ? "bg-green-800/100 text-green-200" : "bg-red-800/100 text-red-200"}`}
         >
           {feedback.msg}
         </div>
@@ -117,9 +117,9 @@ export default function ListaAprovacao({ idGerente }) {
       {erro && (
         <p
           className="text-red-400 font-inter text-center text-base md:text-xl
-         pb-8 md:pt-40  flex flex-col items-center justify-center gap-2"
+         pb-8 md:pt-40  flex flex-col items-center justify-center gap-2 w-full"
         >
-          <Bug size={65} className="inline-block mr-2" />
+          <Bug size={65} className="inline-block mr-2 select-none" />
           {erro}
         </p>
       )}
@@ -127,10 +127,10 @@ export default function ListaAprovacao({ idGerente }) {
       {!loading && !erro && pendentes.length === 0 && (
         <p
           className="text-contrast font-inter text-center text-base md:text-xl
-        pb-8 md:pt-40 flex flex-col items-center justify-center gap-2"
+        pb-8 md:pt-40 flex flex-col items-center justify-center gap-2 w-full select-none"
         >
-          <TicketX size={65} className="inline-block mr-2" />
-          Nenhum autocadastro pendente.
+          <TicketX size={65} className="inline-block" />
+          Nenhum autocadastro pendente
         </p>
       )}
 
@@ -139,7 +139,7 @@ export default function ListaAprovacao({ idGerente }) {
         <div className="h-full w-full pb-3 px-3">
           <div
             className="overflow-hidden h-full w-full rounded-xl border border-secundaryDark/60
-                      scrollbar-thin scrollbar-thumb-secundary scrollbar-track-brandDark
+                      scrollbar-thin scrollbar-thumb-secundary scrollbar-track-brandDark md:overscroll-none
                       shadow-inner shadow-black/20"
           >
             {/* Corpo */}

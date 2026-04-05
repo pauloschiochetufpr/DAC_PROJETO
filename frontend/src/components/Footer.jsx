@@ -44,10 +44,16 @@ export default function Footer() {
           className="h-fit w-full flex flex-col items-center xl:items-start justify-start
                         xl:px-32 px-2 xl:pb-24 xl:pt-16 py-6 select-none gap-4"
         >
-          <button className="flex flex-row font-istok-web font-semibold text-base gap-1 w-full items-center justify-center">
+          <button
+            className="flex flex-row font-istok-web font-semibold text-base gap-1 w-full items-center justify-center
+            hover:underline"
+          >
             ONG's apoiadas <SquareArrowOutUpRight size={12} />
           </button>
-          <button className="flex flex-row font-istok-web font-semibold text-base gap-1 w-full items-center justify-center">
+          <button
+            className="flex flex-row font-istok-web font-semibold text-base gap-1 w-full items-center justify-center
+            hover:underline"
+          >
             Politicas de privacidade <SquareArrowOutUpRight size={12} />
           </button>
         </div>
@@ -58,44 +64,65 @@ export default function Footer() {
             Conheça nossas redes!
           </h1>
           <div className="flex flex-col xl:gap-6 gap-8 justify-center items-center w-full">
-            <button className="flex flex-row font-istok-web font-semibold gap-1 pl-4 xl:pb-0 pb-10 xl:text-base text-lg">
+            <button
+              className="flex flex-row font-istok-web font-semibold gap-1 pl-4 xl:pb-0 pb-10 xl:text-base text-lg
+            hover:underline"
+            >
               Instagram <ExternalLink size={12} />
             </button>
-            <button className="flex flex-row font-istok-web font-semibold gap-1 pl-4 xl:pb-0 pb-10 xl:text-base text-lg">
+            <button
+              className="flex flex-row font-istok-web font-semibold gap-1 pl-4 xl:pb-0 pb-10 xl:text-base text-lg
+            hover:underline"
+            >
               LinkedIn <ExternalLink size={12} />
             </button>
-            <button className="flex flex-row font-istok-web font-semibold gap-1 pl-4 xl:pb-0 pb-10 xl:text-base text-lg">
+            <button
+              className="flex flex-row font-istok-web font-semibold gap-1 pl-4 xl:pb-0 pb-10 xl:text-base text-lg
+            hover:underline"
+            >
               X (Twitter) <ExternalLink size={12} />
             </button>
-            <button className="flex flex-row font-istok-web font-semibold gap-1 pl-4 xl:pb-0 pb-10 xl:text-base text-lg">
+            <button
+              className="flex flex-row font-istok-web font-semibold gap-1 pl-4 xl:pb-0 pb-10 xl:text-base text-lg
+            hover:underline"
+            >
               YouTube <ExternalLink size={12} />
             </button>
-            <button className="flex flex-row font-istok-web font-semibold gap-1 pl-4 xl:pb-0 pb-10 xl:text-base text-lg">
+            <button
+              className="flex flex-row font-istok-web font-semibold gap-1 pl-4 xl:pb-0 pb-10 xl:text-base text-lg
+            hover:underline"
+            >
               Facebook <ExternalLink size={12} />
             </button>
           </div>
         </div>
 
         {/* Ultima coluna footer */}
-        <div className="h-fit w-full  relative flex items-center xl:items-start justify-start px-10 xl:px-32 py-6 select-none">
+        <div
+          className="h-fit w-full relative flex items-center xl:items-start justify-start
+        px-10 xl:px-32 py-6 select-none"
+        >
           {/* Botão de languages desktop */}
           <div
             ref={desktopRef}
             className="xl:block hidden relative w-full h-fit"
           >
-            <div className="w-12 h-20 bg-transparent"></div>
+            <div className="w-fith-fit opacity-0 bg-transparent text-lg font-bold font-istok-web py-4 pt-3">
+              {" "}
+              English
+            </div>
             {/* Botão trigger */}
             <button
               onClick={() => setOpen((v) => !v)}
               className={`
                 right-0 top-0 absolute
                 w-fit h-fit min-w-[12rem]
-                rounded-md px-4 py-2 pt-3
+                rounded-sm px-4 py-2 pt-3
                 text-lg font-bold font-istok-web
                 cursor-pointer outline-none select-none
-                transition-all duration-300 ease-in-out
+                transition-all duration-300 ease-in-out border border-lightDark
                 flex flex-row items-start gap-2 justify-between
-                ${open ? "bg-lightDark shadow-md shadow-black/40" : "bg-lightDark"}
+                ${open ? "bg-lightDark shadow-md shadow-black/40" : "bg-lightDark/30"}
               `}
             >
               <h1 className="flex flex-row gap-3">
@@ -110,10 +137,10 @@ export default function Footer() {
             {/* Lista de opções */}
             <ul
               className={`
-                absolute bottom-full mb-1 right-0
+                absolute top-full right-0
                 bg-lightDark
-                rounded-lg overflow-hidden
-                min-w-[11rem] z-50
+                rounded-sm overflow-hidden
+                min-w-[12rem] z-50
                 shadow-lg
                 transition-opacity duration-200 ease-in-out
                 ${open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}
@@ -155,12 +182,12 @@ export default function Footer() {
           onClick={() => setOpen((v) => !v)}
           className={`
                 w-fit h-fit min-w-[12rem]
-                rounded-md px-4 py-2 pt-3
+                rounded-sm px-4 py-2 pt-3
                 text-lg font-bold font-istok-web
                 cursor-pointer outline-none select-none
                 transition-all duration-300 ease-in-out
-                flex flex-row items-start gap-2 justify-between
-                ${open ? "bg-lightDark shadow-md shadow-black/40" : "bg-lightDark"}
+                flex flex-row items-start gap-2 justify-between border border-lightDark
+                ${open ? "bg-lightDark shadow-md shadow-black/40" : "bg-lightDark/30"}
               `}
         >
           <h1 className="flex flex-row gap-3">
@@ -177,7 +204,7 @@ export default function Footer() {
           className={`
               absolute bottom-full mb-1 left-1/2 -translate-x-1/2
               bg-lightDark
-              rounded-lg overflow-hidden
+              rounded-sm overflow-hidden
               min-w-[11rem] z-50
               shadow-lg
               transition-opacity duration-200 ease-in-out
@@ -207,7 +234,7 @@ export default function Footer() {
       </div>
 
       {/* Copyright */}
-      <div className="select-none flex flex-row text-md xl:text-md pt-24">
+      <div className="select-none flex flex-row text-md text-center xl:text-md pt-24">
         © {new Date().getFullYear()} — (FAKE COMPANY) MasterBank. Todos os
         direitos reservados.
       </div>

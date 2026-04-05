@@ -42,11 +42,11 @@ export default function CardAprovacao({
   return (
     <>
       <tr
-        className={`transition-colors rounded-xl bg-black/20
+        className={`transition-colors rounded-md bg-black/20
                     px-2 duration-75 relative
                     h-[5rem] md:h-[4rem] w-full justify-between flex flex-row
-          ${processando ? "opacity-50 pointer-events-none" : "hover:bg-brand/20"}
-          ${rejeitando ? "rounded-b-none" : ""}`}
+          ${processando ? "opacity-50 pointer-events-none" : ""}
+          ${rejeitando ? "rounded-b-none " : ""}`}
       >
         <div className="flex flex-col justify-center items-center gap-0 px-2">
           {/* CPF */}
@@ -80,11 +80,11 @@ export default function CardAprovacao({
             onClick={handleAprovar}
             disabled={processando || rejeitando}
             title="Aprovar cliente"
-            className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs md:text-sm font-semibold
-                         bg-green-700/70 text-green-100 border border-green-500/40
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-sm text-xs md:text-sm font-semibold
+                         bg-green-700/40 text-green-100 border border-green-500/40
                         active:bg-green-800 transition-colors
                          disabled:opacity-40 disabled:cursor-not-allowed duration-100
-                         ${processando || rejeitando ? "" : "hover:bg-green-600/80"}`}
+                         ${processando || rejeitando ? "" : "hover:bg-green-600/70"}`}
           >
             <Check size={16} />
             <span className="hidden 2xl:inline">Aprovar</span>
@@ -95,11 +95,11 @@ export default function CardAprovacao({
             onClick={() => setRejeitando(true)}
             disabled={processando || rejeitando}
             title="Recusar cliente"
-            className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs md:text-sm font-semibold
-                         bg-red-700/70 text-red-100 border border-red-500/40
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-sm text-xs md:text-sm font-semibold
+                         bg-transparent text-red-100 border border-red-500/40
                          active:bg-red-800 transition-colors
                          disabled:opacity-40 disabled:cursor-not-allowed duration-100
-                         ${processando || rejeitando ? "" : "hover:bg-red-600/80"}`}
+                         ${processando || rejeitando ? "" : "hover:bg-red-600/40"}`}
           >
             <X size={16} />
             <span className="hidden 2xl:inline">Recusar</span>
@@ -108,7 +108,7 @@ export default function CardAprovacao({
         {/* Linha expandida */}
         {rejeitando && (
           <tr
-            className="bg-black/20 rounded-b-xl absolute left-0 top-full w-full px-3 py-3
+            className="bg-black/20 rounded-b-md absolute left-0 top-full w-full px-3 py-3
           flex flex-col md:justify-between sm:flex-row items-stretch sm:items-center gap-2 select-none"
           >
             <input
@@ -127,7 +127,7 @@ export default function CardAprovacao({
               <button
                 onClick={handleConfirmarRejeicao}
                 disabled={!motivo.trim() || processando}
-                className={`px-4 py-2 rounded-lg text-sm font-semibold
+                className={`px-4 py-2 rounded-sm text-sm font-semibold
                            bg-red-700/80 text-red-100 border border-red-500/40
                             transition-colors duration-100
                            disabled:opacity-40 disabled:cursor-not-allowed
@@ -139,7 +139,7 @@ export default function CardAprovacao({
               {/* Cancelar */}
               <button
                 onClick={handleCancelarRejeicao}
-                className="px-4 py-2 rounded-lg text-sm font-semibold duration-100
+                className="px-4 py-2 rounded-sm text-sm font-semibold duration-100
                            bg-neutral-700/60 text-neutral-200 border border-neutral-500/30
                            hover:bg-neutral-600/60 transition-colors"
               >
