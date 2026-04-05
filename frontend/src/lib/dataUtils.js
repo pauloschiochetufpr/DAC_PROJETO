@@ -1,13 +1,4 @@
-/**
- * Converte uma string ISO-8601 com offset BRT para os campos de exibição
- * do extrato, no padrão brasileiro.
- * Formato esperado (igual ao retornado pelo backend): "2026-03-31T10:30:00-03:00"
- *
- * @param {string} isoString
- * @returns {{ dataFormatada: string, horario: string }}
- *   - dataFormatada: "DD/MM/YYYY"  (ex.: "31/03/2026")
- *   - horario:       "HH:MM:SS"    (ex.: "10:30:00")
- */
+// ISO-8601 BRT → { dataFormatada: "DD/MM/YYYY", horario: "HH:MM:SS" }
 export const formatarData = (isoString) => {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: "America/Sao_Paulo",
@@ -28,14 +19,7 @@ export const formatarData = (isoString) => {
   };
 };
 
-/**
- * Converte um timestamp em milissegundos para uma string ISO-8601
- * com offset fixo de Brasília (-03:00).
- * Usado internamente para gerar mocks e registrar novas transações.
- *
- * @param {number} ts
- * @returns {string}  ex.: "2026-03-31T10:30:00-03:00"
- */
+// Timestamp (ms) → ISO-8601 com offset BRT (-03:00)
 export const toBrasiliaIso = (ts) => {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: "America/Sao_Paulo",

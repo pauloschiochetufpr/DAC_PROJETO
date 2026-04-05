@@ -3,7 +3,7 @@ import {
   buildClientDTO,
   updateClient,
   getPayloadFromToken,
-} from "../lib/clientService";
+} from "../services/clientService";
 import { MetalSurface } from "../components/MetalSurface";
 import WaveSimpleRed from "../components/WaveSimpleRed";
 import SecundaryBorder from "../assets/icons/SecundaryBorder.svg";

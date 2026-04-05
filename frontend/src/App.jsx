@@ -17,7 +17,7 @@ import OperationsCli from "./pages/OperationsCli";
 }
 
 export default function App() {
-  const role = 3; // Simulação de obtenção do cargo do usuário (1: Administrador, 2: Gerente, 3: Cliente)
+  const role = 2; // Simulação de obtenção do cargo do usuário (1: Administrador, 2: Gerente, 3: Cliente)
   let HomeCorreto;
 
   if (role === 1) {

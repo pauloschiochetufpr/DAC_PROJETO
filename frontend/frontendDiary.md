@@ -2,7 +2,8 @@
 
 ## Hooks
 
-- Token (Auth)
+- useLanguage
+- useTheme (deprecated)
 
 ## Pages
 
@@ -11,23 +12,41 @@
   - Administrador
   - Cliente
 
-- Login (Geral)
+- Extrato (Cliente)
+
+- Login/Autocad (Geral)
 
 - Perfil (Cliente)
 - Página de transações (Cliente)
 - Página de transferência (Transações -> Transferência) (Cliente)
 
-- Crud de gerente (Administrador)
-
 ## Components
+
+#### Genéricos
+
+- Footer
+- Header
+- WaveSimplRed
+- MetalSurface
+
+#### Listas
 
 - Extrato (componente da Home Cliente)
 
-- Consulta geral de clientes (Componente da Home Gerente)
-- Consultar cliente especifico com pesquisa por cpf (Componente da Home Gerente)
-- Consultar 3 melhores clientes (Componente da Home Gerente)
+#### Gerente
 
-- Relatório de clientes (Componente da Home Administrador)
+- CardAprovacao
+- ListaAprovacao
+- ListaClientes
+
+#### Operations
+
+- ScrollBox
+- ScrollOperation
+
+#### Emprestimo
+
+- Credito
 
 ## Security
 

@@ -3,7 +3,7 @@ import { BancoContext } from "./banco.context";
 import { contaMockInicial, CONTA_CLIENTE } from "../mocks/extratoMockData";
 import { toBrasiliaIso } from "../lib/dataUtils";
 
-// Determina o impacto da operação no saldo (positivo = crédito, negativo = débito)
+// Calcula delta de saldo (positivo = crédito, negativo = débito)
 const calcularDelta = (tipo, origem, valor) => {
   if (tipo === "deposito") return valor;
   if (tipo === "saque" || tipo === "pagamento") return -valor;
@@ -12,37 +12,6 @@ const calcularDelta = (tipo, origem, valor) => {
   return 0;
 };
 
-/**
- * Provê o estado em memória do protótipo.
- * Todo o estado é volátil: reseta a cada `npm run dev` / reload da página.
- *
- * adicionarTransacao simula uma chamada HTTP POST ao backend.
- * Retorna uma Promise que resolve com { status, message } — exatamente o
- * que um fetch real retornaria. O componente que chama JÁ DEVE usar
- * async/await e tratar o resultado, facilitando a troca pelo fetch real.
- *
- * Uso nos componentes:
- *
- *   const { adicionarTransacao } = useBanco();
- *
- *   const handleSubmit = async () => {
- *     try {
- *       const res = await adicionarTransacao({
- *         tipo: "transferencia",
- *         origem: "1234",
- *         destino: "5432",
- *         valor: 200.00,
- *         descricao: "Pix para Ana", // opcional
- *       });
- *       console.log(res.message); // "Operação registrada com sucesso."
- *     } catch (err) {
- *       console.error(err.message);
- *     }
- *   };
- *
- * Quando o backend estiver pronto, troca apenas o corpo de adicionarTransacao
- * por um fetch() — o componente não precisa mudar nada.
- */
 export function BancoProvider({ children }) {
   const [conta] = useState(contaMockInicial.conta);
   const [saldo, setSaldo] = useState(contaMockInicial.saldo);
