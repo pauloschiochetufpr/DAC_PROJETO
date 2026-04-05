@@ -1,4 +1,4 @@
-import Logo from "../assets/logo/logoEscura.svg";
+import Logo from "../assets/logo/LogoEscura.svg";
 import { useLanguage } from "../hooks/useLanguage";
 import { t } from "../lib/i18n";
 
@@ -11,6 +11,7 @@ export default function Header() {
                       bg-brand/20 border-b-2 border-red-600
                       shadow-lg shadow-black/15"
     >
+      <div className="h-full w-full bg-transparent blur-xl absolute top-0 left-0 z-[-3]"></div>
       <div className="z-[-10] w-full h-full absolute top-0 left-0 flex flex-row">
         <div className="absolute left-0 top-0 w-full h-full bg-gradient-to-t from-transparent to-black/40 z-[1]"></div>
         <div className="absolute left-0 top-0 w-full h-full bg-white/[0.05] z-[2]"></div>

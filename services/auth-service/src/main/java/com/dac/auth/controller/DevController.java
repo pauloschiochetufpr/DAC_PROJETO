@@ -18,10 +18,12 @@ public class DevController {
 
     @PostMapping
     public String resetDatabase() {
+        // Remove a coleção antiga para evitar duplicatas ou lixo
         mongo.dropCollection("auth");
 
         List<Map<String, Object>> usuarios = new ArrayList<>();
 
+        // Adicionando mocks conforme a estrutura do HEAD (campo: senhaHash)
         usuarios.add(new HashMap<>(Map.of("cpf","12912861012","email","cli1@bantads.com.br","senhaHash","tads","tipo","cliente")));
         usuarios.add(new HashMap<>(Map.of("cpf","09506382000","email","cli2@bantads.com.br","senhaHash","tads","tipo","cliente")));
         usuarios.add(new HashMap<>(Map.of("cpf","85733854057","email","cli3@bantads.com.br","senhaHash","tads","tipo","cliente")));
@@ -32,7 +34,9 @@ public class DevController {
         usuarios.add(new HashMap<>(Map.of("cpf","23862179060","email","ger3@bantads.com.br","senhaHash","tads","tipo","gerente")));
         usuarios.add(new HashMap<>(Map.of("cpf","40501740066","email","adm1@bantads.com.br","senhaHash","tads","tipo","administrador")));
 
+        // Insere a lista na coleção "auth"
         mongo.insert(usuarios, "auth");
-        return "Banco auth recriado com mocks";
+        
+        return "Banco auth recriado com mocks (Prioridade HEAD)";
     }
 }

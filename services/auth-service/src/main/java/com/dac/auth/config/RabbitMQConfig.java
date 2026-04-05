@@ -1,4 +1,4 @@
-package com.dac.saga.config;
+package com.dac.auth.config;
 
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
@@ -13,9 +13,10 @@ import org.springframework.context.annotation.Configuration;
 public class RabbitMQConfig {
 
     public static final String FILA_RESET = "saga.reset";
-    public static final String SAGA_EXCHANGE = "saga.exchange";
-    public static final String FILA_APROVAR = "saga.aprovar_cliente.queue";
-    public static final String FILA_REJEITAR = "saga.rejeitar_cliente.queue";
+    public static final String AUTH_EXCHANGE = "auth.exchange";
+    public static final String FILA_AUTH_CRIAR = "auth.criar.queue";
+    public static final String FILA_AUTH_ATUALIZAR = "auth.atualizar.queue";
+    public static final String FILA_AUTH_REMOVER = "auth.remover.queue";
 
     @Bean
     public Queue filaReset() {
@@ -23,33 +24,38 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public TopicExchange sagaExchange() {
-        return new TopicExchange(SAGA_EXCHANGE);
-    }
-
-    @Bean
     public TopicExchange authExchange() {
-        return new TopicExchange("auth.exchange");
+        return new TopicExchange(AUTH_EXCHANGE);
     }
 
     @Bean
-    public Queue filaAprovar() {
-        return new Queue(FILA_APROVAR, true);
+    public Queue filaAuthCriar() {
+        return new Queue(FILA_AUTH_CRIAR, true);
     }
 
     @Bean
-    public Queue filaRejeitar() {
-        return new Queue(FILA_REJEITAR, true);
+    public Queue filaAuthAtualizar() {
+        return new Queue(FILA_AUTH_ATUALIZAR, true);
     }
 
     @Bean
-    public Binding bindingAprovar(Queue filaAprovar, TopicExchange sagaExchange) {
-        return BindingBuilder.bind(filaAprovar).to(sagaExchange).with("saga.aprovar_cliente");
+    public Queue filaAuthRemover() {
+        return new Queue(FILA_AUTH_REMOVER, true);
     }
 
     @Bean
-    public Binding bindingRejeitar(Queue filaRejeitar, TopicExchange sagaExchange) {
-        return BindingBuilder.bind(filaRejeitar).to(sagaExchange).with("saga.rejeitar_cliente");
+    public Binding bindingCriar(Queue filaAuthCriar, TopicExchange authExchange) {
+        return BindingBuilder.bind(filaAuthCriar).to(authExchange).with("auth.criar");
+    }
+
+    @Bean
+    public Binding bindingAtualizar(Queue filaAuthAtualizar, TopicExchange authExchange) {
+        return BindingBuilder.bind(filaAuthAtualizar).to(authExchange).with("auth.atualizar");
+    }
+
+    @Bean
+    public Binding bindingRemover(Queue filaAuthRemover, TopicExchange authExchange) {
+        return BindingBuilder.bind(filaAuthRemover).to(authExchange).with("auth.remover");
     }
 
     @Bean

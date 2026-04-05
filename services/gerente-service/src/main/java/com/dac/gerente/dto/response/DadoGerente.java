@@ -1,11 +1,22 @@
 package com.dac.gerente.dto.response;
 
 public class DadoGerente {
-    
+
     private String cpf;
     private String nome;
     private String email;
+    private String telefone;
     private String tipo;
+
+    public DadoGerente() {}
+
+    public DadoGerente(String cpf, String nome, String email, String telefone, String tipo) {
+        this.cpf = cpf;
+        this.nome = nome;
+        this.email = email;
+        this.telefone = telefone;
+        this.tipo = tipo;
+    }
 
     public String getCpf() {
         return cpf;
@@ -29,6 +40,14 @@ public class DadoGerente {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getTelefone() {
+        return telefone;
+    }
+
+    public void setTelefone(String telefone) {
+        this.telefone = telefone;
     }
 
     public String getTipo() {

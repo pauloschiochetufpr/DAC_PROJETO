@@ -1,75 +1,243 @@
-const tipos = ["saque", "deposito", "pagamento", "transferencia"];
+import { toBrasiliaIso } from "../lib/dataUtils";
 
-const formatDateTimeParts = (timestamp) => {
-  const date = new Date(timestamp);
+// Conta simulada do cliente logado
+export const CONTA_CLIENTE = "3245";
 
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Sao_Paulo",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hourCycle: "h23",
-  }).formatToParts(date);
+/**
+ * Seed de transações pré-criadas. Cada entrada representa uma operação
+ * ocorrida "X dias, Y horas e Z minutos atrás" em relação ao momento
+ * em que o módulo é carregado (ou seja, reseta a cada `npm run dev`).
+ *
+ * Campos:
+ *   d   → dias atrás
+ *   h   → horas atrás (além dos dias)
+ *   m   → minutos atrás (além das horas)
+ *   tipo → "saque" | "deposito" | "pagamento" | "transferencia"
+ *   orig → conta/referência de origem
+ *   dest → conta/referência de destino
+ *   val  → valor em BRL
+ */
+const seedTransacoes = [
+  {
+    d: 0,
+    h: 0,
+    m: 35,
+    tipo: "deposito",
+    orig: "ATM-9983",
+    dest: CONTA_CLIENTE,
+    val: 2800.0,
+  }, // salário
+  {
+    d: 0,
+    h: 2,
+    m: 10,
+    tipo: "pagamento",
+    orig: CONTA_CLIENTE,
+    dest: "0045",
+    val: 89.9,
+  }, // conta de luz
+  {
+    d: 1,
+    h: 9,
+    m: 0,
+    tipo: "transferencia",
+    orig: CONTA_CLIENTE,
+    dest: "5432",
+    val: 200.0,
+  }, // pix enviado
+  {
+    d: 2,
+    h: 14,
+    m: 45,
+    tipo: "saque",
+    orig: CONTA_CLIENTE,
+    dest: "ATM-0342",
+    val: 150.0,
+  },
+  {
+    d: 3,
+    h: 11,
+    m: 20,
+    tipo: "deposito",
+    orig: "ATM-0342",
+    dest: CONTA_CLIENTE,
+    val: 50.0,
+  }, // pix recebido
+  {
+    d: 5,
+    h: 8,
+    m: 5,
+    tipo: "pagamento",
+    orig: CONTA_CLIENTE,
+    dest: "0011",
+    val: 1200.0,
+  }, // aluguel
+  {
+    d: 6,
+    h: 16,
+    m: 30,
+    tipo: "transferencia",
+    orig: "3344",
+    dest: CONTA_CLIENTE,
+    val: 75.0,
+  }, // recebido
+  {
+    d: 8,
+    h: 13,
+    m: 15,
+    tipo: "saque",
+    orig: CONTA_CLIENTE,
+    dest: "ATM-0117",
+    val: 300.0,
+  },
+  {
+    d: 9,
+    h: 10,
+    m: 50,
+    tipo: "deposito",
+    orig: "ATM-1122",
+    dest: CONTA_CLIENTE,
+    val: 500.0,
+  }, // depósito avulso
+  {
+    d: 11,
+    h: 9,
+    m: 0,
+    tipo: "pagamento",
+    orig: CONTA_CLIENTE,
+    dest: "5566",
+    val: 45.0,
+  }, // streaming
+  {
+    d: 14,
+    h: 7,
+    m: 30,
+    tipo: "transferencia",
+    orig: CONTA_CLIENTE,
+    dest: "8899",
+    val: 120.0,
+  }, // pix enviado
+  {
+    d: 15,
+    h: 12,
+    m: 0,
+    tipo: "deposito",
+    orig: "ATM-2237",
+    dest: CONTA_CLIENTE,
+    val: 1500.0,
+  }, // freela
+  {
+    d: 18,
+    h: 15,
+    m: 20,
+    tipo: "saque",
+    orig: CONTA_CLIENTE,
+    dest: "ATM-0058",
+    val: 200.0,
+  },
+  {
+    d: 20,
+    h: 9,
+    m: 10,
+    tipo: "pagamento",
+    orig: CONTA_CLIENTE,
+    dest: "0099",
+    val: 189.9,
+  }, // plano internet
+  {
+    d: 22,
+    h: 11,
+    m: 45,
+    tipo: "transferencia",
+    orig: "6677",
+    dest: CONTA_CLIENTE,
+    val: 350.0,
+  }, // recebido
+  {
+    d: 25,
+    h: 14,
+    m: 0,
+    tipo: "pagamento",
+    orig: CONTA_CLIENTE,
+    dest: "3344",
+    val: 29.9,
+  }, // assinatura
+  {
+    d: 28,
+    h: 8,
+    m: 30,
+    tipo: "deposito",
+    orig: "ATM-9988",
+    dest: CONTA_CLIENTE,
+    val: 2800.0,
+  }, // salário mês anterior
+  {
+    d: 30,
+    h: 10,
+    m: 0,
+    tipo: "saque",
+    orig: CONTA_CLIENTE,
+    dest: "ATM-0342",
+    val: 250.0,
+  },
+  {
+    d: 32,
+    h: 16,
+    m: 15,
+    tipo: "transferencia",
+    orig: CONTA_CLIENTE,
+    dest: "4455",
+    val: 80.0,
+  }, // pix enviado
+  {
+    d: 35,
+    h: 9,
+    m: 45,
+    tipo: "pagamento",
+    orig: CONTA_CLIENTE,
+    dest: "7788",
+    val: 65.0,
+  }, // academia
+];
 
-  const valueFrom = (type) => parts.find((part) => part.type === type)?.value;
-
-  const year = valueFrom("year");
-  const month = valueFrom("month");
-  const day = valueFrom("day");
-  const hour = valueFrom("hour");
-  const minute = valueFrom("minute");
-  const second = valueFrom("second");
-
-  return {
-    data: `${year}-${month}-${day}`,
-    horario: `${hour}:${minute}:${second}`,
-  };
+// Calcula o delta de saldo de um seed (positivo = crédito, negativo = débito)
+const calcularDeltaSeed = (seed) => {
+  if (seed.tipo === "deposito") return seed.val;
+  if (seed.tipo === "saque" || seed.tipo === "pagamento") return -seed.val;
+  if (seed.tipo === "transferencia")
+    return seed.orig === CONTA_CLIENTE ? -seed.val : seed.val;
+  return 0;
 };
 
-const toBrasiliaIso = (date) => {
-  const { data, horario } = formatDateTimeParts(date.toISOString());
-  return `${data}T${horario}-03:00`;
+// Saldo calculado a partir das transações pré-criadas — fonte única de verdade
+export const SALDO_INICIAL = Number(
+  seedTransacoes.reduce((acc, s) => acc + calcularDeltaSeed(s), 0).toFixed(2),
+);
+
+const gerarMovimentacoesIniciais = () => {
+  const agora = Date.now();
+  return seedTransacoes
+    .map((seed, i) => {
+      const offsetMs = (seed.d * 24 * 60 + seed.h * 60 + seed.m) * 60 * 1000;
+      return {
+        id: `mock-${i + 1}`,
+        data: toBrasiliaIso(agora - offsetMs),
+        tipo: seed.tipo,
+        origem: seed.orig,
+        destino: seed.dest,
+        valor: seed.val,
+      };
+    })
+    .sort((a, b) => new Date(b.data) - new Date(a.data));
 };
 
-const getRandomTimestamp = (index) => {
-  const agora = new Date();
-  const diasAtras = (index * 11 + 7) % 240;
-  const minutosAtras = (index * 67 + 31) % (24 * 60);
-
-  return new Date(
-    agora.getTime() - (diasAtras * 24 * 60 + minutosAtras) * 60 * 1000,
-  );
+/**
+ * Estado inicial do protótipo — espelha exatamente o formato do backend:
+ * { conta, saldo, movimentacoes }
+ * Gerado uma vez no carregamento do módulo; reseta a cada `npm run dev`.
+ */
+export const contaMockInicial = {
+  conta: CONTA_CLIENTE,
+  saldo: SALDO_INICIAL,
+  movimentacoes: gerarMovimentacoesIniciais(),
 };
-
-const registrosBase = Array.from({ length: 60 }, (_, seed) => {
-  const referencia = seed + 1;
-  const bruto = getRandomTimestamp(referencia);
-  const data = toBrasiliaIso(bruto);
-  const { data: dataFormatada, horario } = formatDateTimeParts(data);
-
-  return {
-    data,
-    tipo: tipos[referencia % tipos.length],
-    origem: String(1000 + ((referencia * 37) % 9000)),
-    destino: String(1000 + ((referencia * 71) % 9000)),
-    valor: Number((25 + ((referencia * 43) % 1950) + 0.37).toFixed(2)),
-    dataFormatada,
-    horario,
-  };
-});
-
-export const extratoMockData = registrosBase
-  .sort((itemA, itemB) => new Date(itemB.data) - new Date(itemA.data))
-  .map((item, posicao, arrayOrdenado) => ({
-    index: arrayOrdenado.length - posicao,
-    data: item.data,
-    tipo: item.tipo,
-    origem: item.origem,
-    destino: item.destino,
-    valor: item.valor,
-    dataFormatada: item.dataFormatada,
-    horario: item.horario,
-  }));

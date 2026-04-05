@@ -95,20 +95,20 @@ public class DevService {
 
     private List<MovimentacaoR> mockMovimentacoesR() {
         return List.of(
-            movR("deposito",      null,   "1291", null,          "12912861012", new BigDecimal("1000"),   LocalDateTime.of(2020,  1,  1, 10, 0)),
-            movR("deposito",      null,   "1291", null,          "12912861012", new BigDecimal("900"),    LocalDateTime.of(2020,  1,  1, 11, 0)),
-            movR("saque",        "1291",   null,  "12912861012", null,          new BigDecimal("550"),    LocalDateTime.of(2020,  1,  1, 12, 0)),
-            movR("saque",        "1291",   null,  "12912861012", null,          new BigDecimal("350"),    LocalDateTime.of(2020,  1,  1, 13, 0)),
-            movR("deposito",      null,   "1291", null,          "12912861012", new BigDecimal("2000"),   LocalDateTime.of(2020,  1, 10, 15, 0)),
-            movR("saque",        "1291",   null,  "12912861012", null,          new BigDecimal("500"),    LocalDateTime.of(2020,  1, 15,  8, 0)),
-            movR("transferencia","1291",  "0950", "12912861012", "09506382000", new BigDecimal("1700"),   LocalDateTime.of(2020,  1, 20, 12, 0)),
-            movR("deposito",      null,   "0950", null,          "09506382000", new BigDecimal("1000"),   LocalDateTime.of(2025,  1,  1, 12, 0)),
-            movR("deposito",      null,   "0950", null,          "09506382000", new BigDecimal("5000"),   LocalDateTime.of(2025,  1,  2, 10, 0)),
-            movR("saque",        "0950",   null,  "09506382000", null,          new BigDecimal("200"),    LocalDateTime.of(2025,  1, 10, 10, 0)),
-            movR("deposito",      null,   "0950", null,          "09506382000", new BigDecimal("7000"),   LocalDateTime.of(2025,  2,  5, 10, 0)),
-            movR("deposito",      null,   "8573", null,          "85733854057", new BigDecimal("1000"),   LocalDateTime.of(2025,  5,  5, 10, 0)),
-            movR("saque",        "8573",   null,  "85733854057", null,          new BigDecimal("2000"),   LocalDateTime.of(2025,  5,  6, 10, 0)),
-            movR("deposito",      null,   "5887", null,          "58872160006", new BigDecimal("150000"), LocalDateTime.of(2025,  6,  1, 10, 0))
+            movR("DEPOSITO",      null,   "1291", null,          "12912861012", new BigDecimal("1000"),   LocalDateTime.of(2020,  1,  1, 10, 0)),
+            movR("DEPOSITO",      null,   "1291", null,          "12912861012", new BigDecimal("900"),    LocalDateTime.of(2020,  1,  1, 11, 0)),
+            movR("SAQUE",        "1291",   null,  "12912861012", null,          new BigDecimal("550"),    LocalDateTime.of(2020,  1,  1, 12, 0)),
+            movR("SAQUE",        "1291",   null,  "12912861012", null,          new BigDecimal("350"),    LocalDateTime.of(2020,  1,  1, 13, 0)),
+            movR("DEPOSITO",      null,   "1291", null,          "12912861012", new BigDecimal("2000"),   LocalDateTime.of(2020,  1, 10, 15, 0)),
+            movR("SAQUE",        "1291",   null,  "12912861012", null,          new BigDecimal("500"),    LocalDateTime.of(2020,  1, 15,  8, 0)),
+            movR("TRANSFERENCIA","1291",  "0950", "12912861012", "09506382000", new BigDecimal("1700"),   LocalDateTime.of(2020,  1, 20, 12, 0)),
+            movR("DEPOSITO",      null,   "0950", null,          "09506382000", new BigDecimal("1000"),   LocalDateTime.of(2025,  1,  1, 12, 0)),
+            movR("DEPOSITO",      null,   "0950", null,          "09506382000", new BigDecimal("5000"),   LocalDateTime.of(2025,  1,  2, 10, 0)),
+            movR("SAQUE",        "0950",   null,  "09506382000", null,          new BigDecimal("200"),    LocalDateTime.of(2025,  1, 10, 10, 0)),
+            movR("DEPOSITO",      null,   "0950", null,          "09506382000", new BigDecimal("7000"),   LocalDateTime.of(2025,  2,  5, 10, 0)),
+            movR("DEPOSITO",      null,   "8573", null,          "85733854057", new BigDecimal("1000"),   LocalDateTime.of(2025,  5,  5, 10, 0)),
+            movR("SAQUE",        "8573",   null,  "85733854057", null,          new BigDecimal("2000"),   LocalDateTime.of(2025,  5,  6, 10, 0)),
+            movR("DEPOSITO",      null,   "5887", null,          "58872160006", new BigDecimal("150000"), LocalDateTime.of(2025,  6,  1, 10, 0))
         );
     }
 

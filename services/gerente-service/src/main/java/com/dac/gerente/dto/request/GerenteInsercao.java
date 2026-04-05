@@ -5,9 +5,9 @@ public class GerenteInsercao {
     private String cpf;
     private String nome;
     private String email;
+    private String telefone;
     private String tipo;
-    private String senha;
-    private String telefone; 
+    private String senha; 
 
     public String getCpf() {
         return cpf;
@@ -33,6 +33,14 @@ public class GerenteInsercao {
         this.email = email;
     }
 
+    public String getTelefone() {
+        return telefone;
+    }
+
+    public void setTelefone(String telefone) {
+        this.telefone = telefone;
+    }
+
     public String getTipo() {
         return tipo;
     }
@@ -47,13 +55,5 @@ public class GerenteInsercao {
 
     public void setSenha(String senha) {
         this.senha = senha;
-    }
-
-    public String getTelefone() {
-        return telefone;
-    }
-
-    public void setTelefone(String telefone) {
-        this.telefone = telefone;
     }
 }
