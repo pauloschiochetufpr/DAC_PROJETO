@@ -4,7 +4,15 @@ import { useState, useEffect, useMemo } from "react";
 import { useGerente } from "../../hooks/useGerente";
 
 // Lucide
-import { Search, ChevronDown, ChevronUp, Copy } from "lucide-react";
+import {
+  Search,
+  ChevronDown,
+  ChevronUp,
+  Copy,
+  Bug,
+  BookUser,
+  LoaderCircle,
+} from "lucide-react";
 
 // SVG's
 import WaveSimpleRed from "../WaveSimpleRed";
@@ -22,6 +30,7 @@ export default function ListaClientes({ idGerente }) {
   const [expandido, setExpandido] = useState(null);
 
   // Busca inicial e re-busca quando o mock muda (vai ficar bem diferernte na final)
+
   useEffect(() => {
     let cancelado = false;
 
@@ -65,7 +74,7 @@ export default function ListaClientes({ idGerente }) {
     setExpandido((prev) => (prev === cpf ? null : cpf));
 
   return (
-    <div className="flex flex-col w-full h-full gap-8">
+    <div className="flex flex-col w-full h-full gap-8 relative">
       {/* Cabeçalho da seção */}
       <div className="rounded-t-2xl w-full h-fit shadow-md shadow-black/40 relative">
         <div
@@ -112,20 +121,36 @@ export default function ListaClientes({ idGerente }) {
 
       {/* Estado de carregamento / erro / vazio */}
       {loading && (
-        <p className="text-contrastDark font-inter text-center py-8">
-          Carregando clientes…
+        <p className="text-secundary w-full h-full flex items-center justify-center absolute">
+          <div className="h-fit w-fit animate-pulse transition-transform ease-in-out">
+            <LoaderCircle size={65} className="animate-spin" />
+          </div>
         </p>
       )}
 
       {erro && (
-        <p className="text-red-400 font-inter text-center py-8">{erro}</p>
+        <p
+          className="text-red-400 font-inter text-center text-base md:text-xl
+         pb-8 md:pt-40  flex flex-col items-center justify-center gap-2 w-full"
+        >
+          <Bug size={65} className="inline-block mr-2 select-none" />
+          {erro}
+        </p>
       )}
 
       {!loading && !erro && clientesFiltrados.length === 0 && (
-        <p className="text-contrastDark font-inter text-center py-8">
-          {busca.trim()
-            ? "Nenhum cliente corresponde à pesquisa."
-            : "Nenhum cliente cadastrado."}
+        <p className="text-contrastDark font-inter text-center">
+          {busca.trim() ? (
+            <div className="py-8">Nenhum cliente corresponde à pesquisa </div>
+          ) : (
+            <div
+              className="text-red-400 font-inter text-center text-base md:text-xl
+              pb-8 md:pt-40  flex flex-col items-center justify-center gap-2 w-full select-none"
+            >
+              <BookUser size={65} className="inline-block mr-2" />
+              Nenhum cliente cadastrado
+            </div>
+          )}
         </p>
       )}
 
@@ -138,7 +163,7 @@ export default function ListaClientes({ idGerente }) {
                       scrollbar-thin scrollbar-thumb-secundary scrollbar-track-brandDark
                       md:overscroll-none"
             >
-              <table className="w-full h-full text-center font-inter text-sm md:text-base select-none">
+              <table className="w-full text-center font-inter text-sm md:text-base select-none">
                 {/* Cabeçalho */}
                 <thead className="sticky top-0 z-10">
                   <tr className="bg-brandDark/90 border-b border-secundaryDark/40">
@@ -170,7 +195,7 @@ export default function ListaClientes({ idGerente }) {
                         onClick={() => toggleExpandido(c.cpf)}
                         className={`border-b border-brandDark/60 cursor-pointer transition-colors select-none
                                     
-                      ${expandido === c.cpf ? "bg-brand/25" : "hover:bg-brand/15"}`}
+                      ${expandido === c.cpf ? "bg-brand/25" : "hover:bg-brand/15 transition-colors duration-200"}`}
                       >
                         <td className=" py-3 text-contrast font-mono text-xs md:text-sm whitespace-nowrap">
                           {cpfMask(c.cpf)}
@@ -188,7 +213,7 @@ export default function ListaClientes({ idGerente }) {
                         <td className="py-3 text-contrast hidden sm:table-cell text-right whitespace-nowrap">
                           {fmtBRL(c.limite)}
                         </td>
-                        <td className=" py-3 text-contrastDark text-center">
+                        <td className=" py-3 pl-2 text-contrastDark text-center">
                           {expandido === c.cpf ? (
                             <ChevronUp size={18} />
                           ) : (

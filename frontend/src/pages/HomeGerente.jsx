@@ -1,6 +1,11 @@
 // Componentes do gerente
 import ListaAprovacao from "../components/gerente/ListaAprovacao";
 import ListaClientes from "../components/gerente/ListaClientes";
+import Podium from "../components/listas/Podium";
+import BotaoPergaminho from "../components/UI/BotaoPergaminho";
+
+// Lucide
+import { UserRoundSearch } from "lucide-react";
 
 // ID do gerente logado (simulação simples)
 import { GERENTE_ID } from "../mocks/gerenteMockData";
@@ -9,7 +14,7 @@ export default function HomeGerente() {
   return (
     <div
       className="relative flex flex-col items-center w-full min-h-screen
-                  pt-[12rem] md:pt-[14rem] pb-12"
+                  pt-[12rem] md:pt-[14rem] pb-12 gap-12"
     >
       {/* Fundo gradiente */}
       <div
@@ -40,6 +45,21 @@ export default function HomeGerente() {
                       "
         >
           <ListaClientes idGerente={GERENTE_ID} />
+        </div>
+      </div>
+      {/* Container secundário | Botões de navegação + pódio */}
+      <div className="xl:flex-row flex-col gap-10 flex h-fit w-full mt-10 md:px-32 z-[200]">
+        <div className="w-full h-fit">
+          <Podium />
+        </div>
+        <div className="w-full h-fit justify-center flex flex-row">
+          <div className="h-[12rem] w-[60%] md:w-[10rem]">
+            <BotaoPergaminho
+              text={"Consulta especializada"}
+              icon={UserRoundSearch}
+              ref={"consultaGerente"}
+            />
+          </div>
         </div>
       </div>
     </div>

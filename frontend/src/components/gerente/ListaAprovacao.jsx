@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-// Mocks
+// Mock's
 import { useGerente } from "../../hooks/useGerente";
 
 // Componentes
