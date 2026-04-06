@@ -16,11 +16,14 @@ export default function ConsultaEspecializada() {
 
       {/* Painel de consulta */}
       <div
-        className="relative z-[1] w-full max-w-4xl px-2 md:px-4
+        className="relative z-[1] w-full max-w-4xl
                     bg-brand/30 backdrop-blur-lg sm:rounded-2xl
-                    border border-secundary/70 shadow-dourado-sutil"
+                    border border-secundary/70 shadow-dourado-sutil
+                    "
       >
-        <ConsultaClientePanel />
+        <div className="h-full w-full px-2 md:px-4 sm:rounded-2xl overflow-hidden relative">
+          <ConsultaClientePanel />
+        </div>
       </div>
     </div>
   );

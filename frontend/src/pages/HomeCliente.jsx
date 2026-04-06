@@ -18,6 +18,8 @@ import { useBanco } from "../hooks/useBanco";
 import Credito from "../components/emprestimo/Credito";
 /// Extrato
 import Extrato from "../components/listas/Extrato";
+/// Extrato mobyle
+import MiniExtratoMob from "../components/listas/MiniExtratoMob";
 
 export default function HomeCliente() {
   // Mock renderizado
@@ -230,6 +232,12 @@ export default function HomeCliente() {
         className="w-full h-fit bg-gradient-to-t from-brandDark to-red-700 flex xl:flex-row md:items-center
                   flex-col items-center justify-center xl:px-[1.8rem] py-12 pt-4 xl:pt-36 md:justify-end"
       >
+        <div
+          className="w-full h-fit mt-10
+         relative flex justify-center items-center overflow-hidden sm:hidden"
+        >
+          <MiniExtratoMob />
+        </div>
         {/* Crédito */}
         <div
           className="xl:w-[40rem] w-[90%] xl:h-[40rem] h-[70rem]

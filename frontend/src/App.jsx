@@ -9,16 +9,10 @@ import HomeAdmin from "./pages/HomeAdmin";
 import NotFound from "./pages/NotFound";
 import OperationsCli from "./pages/OperationsCli";
 import ConsultaEspecializada from "./pages/ConsultaEspecializada";
-
-{
-  /* O route guard do Home é mais robusto e visa detectar qual o tipo de usuário toda vez
-  que for acessar a página, afin de rotear para a rota correta
-  Assim, a página que mais compartilha entre cargos diferentes se mantém otimizada por só ter
-  uma validação inicial, ao invés de multiplás validações em tempo de exibição */
-}
+import ExtratoGeral from "./components/listas/ExtratoGeral";
 
 export default function App() {
-  const role = 2; // Simulação de obtenção do cargo do usuário (1: Administrador, 2: Gerente, 3: Cliente)
+  const role = 3; // Simulação de obtenção do cargo do usuário (1: Administrador, 2: Gerente, 3: Cliente)
   let HomeCorreto;
 
   if (role === 1) {
@@ -34,13 +28,15 @@ export default function App() {
   return (
     <MainLayout>
       <Routes>
+        <Route path="/" element={HomeCorreto} />
+
         <Route
           path="/consulta_especializada"
           element={<ConsultaEspecializada />}
         />
-        <Route path="/" element={HomeCorreto} />
         <Route path="/perfil" element={<Perfil />} />
         <Route path="/operations" element={<OperationsCli />} />
+        <Route path="/extrato" element={<ExtratoGeral />} />
 
         {/* Guard global para rotas inexistentes */}
         <Route path="*" element={<NotFound />} />

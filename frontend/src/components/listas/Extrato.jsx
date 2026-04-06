@@ -1,7 +1,11 @@
 import React from "react";
 import { Link } from "react-router-dom";
+
+// Mock's
 import { useBanco } from "../../hooks/useBanco";
 import { formatarData } from "../../lib/dataUtils";
+
+// Lucide
 import {
   ArrowRightFromLine,
   BanknoteArrowUp,
@@ -10,6 +14,7 @@ import {
   Coins,
 } from "lucide-react";
 
+// Formatadores
 const currencyFormatter = new Intl.NumberFormat("pt-BR", {
   style: "currency",
   currency: "BRL",

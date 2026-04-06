@@ -89,7 +89,11 @@ export default function ConsultaClientePanel() {
   return (
     <div className="flex flex-col w-full gap-6 py-10 px-6">
       {/* Cabeçalho */}
-      <div className="rounded-sm relative h-fit w-full px-6 py-4 overflow-hidden shadow-black/30 shadow-inner z-[15]">
+      <div className="bg-transparent h-[10rem] xl:h-[7rem] w-full"></div>
+      <div
+        className=" h-[10rem] xl:h-[7rem] absolute top-0 left-0 sm:rounded-t-2xl
+        w-full px-2 xl:px-6 py-4 overflow-hidden shadow-black/40 shadow-lg z-[15]"
+      >
         <div className="absolute left-0 top-0 w-full h-full bg-white/[0.05] z-[14]"></div>
         <div className="absolute left-0 top-0 w-full h-full flex flex-row z-[13]">
           <div className=" w-[50%] h-full bg-gradient-to-r from-transparent to-white/[0.14] z-[13]"></div>
@@ -101,7 +105,10 @@ export default function ConsultaClientePanel() {
         </div>
         <div className="absolute left-0 top-0 w-full h-full bg-gradient-to-t from-transparent to-black/40 z-[12]"></div>
         <WaveSimpleRedReverse className="z-[-3]" />
-        <div className="rounded-md bg-black/50 shadow-black/60 shadow-inner px-4 py-3 w-fit h-fit select-none z-[200]">
+        <div
+          className=" absolute rounded-md bg-black/50 shadow-black/60 shadow-inner px-4 py-3 
+        md:w-fit w-[14rem] h-fit select-none z-[200] left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2"
+        >
           <h2 className="text-white text-2xl font-orienta">
             Consulta de Cliente
           </h2>
