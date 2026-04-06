@@ -11,7 +11,6 @@ import {
   BanknoteArrowUp,
   BanknoteArrowDown,
   HandCoins,
-  Coins,
   Calendar,
   LoaderCircle,
   AlertCircle,
@@ -39,7 +38,6 @@ const calcularDelta = (tipo, origem, valor, conta) => {
     case "deposito":
       return valor;
     case "saque":
-    case "pagamento":
       return -valor;
     case "transferencia":
       return origem === conta ? -valor : valor;
@@ -62,14 +60,13 @@ const addDays = (date, n) => {
 
 // Labels de interface
 
-const TIPOS = ["todos", "deposito", "saque", "transferencia", "pagamento"];
+const TIPOS = ["todos", "deposito", "saque", "transferencia"];
 
 const TIPO_LABEL = {
   todos: "Todos",
   deposito: "Depósito",
   saque: "Saque",
   transferencia: "Transferência",
-  pagamento: "Pagamento",
 };
 
 const IconeTipo = ({ tipo, className }) => {
@@ -79,8 +76,6 @@ const IconeTipo = ({ tipo, className }) => {
       return <BanknoteArrowDown {...p} />;
     case "saque":
       return <BanknoteArrowUp {...p} />;
-    case "pagamento":
-      return <Coins {...p} />;
     case "transferencia":
       return <HandCoins {...p} />;
     default:

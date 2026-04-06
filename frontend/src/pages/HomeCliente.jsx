@@ -236,7 +236,7 @@ export default function HomeCliente() {
           className="w-full h-fit mt-10
          relative flex justify-center items-center overflow-hidden sm:hidden"
         >
-          <MiniExtratoMob />
+          <MiniExtratoMob showInfo={showInfo} />
         </div>
         {/* Crédito */}
         <div

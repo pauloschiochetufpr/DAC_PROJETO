@@ -13,7 +13,6 @@ import {
   BanknoteArrowUp,
   BanknoteArrowDown,
   HandCoins,
-  Coins,
   NotepadTextDashed,
 } from "lucide-react";
 
@@ -23,22 +22,18 @@ const currencyFormatter = new Intl.NumberFormat("pt-BR", {
   currency: "BRL",
 });
 
-const gruposTipoValor = {
-  negativo: new Set(["pagamento", "saque"]),
-  positivo: new Set(["transferencia", "deposito"]),
-};
-
-const getValorPrefixo = (tipo) => {
-  const t = String(tipo || "").toLowerCase();
-  if (gruposTipoValor.negativo.has(t)) return "-";
-  if (gruposTipoValor.positivo.has(t)) return "+";
+const getValorPrefixo = (tipo, origem, conta) => {
+  if (tipo === "saque") return "-";
+  if (tipo === "deposito") return "+";
+  if (tipo === "transferencia") return origem === conta ? "-" : "+";
   return "";
 };
 
-const getValorClasseTexto = (tipo) => {
-  const t = String(tipo || "").toLowerCase();
-  if (gruposTipoValor.negativo.has(t)) return "text-red-600";
-  if (gruposTipoValor.positivo.has(t)) return "text-green-600";
+const getValorClasseTexto = (tipo, origem, conta) => {
+  if (tipo === "saque") return "text-red-600";
+  if (tipo === "deposito") return "text-green-600";
+  if (tipo === "transferencia")
+    return origem === conta ? "text-red-600" : "text-green-600";
   return "text-black";
 };
 
@@ -48,7 +43,6 @@ const getIconeTipo = (tipo) => {
     return <BanknoteArrowUp size={24} className="text-secundary" />;
   if (t === "deposito")
     return <BanknoteArrowDown size={24} className="text-secundary" />;
-  if (t === "pagamento") return <Coins size={24} className="text-secundary" />;
   if (t === "transferencia")
     return <HandCoins size={24} className="text-secundary" />;
 };
@@ -60,7 +54,7 @@ const BATCH = 10;
 const CORTE_30_DIAS = Date.now() - 30 * 24 * 60 * 60 * 1000;
 
 export default function MiniExtratoMob({ showInfo }) {
-  const { movimentacoes } = useBanco();
+  const { movimentacoes, conta } = useBanco();
   const masked = "R$ --,--";
 
   // Filtra ultimos 30 dias
@@ -149,10 +143,10 @@ export default function MiniExtratoMob({ showInfo }) {
                   <div className="flex flex-row w-fit h-full pr-2 justify-center items-center">
                     <div
                       className={`flex flex-row bg-white rounded-sm py-1.5 px-2 min-w-24 w-fit h-fit
-                        items-center justify-center gap-[3px] ${getValorClasseTexto(item.tipo)}`}
+                        items-center justify-center gap-[3px] ${getValorClasseTexto(item.tipo, item.origem, conta)}`}
                     >
                       <span className="w-3 text-center">
-                        {getValorPrefixo(item.tipo)}
+                        {getValorPrefixo(item.tipo, item.origem, conta)}
                       </span>
                       {showInfo ? (
                         <p>{currencyFormatter.format(item.valor)}</p>

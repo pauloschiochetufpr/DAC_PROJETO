@@ -12,7 +12,7 @@ export const CONTA_CLIENTE = "3245";
  *   d   → dias atrás
  *   h   → horas atrás (além dos dias)
  *   m   → minutos atrás (além das horas)
- *   tipo → "saque" | "deposito" | "pagamento" | "transferencia"
+ *   tipo → "saque" | "deposito" | "transferencia"
  *   orig → conta/referência de origem
  *   dest → conta/referência de destino
  *   val  → valor em BRL
@@ -31,9 +31,9 @@ const seedTransacoes = [
     d: 0,
     h: 2,
     m: 10,
-    tipo: "pagamento",
+    tipo: "saque",
     orig: CONTA_CLIENTE,
-    dest: "0045",
+    dest: "ATM-0045",
     val: 89.9,
   }, // conta de luz
   {
@@ -67,9 +67,9 @@ const seedTransacoes = [
     d: 5,
     h: 8,
     m: 5,
-    tipo: "pagamento",
+    tipo: "saque",
     orig: CONTA_CLIENTE,
-    dest: "0011",
+    dest: "ATM-0011",
     val: 1200.0,
   }, // aluguel
   {
@@ -103,9 +103,9 @@ const seedTransacoes = [
     d: 11,
     h: 9,
     m: 0,
-    tipo: "pagamento",
+    tipo: "saque",
     orig: CONTA_CLIENTE,
-    dest: "5566",
+    dest: "ATM-5566",
     val: 45.0,
   }, // streaming
   {
@@ -139,9 +139,9 @@ const seedTransacoes = [
     d: 20,
     h: 9,
     m: 10,
-    tipo: "pagamento",
+    tipo: "saque",
     orig: CONTA_CLIENTE,
-    dest: "0099",
+    dest: "ATM-0099",
     val: 189.9,
   }, // plano internet
   {
@@ -157,9 +157,9 @@ const seedTransacoes = [
     d: 25,
     h: 14,
     m: 0,
-    tipo: "pagamento",
+    tipo: "saque",
     orig: CONTA_CLIENTE,
-    dest: "3344",
+    dest: "ATM-3344",
     val: 29.9,
   }, // assinatura
   {
@@ -193,9 +193,9 @@ const seedTransacoes = [
     d: 35,
     h: 9,
     m: 45,
-    tipo: "pagamento",
+    tipo: "saque",
     orig: CONTA_CLIENTE,
-    dest: "7788",
+    dest: "ATM-7788",
     val: 65.0,
   }, // academia
 ];
@@ -203,7 +203,7 @@ const seedTransacoes = [
 // Calcula o delta de saldo de um seed (positivo = crédito, negativo = débito)
 const calcularDeltaSeed = (seed) => {
   if (seed.tipo === "deposito") return seed.val;
-  if (seed.tipo === "saque" || seed.tipo === "pagamento") return -seed.val;
+  if (seed.tipo === "saque") return -seed.val;
   if (seed.tipo === "transferencia")
     return seed.orig === CONTA_CLIENTE ? -seed.val : seed.val;
   return 0;
