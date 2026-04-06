@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+﻿import { useState, useCallback } from "react";
 import { GerenteContext } from "./gerente.context";
 import {
   clientesPendentesInicial,
@@ -26,7 +26,7 @@ export function GerenteProvider({ children }) {
               break;
 
             case "melhores_clientes":
-              // Top 3 por saldo — qualquer gerente
+              // Top 3 por saldo  qualquer gerente
               resultado = [...clientes]
                 .sort((a, b) => b.saldo - a.saldo)
                 .slice(0, 3);
@@ -39,7 +39,7 @@ export function GerenteProvider({ children }) {
               break;
 
             default:
-              // Sem filtro — todos os clientes com conta
+              // Sem filtro  todos os clientes com conta
               resultado = [...clientes].sort((a, b) =>
                 a.nome.localeCompare(b.nome),
               );

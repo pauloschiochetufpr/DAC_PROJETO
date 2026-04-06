@@ -1,7 +1,7 @@
-/**
+﻿/**
  * Mock de dados do administrador.
  * Contém gerentes e clientes de todo o banco (todos os gerentes).
- * Reseta a cada reload — mesmo padrão dos outros mocks.
+ * Reseta a cada reload  mesmo padrão dos outros mocks.
  */
 
 // ── Helpers ────────────────────────────────────────────────────────────
@@ -311,7 +311,7 @@ export const getClientesAdmin = () =>
 
 /**
  * GET /admin/clientes?offset=X&limit=Y
- * Paginação para lazy loading — retorna fatia ordenada por nome.
+ * Paginação para lazy loading  retorna fatia ordenada por nome.
  */
 export const getClientesAdminPaginado = (offset = 0, limit = 15) =>
   new Promise((resolve) => {
@@ -333,8 +333,8 @@ export const getClientesAdminPaginado = (offset = 0, limit = 15) =>
 
 /**
  * GET /admin/clientes/search?q=termo&limit=N
- * Busca por nome ou CPF — base para autocomplete e filtro.
- * limit = 0 → sem limite (retorna todos os matches).
+ * Busca por nome ou CPF  base para autocomplete e filtro.
+ * limit = 0 -> sem limite (retorna todos os matches).
  */
 export const searchClientesAdmin = (termo, limit = 8) =>
   new Promise((resolve) => {

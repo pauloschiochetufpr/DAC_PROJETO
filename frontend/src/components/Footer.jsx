@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+﻿import { useState, useRef, useEffect } from "react";
 
 // Lucide icon's
 import {
@@ -235,7 +235,7 @@ export default function Footer() {
 
       {/* Copyright */}
       <div className="select-none flex flex-row text-md text-center xl:text-md pt-24">
-        © {new Date().getFullYear()} — (FAKE COMPANY) MasterBank. Todos os
+        © {new Date().getFullYear()}  (FAKE COMPANY) MasterBank. Todos os
         direitos reservados.
       </div>
     </footer>

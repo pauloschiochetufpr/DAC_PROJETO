@@ -1,4 +1,4 @@
-import { toBrasiliaIso } from "../lib/dataUtils";
+﻿import { toBrasiliaIso } from "../lib/dataUtils";
 
 // Conta simulada do cliente logado
 export const CONTA_CLIENTE = "3245";
@@ -9,13 +9,13 @@ export const CONTA_CLIENTE = "3245";
  * em que o módulo é carregado (ou seja, reseta a cada `npm run dev`).
  *
  * Campos:
- *   d   → dias atrás
- *   h   → horas atrás (além dos dias)
- *   m   → minutos atrás (além das horas)
- *   tipo → "saque" | "deposito" | "transferencia"
- *   orig → conta/referência de origem
- *   dest → conta/referência de destino
- *   val  → valor em BRL
+ *   d   -> dias atrás
+ *   h   -> horas atrás (além dos dias)
+ *   m   -> minutos atrás (além das horas)
+ *   tipo -> "saque" | "deposito" | "transferencia"
+ *   orig -> conta/referência de origem
+ *   dest -> conta/referência de destino
+ *   val  -> valor em BRL
  */
 const seedTransacoes = [
   {
@@ -209,7 +209,7 @@ const calcularDeltaSeed = (seed) => {
   return 0;
 };
 
-// Saldo calculado a partir das transações pré-criadas — fonte única de verdade
+// Saldo calculado a partir das transações pré-criadas  fonte única de verdade
 export const SALDO_INICIAL = Number(
   seedTransacoes.reduce((acc, s) => acc + calcularDeltaSeed(s), 0).toFixed(2),
 );
@@ -232,7 +232,7 @@ const gerarMovimentacoesIniciais = () => {
 };
 
 /**
- * Estado inicial do protótipo — espelha exatamente o formato do backend:
+ * Estado inicial do protótipo  espelha exatamente o formato do backend:
  * { conta, saldo, movimentacoes }
  * Gerado uma vez no carregamento do módulo; reseta a cada `npm run dev`.
  */

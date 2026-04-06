@@ -1,4 +1,4 @@
-// ISO-8601 BRT → { dataFormatada: "DD/MM/YYYY", horario: "HH:MM:SS" }
+﻿// ISO-8601 BRT -> { dataFormatada: "DD/MM/YYYY", horario: "HH:MM:SS" }
 export const formatarData = (isoString) => {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: "America/Sao_Paulo",
@@ -19,7 +19,7 @@ export const formatarData = (isoString) => {
   };
 };
 
-// Timestamp (ms) → ISO-8601 com offset BRT (-03:00)
+// Timestamp (ms) -> ISO-8601 com offset BRT (-03:00)
 export const toBrasiliaIso = (ts) => {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: "America/Sao_Paulo",

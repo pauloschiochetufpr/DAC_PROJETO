@@ -1,4 +1,4 @@
-/* Font (carregadas de src/assets/fonts) */
+﻿/* Font (carregadas de src/assets/fonts) */
 @font-face {
   font-family: "Inter";
   src: url("./assets/fonts/Inter/Inter-100.woff2") format("woff2");
@@ -235,7 +235,7 @@
 }
 
 /* Versões neutras: apenas a máscara da borda côncava.
-   circle closest-corner → raio = height/2 (distância ao canto mais próximo),
+   circle closest-corner -> raio = height/2 (distância ao canto mais próximo),
    gerando uma semicircunferência perfeita, independente de width/height. */
 .parchment-roll-edge-neutral-left {
   -webkit-mask-image: radial-gradient(

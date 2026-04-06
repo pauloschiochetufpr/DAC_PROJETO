@@ -1,11 +1,11 @@
-/**
- * Mock de dados do gerente — gera clientes pendentes de aprovação e
+﻿/**
+ * Mock de dados do gerente  gera clientes pendentes de aprovação e
  * clientes já aprovados (com conta) a cada carregamento do módulo.
  * Reseta em cada `npm run dev` / reload, assim como extratoMockData.
  *
  * Dois conjuntos independentes:
- *   clientesPendentesInicial → tabela de autocadastros (Função 1)
- *   clientesAprovadosInicial → tabela de clientes com conta (Função 2)
+ *   clientesPendentesInicial -> tabela de autocadastros (Função 1)
+ *   clientesAprovadosInicial -> tabela de clientes com conta (Função 2)
  */
 
 // ── ID fixo do gerente logado (simulação) ──────────────────────────────
@@ -90,7 +90,7 @@ const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 /** Escolhe item aleatório de um array */
 const pick = (arr) => arr[randInt(0, arr.length - 1)];
 
-/** CPF aleatório (11 dígitos, sem validação — é mock) */
+/** CPF aleatório (11 dígitos, sem validação  é mock) */
 const gerarCpf = () => String(randInt(10000000000, 99999999999));
 
 /** Nome completo aleatório */
@@ -115,7 +115,7 @@ const gerarCidadeEstado = () => pick(cidadesEstados);
 /** Endereço aleatório */
 const gerarEndereco = () => `${pick(ruas)}, nº ${randInt(1, 999)}`;
 
-/** Conta — string de 4 dígitos */
+/** Conta  string de 4 dígitos */
 const gerarConta = () => String(randInt(1000, 9999));
 
 /** Saldo aleatório entre 0 e 50 000 */
@@ -137,7 +137,7 @@ const gerentesFixos = [
 /** Retorna dados do gerente pelo idGerente (1-indexed) */
 const getGerenteInfo = (id) => gerentesFixos[(id - 1) % gerentesFixos.length];
 
-// ── Geração: clientes pendentes (autocadastro — Função 1) ─────────────
+// ── Geração: clientes pendentes (autocadastro  Função 1) ─────────────
 /**
  * Gera 5 pendentes para GERENTE_ID e 2 para gerentes aleatórios,
  * demonstrando que apenas os do gerente logado serão exibidos.
@@ -188,7 +188,7 @@ function gerarClientesPendentes() {
   return lista;
 }
 
-// ── Geração: clientes aprovados (com conta — Função 2) ────────────────
+// ── Geração: clientes aprovados (com conta  Função 2) ────────────────
 /**
  * Gera 8 clientes do gerente logado e 4 de outros gerentes.
  * Cada cliente já possui conta, saldo e limite calculado.
