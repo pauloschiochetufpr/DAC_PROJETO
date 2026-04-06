@@ -1,6 +1,8 @@
 import { useState, useRef, useCallback } from "react";
 import { BancoContext } from "./banco.context";
 import { contaMockInicial, CONTA_CLIENTE } from "../mocks/extratoMockData";
+import { loginMock } from "../mocks/authService";
+import { perfilMockInicial } from "../mocks/perfilMockData";
 import { toBrasiliaIso } from "../lib/dataUtils";
 
 // Determina o impacto da operação no saldo (positivo = crédito, negativo = débito)
@@ -50,6 +52,37 @@ export function BancoProvider({ children }) {
     contaMockInicial.movimentacoes,
   );
 
+  const [usuario, setUsuario] = useState(null);
+  const [client, setClient] = useState(perfilMockInicial.client);
+  const [contaInfo] = useState(perfilMockInicial.contaInfo);
+
+  const atualizarPerfil = useCallback((novosDados) => {
+    return new Promise((resolve) => {
+      setClient((prev) => {
+        const atualizado = { ...prev, ...novosDados };
+
+        const base = atualizado.salario >= 2000 ? atualizado.salario / 2 : 0;
+        const saldoNegativoAbs =
+          atualizado.saldo < 0 ? Math.abs(atualizado.saldo) : 0;
+
+        atualizado.limite = base < saldoNegativoAbs ? saldoNegativoAbs : base;
+
+        return atualizado;
+      });
+
+      resolve({
+        status: 200,
+        message: "Perfil atualizado com sucesso.",
+      });
+    });
+  }, []);
+
+  const login = useCallback(async (email, senha) => {
+    const res = await loginMock(email, senha);
+    setUsuario(res);
+    return res;
+  }, []);
+
   // Ref para leitura síncrona do saldo dentro da Promise sem stale closure
   const saldoRef = useRef(contaMockInicial.saldo);
 
@@ -57,9 +90,10 @@ export function BancoProvider({ children }) {
     ({ tipo, origem, destino, valor, descricao }) =>
       new Promise((resolve) => {
         const delta = calcularDelta(tipo, origem, valor);
+        const limiteDisponivel = client.limite ?? 0;
 
-        if (delta < 0 && saldoRef.current + delta < 0) {
-          resolve({ status: 422, message: "Saldo insuficiente." });
+        if (delta < 0 && saldoRef.current + limiteDisponivel + delta < 0) {
+          resolve({ status: 422, message: "Saldo + limite insuficientes." });
           return;
         }
 
@@ -84,7 +118,17 @@ export function BancoProvider({ children }) {
 
   return (
     <BancoContext.Provider
-      value={{ conta, saldo, movimentacoes, adicionarTransacao }}
+      value={{
+        conta,
+        saldo,
+        movimentacoes,
+        adicionarTransacao,
+        client,
+        contaInfo,
+        atualizarPerfil,
+        usuario,
+        login,
+      }}
     >
       {children}
     </BancoContext.Provider>

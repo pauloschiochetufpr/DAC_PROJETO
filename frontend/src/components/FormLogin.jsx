@@ -1,10 +1,15 @@
 import { useState } from "react";
+import { useBanco } from "../hooks/useBanco";
+import { useNavigate } from "react-router-dom";
 
 export default function FormLogin() {
   const [form, setForm] = useState({
     email: "",
     senha: "",
   });
+
+  const { login } = useBanco();
+  const navigate = useNavigate();
 
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
@@ -24,16 +29,12 @@ export default function FormLogin() {
     setLoading(true);
 
     try {
-      console.log("Login:", form);
-      await new Promise((res) => setTimeout(res, 1000));
+      const user = await login(form.email, form.senha);
+
+      // Redireciona após login
+      navigate("/home");
     } catch (err) {
-      if (err.message === "PENDENTE") {
-        setError("Seu cadastro ainda está em análise.");
-      } else if (err.message === "REJEITADO") {
-        setError("Seu cadastro foi rejeitado.");
-      } else {
-        setError("Email ou senha inválidos.");
-      }
+      setError(err.message || "Email ou senha inválidos.");
     } finally {
       setLoading(false);
     }

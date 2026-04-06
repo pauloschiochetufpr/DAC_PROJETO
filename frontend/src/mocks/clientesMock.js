@@ -1,0 +1,32 @@
+export const clientesMock = [
+  {
+    id: 1,
+    nome: "Administrador",
+    cpf: "00000000000",
+    email: "adm1@bantads.com.br",
+    telefone: "44999999999",
+    salario: 0,
+    status: "aprovado",
+    gerenteId: null,
+  },
+  {
+    id: 2,
+    nome: "Gerente Silva",
+    cpf: "11111111111",
+    email: "ger1@bantads.com.br",
+    telefone: "44988888888",
+    salario: 5000,
+    status: "aprovado",
+    gerenteId: null,
+  },
+  {
+    id: 3,
+    nome: "Cliente Teste",
+    cpf: "22222222222",
+    email: "cli1@bantads.com.br",
+    telefone: "44977777777",
+    salario: 3000,
+    status: "aprovado",
+    gerenteId: 2,
+  },
+];

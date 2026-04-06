@@ -10,6 +10,9 @@ import NotFound from "./pages/NotFound";
 import OperationsCli from "./pages/OperationsCli";
 import Login from "./pages/Login";
 
+//mock
+import { useBanco } from "./hooks/useBanco";
+
 {
   /* O route guard do Home é mais robusto e visa detectar qual o tipo de usuário toda vez
   que for acessar a página, afin de rotear para a rota correta
@@ -18,7 +21,8 @@ import Login from "./pages/Login";
 }
 
 export default function App() {
-  const role = 3; // Simulação de obtenção do cargo do usuário (1: Administrador, 2: Gerente, 3: Cliente)
+  const { usuario } = useBanco();
+  const role = usuario?.tipo;
   let HomeCorreto;
 
   if (role === 1) {
@@ -34,10 +38,10 @@ export default function App() {
   return (
     <MainLayout>
       <Routes>
-        <Route path="/" element={HomeCorreto} />
+        <Route path="/home" element={usuario ? HomeCorreto : <Login />} />
         <Route path="/perfil" element={<Perfil />} />
         <Route path="/operations" element={<OperationsCli />} />
-        <Route path="/login" element={<Login />} />
+        <Route path="/" element={<Login />} />
         {/* Guard global para rotas inexistentes */}
         <Route path="*" element={<NotFound />} />
       </Routes>

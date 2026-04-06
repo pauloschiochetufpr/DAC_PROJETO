@@ -1,28 +1,19 @@
-import React, { useEffect, useState, useRef } from "react";
-import {
-  buildClientDTO,
-  updateClient,
-  getPayloadFromToken,
-} from "../lib/clientService";
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { useBanco } from "../hooks/useBanco";
 import { MetalSurface } from "../components/MetalSurface";
 import WaveSimpleRed from "../components/WaveSimpleRed";
 import SecundaryBorder from "../assets/icons/SecundaryBorder.svg";
 
 export default function Perfil() {
+  const { client, contaInfo, atualizarPerfil, saldo } = useBanco();
+  if (!client || !contaInfo) {
+    return <div>Carregando...</div>;
+  }
+
   const [isEditing, setIsEditing] = useState(false);
   const [fieldEditing, setFieldEditing] = useState({});
-
-  const [client, setClient] = useState({
-    nome: "João Silva",
-    cpf: "123.456.789-00",
-    salario: 1000,
-    saldo: 1000,
-    limite: 0,
-    email: "joao.silva@email.com",
-    telefone: "(11) 99999-9999",
-  });
-
-  const [form, setForm] = useState({ ...client });
+  const [form, setForm] = useState({});
 
   function calcularLimiteParaSalario(salario, saldoAtual) {
     const base = salario >= 2000 ? salario / 2 : 0;
@@ -30,19 +21,16 @@ export default function Perfil() {
     return base < saldoNegativoAbs ? saldoNegativoAbs : base;
   }
 
+  // mantém form sincronizado com o provider
   useEffect(() => {
-    setClient((c) => ({
-      ...c,
-      limite: calcularLimiteParaSalario(c.salario, c.saldo),
-    }));
-    setForm((f) => ({
-      ...f,
-      limite: calcularLimiteParaSalario(f.salario, f.saldo),
-    }));
-  }, []);
+    if (client) {
+      setForm(client);
+    }
+  }, [client]);
 
   function handleChange(e) {
     const { name, value } = e.target;
+
     const parsed =
       name === "salario" || name === "saldo" ? parseFloat(value || 0) : value;
 
@@ -60,7 +48,7 @@ export default function Perfil() {
   }
 
   function handleEdit() {
-    setForm({ ...client });
+    setForm(client);
     setIsEditing(true);
   }
 
@@ -71,32 +59,44 @@ export default function Perfil() {
   }
 
   function handleCancel() {
-    setForm({ ...client });
+    setForm(client);
     setIsEditing(false);
   }
 
   function handleSave() {
-    const novo = { ...client, ...form };
-    novo.limite = calcularLimiteParaSalario(novo.salario, novo.saldo);
-
-    const payload = getPayloadFromToken() || { cpf: novo.cpf };
-    const dto = buildClientDTO(payload, novo);
-
-    updateClient(dto)
-      .then((updated) => {
-        setClient({ ...novo, ...(updated || {}) });
-        setIsEditing(false);
-        setFieldEditing({});
-      })
-      .catch(() => {
-        setClient(novo);
-        setIsEditing(false);
-        setFieldEditing({});
-      });
+    atualizarPerfil(form).then(() => {
+      setIsEditing(false);
+      setFieldEditing({});
+    });
   }
 
   return (
     <div className="mt-56 p-6 mx-auto relative flex flex-col justify-center items-end md:flex-row gap-24">
+      <div className="absolute top-6 left-6 z-[200]">
+        <Link to="/home">
+          <div className="relative w-32 h-10 rounded-xl overflow-hidden cursor-pointer group">
+            {/* SOMBRA SUPERIOR */}
+            <div className="absolute inset-0 bg-[linear-gradient(to_bottom,#00000090,#00000040_40%,transparent_80%)]" />
+
+            {/* VOLUME */}
+            <div className="absolute inset-0 bg-[linear-gradient(to_top,#00000040,transparent_50%,#ffffff05)]" />
+
+            {/* REFLEXO LATERAL */}
+            <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.08),transparent_30%,transparent_70%,rgba(255,255,255,0.08))]" />
+
+            {/* BORDA BRILHO HOVER */}
+            <div className="absolute inset-0 border border-transparent group-hover:border-orange-300/40 group-hover:shadow-[0_0_10px_rgba(255,120,80,0.25)] transition-all duration-300 rounded-xl" />
+
+            {/* TEXTO */}
+            <div className="relative z-10 flex items-center justify-center h-full text-sm text-secundary group-hover:text-orange-300 transition">
+              <span className="mr-2 group-hover:-translate-x-1 transition">
+                ←
+              </span>
+              Voltar
+            </div>
+          </div>
+        </Link>
+      </div>
       <div className="relative order-1 md:order-2 w-[36vw] flex flex-col items-center mx-auto md:mx-0">
         <div className="relative flex flex-col items-center justify-center">
           {/* WRAPPER DA LANTERNA */}
@@ -179,8 +179,8 @@ export default function Perfil() {
                             step={f.key === "saldo" ? "0.01" : undefined}
                             value={
                               isEditing
-                                ? (form[f.key] ?? "")
-                                : (client[f.key] ?? "")
+                                ? (form?.[f.key] ?? "")
+                                : (client?.[f.key] ?? "")
                             }
                             onChange={handleChange}
                             disabled={!isFieldEditable}
@@ -223,7 +223,7 @@ export default function Perfil() {
                           value={
                             isEditing
                               ? (form.salario ?? "").toString()
-                              : Number(client.salario).toFixed(2)
+                              : Number(client?.salario ?? 0).toFixed(2)
                           }
                           onChange={(e) => {
                             let value = e.target.value;
@@ -261,11 +261,11 @@ export default function Perfil() {
                           type="text"
                           value={calcularLimiteParaSalario(
                             isEditing
-                              ? (form.salario ?? client.salario)
-                              : client.salario,
+                              ? (form.salario ?? client?.salario ?? 0)
+                              : (client?.salario ?? 0),
                             isEditing
-                              ? (form.saldo ?? client.saldo)
-                              : client.saldo,
+                              ? (form.saldo ?? client?.saldo ?? 0)
+                              : (client?.saldo ?? 0),
                           ).toFixed(2)}
                           readOnly
                           disabled
@@ -408,7 +408,7 @@ export default function Perfil() {
               />
 
               <span className="relative z-[5] text-3xl sm:text-5xl md:text-6xl  text-secundary font-semibold">
-                R$ {client.saldo.toFixed(2)}
+                R$ {Number(saldo ?? 0).toFixed(2)}
               </span>
             </div>
 
@@ -416,7 +416,7 @@ export default function Perfil() {
             <div className="w-full flex flex-col items-center gap-2">
               <span className="text-secundary text-xl">Número da Conta</span>
               <span className="text-xl font-medium text-zinc-100">
-                00012345-6
+                {contaInfo.conta}
               </span>
             </div>
 
@@ -424,7 +424,7 @@ export default function Perfil() {
             <div className="w-full flex flex-col items-center gap-2">
               <span className="text-secundary text-xl">Gerente</span>
               <span className="text-xl font-medium text-zinc-100">
-                Maria Oliveira
+                {contaInfo.gerente}
               </span>
             </div>
           </div>
