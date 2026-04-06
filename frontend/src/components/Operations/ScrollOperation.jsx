@@ -1,100 +1,108 @@
 import { useRef, useEffect } from "react";
 import { gsap } from "gsap";
 
-export default function ScrollOperation({ isActive, children }) {
+export default function ScrollOperation({
+  isActive,
+  children,
+  isOpen,
+  onCloseComplete,
+}) {
   const contentRef = useRef(null);
-  const wrapperRef = useRef(null);
+  const topRollRef = useRef(null);
   const bottomRollRef = useRef(null);
 
   useEffect(() => {
-    if (!isActive) return;
-
     const content = contentRef.current;
+    const bottom = bottomRollRef.current;
+
+    if (!content || !bottom) return;
+
     const fullHeight = content.scrollHeight;
-
-    gsap.to(content, {
-      height: fullHeight,
-      duration: 0.3,
-      ease: "power2.out",
-    });
-
-    gsap.to(bottomRollRef.current, {
-      top: 24 + fullHeight, // 🔥 usa TOP em vez de Y
-      duration: 0.3,
-      ease: "power2.out",
-    });
-  }, [children, isActive]);
-
-  useEffect(() => {
-    if (isActive) open();
-    else close();
-  }, [isActive]);
-
-  const open = () => {
-    const content = contentRef.current;
-    const fullHeight = content.scrollHeight;
-
-    gsap.set(content, { height: 0 });
 
     const tl = gsap.timeline();
 
-    tl.to(content, {
-      height: fullHeight,
-      duration: 0.5,
-      ease: "power2.out",
-    }).to(
-      bottomRollRef.current,
-      {
-        top: 24 + fullHeight, // 🔥 FIX REAL
-        duration: 0.5,
+    if (isActive) {
+      tl.to(content, {
+        height: fullHeight,
+        duration: 1,
         ease: "power2.out",
-      },
-      "<",
-    );
-  };
-
-  const close = () => {
-    const tl = gsap.timeline();
-
-    tl.to(contentRef.current, {
-      height: 0,
-      duration: 0.4,
-      ease: "power2.in",
-    }).to(
-      bottomRollRef.current,
-      {
-        top: 24,
-        duration: 0.4,
-        ease: "power2.in",
-      },
-      "<",
-    );
-  };
+      }).to(
+        bottom,
+        {
+          top: fullHeight + 40,
+          duration: 1,
+          ease: "power2.out",
+        },
+        0, // sincroniza com início
+      );
+    } else {
+      tl.to(content, {
+        height: 0,
+        duration: 1,
+        ease: "power2.inOut",
+      }).to(
+        bottom,
+        {
+          top: 40,
+          duration: 1,
+          ease: "power2.inOut",
+        },
+        0,
+      );
+      if (!isOpen) {
+        tl.add(() => {
+          onCloseComplete?.();
+        });
+      }
+    }
+  }, [isActive, isOpen, children]);
 
   return (
-    <div ref={wrapperRef} className="relative w-44 scale-90">
-      {/* 🔥 Rolo superior */}
-      <div className="bg-yellow-700 h-6 w-[120%] rounded-full absolute top-0 left-1/2 -translate-x-1/2 z-10 shadow-md" />
+    <div className="relative w-60 scale-95">
+      {/* TOPO */}
+      <div
+        ref={topRollRef}
+        className="bg-brand h-[3rem] w-[120%] absolute -top-2 left-1/2 -translate-x-1/2 rounded-full overflow-hidden z-10 shadow-md"
+        style={{ transformOrigin: "center center" }}
+      >
+        <div className="parchment-roll-edge parchment-roll-edge-left"></div>
+        <div className="parchment-roll-edge parchment-roll-edge-right"></div>
+        <div className="w-[25%] h-full right-0 top-0 absolute bg-gradient-to-r from-transparent to-brandDark/60"></div>
+        <div className="w-[25%] h-full left-0 top-0 absolute bg-gradient-to-l from-transparent to-brandDark/60"></div>
+        <div className="w-full h-[60%] left-0 bottom-0 absolute bg-gradient-to-b from-transparent to-brandDark/60"></div>
+      </div>
 
-      {/* 🔥 CONTEÚDO */}
+      {/* CONTEÚDO */}
       <div
         ref={contentRef}
-        className="absolute top-6 left-1/2 -translate-x-1/2 w-full bg-yellow-200 border border-yellow-600 shadow-inner overflow-hidden"
+        className="absolute top-10 left-1/2 -translate-x-1/2 w-[90%] overflow-hidden border-x-[2px] border-secundaryDark bg-brand"
         style={{ height: 0 }}
       >
-        <div className="p-2 flex flex-col gap-2 text-black text-sm">
+        {/* textura / sombras */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="w-[30%] h-full right-0 absolute bg-gradient-to-r from-transparent to-brandDark/50"></div>
+          <div className="w-[30%] h-full left-0 absolute bg-gradient-to-l from-transparent to-brandDark/50"></div>
+          <div className="w-full h-[50%] top-0 absolute bg-gradient-to-t from-transparent to-brandDark/70"></div>
+          <div className="w-full h-[50%] bottom-0 absolute bg-gradient-to-b from-transparent to-brandDark/50"></div>
+        </div>
+
+        <div className="relative z-10 flex flex-col text-sm text-black">
           {children}
         </div>
       </div>
 
-      {/* 🔥 Rolo inferior */}
+      {/* BASE */}
       <div
         ref={bottomRollRef}
-        className="bg-yellow-700 h-6 w-[120%] rounded-full absolute left-1/2 -translate-x-1/2 shadow-md"
-        style={{
-          top: 24, // começa logo abaixo do topo
-        }}
-      />
+        className="bg-brand h-[3rem] w-[120%] absolute left-1/2 -translate-x-1/2 rounded-full overflow-hidden shadow-md"
+        style={{ top: 40, transformOrigin: "center center" }}
+      >
+        <div className="parchment-roll-edge parchment-roll-edge-left"></div>
+        <div className="parchment-roll-edge parchment-roll-edge-right"></div>
+        <div className="w-[25%] h-full right-0 top-0 absolute bg-gradient-to-r from-transparent to-brandDark/60"></div>
+        <div className="w-[25%] h-full left-0 top-0 absolute bg-gradient-to-l from-transparent to-brandDark/60"></div>
+        <div className="w-full h-[60%] left-0 bottom-0 absolute bg-gradient-to-b from-transparent to-brandDark/60"></div>
+      </div>
     </div>
   );
 }
