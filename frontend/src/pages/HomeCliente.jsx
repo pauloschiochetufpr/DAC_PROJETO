@@ -49,6 +49,13 @@ export default function HomeCliente() {
 
   return (
     <div className="relative flex flex-col items-center">
+      <div className="absolute right-6 top-10 z-[20000]">
+        <Link to="/perfil">
+          <button className="bg-secundary text-white px-4 py-2 rounded-lg hover:bg-secundaryHover transition">
+            Perfil
+          </button>
+        </Link>
+      </div>
       {/* Primeira parte */}
       <div
         className="h-[50rem] w-full flex items-center md:justify-center xl:justify-between justify-end 

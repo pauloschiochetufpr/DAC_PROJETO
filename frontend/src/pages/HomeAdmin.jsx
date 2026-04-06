@@ -2,9 +2,11 @@
 import GerentesLista from "../components/admin/GerentesLista";
 import GraficoSaldos from "../components/admin/GraficoSaldos";
 import ClientesAdminLista from "../components/admin/ClientesAdminLista";
+import BotaoPergaminho from "../components/UI/BotaoPergaminho";
 
 // Lucide
 import { Construction } from "lucide-react";
+import { UserRoundSearch } from "lucide-react";
 
 export default function HomeAdmin() {
   return (
@@ -60,6 +62,15 @@ export default function HomeAdmin() {
           >
             <ClientesAdminLista />
           </div>
+        </div>
+      </div>
+      <div className="w-full h-fit justify-center flex flex-row xl:mt-10">
+        <div className="h-[12rem] w-[60%] md:w-[10rem]">
+          <BotaoPergaminho
+            text={"Gerenciamento de Gerentes"}
+            icon={UserRoundSearch}
+            ref={"/gerenciar_gerentes"}
+          />
         </div>
       </div>
     </div>

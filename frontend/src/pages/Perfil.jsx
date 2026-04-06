@@ -73,7 +73,7 @@ export default function Perfil() {
   return (
     <div className="mt-56 p-6 mx-auto relative flex flex-col justify-center items-end md:flex-row gap-24">
       <div className="absolute top-6 left-6 z-[200]">
-        <Link to="/home">
+        <Link to="/">
           <div className="relative w-32 h-10 rounded-xl overflow-hidden cursor-pointer group">
             {/* SOMBRA SUPERIOR */}
             <div className="absolute inset-0 bg-[linear-gradient(to_bottom,#00000090,#00000040_40%,transparent_80%)]" />

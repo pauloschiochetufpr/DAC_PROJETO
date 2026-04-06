@@ -11,6 +11,7 @@ import OperationsCli from "./pages/OperationsCli";
 import Login from "./pages/Login";
 import ConsultaEspecializada from "./pages/ConsultaEspecializada";
 import ExtratoGeral from "./components/listas/ExtratoGeral";
+import GerenciarGerentes from "./pages/GerenciarGerentes";
 
 //mock
 import { useBanco } from "./hooks/useBanco";
@@ -38,6 +39,7 @@ export default function App() {
           path="/consulta_especializada"
           element={<ConsultaEspecializada />}
         />
+        <Route path="/gerenciar_gerentes" element={<GerenciarGerentes />} />
         <Route path="/perfil" element={<Perfil />} />
         <Route path="/operations" element={<OperationsCli />} />
         <Route path="/extrato" element={<ExtratoGeral />} />

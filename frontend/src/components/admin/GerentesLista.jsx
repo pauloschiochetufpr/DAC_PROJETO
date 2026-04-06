@@ -22,7 +22,7 @@ const fmtBRL = (v) =>
 const cpfMask = (cpf) =>
   cpf.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
 
-export default function GerentesLista() {
+export default function GerentesLista({ onSelect = null, selectedId = null }) {
   // State gerentes
   const [gerentes, setGerentes] = useState([]);
 
@@ -98,7 +98,13 @@ export default function GerentesLista() {
                        scrollbar-thin scrollbar-thumb-secundary scrollbar-track-brandDark"
           >
             {gerentes.map((ger, idx) => (
-              <CardGerente key={ger.id} gerente={ger} posicao={idx + 1} />
+              <CardGerente
+                key={ger.id}
+                gerente={ger}
+                posicao={idx + 1}
+                onSelect={onSelect}
+                isSelected={selectedId === ger.id}
+              />
             ))}
           </div>
         )}
@@ -108,7 +114,7 @@ export default function GerentesLista() {
 }
 
 // Card individual de gerente
-function CardGerente({ gerente, posicao }) {
+function CardGerente({ gerente, posicao, onSelect, isSelected }) {
   const medalha =
     posicao === 1
       ? "border-yellow-400/60"
@@ -120,7 +126,12 @@ function CardGerente({ gerente, posicao }) {
 
   return (
     <div
-      className={`rounded-xl border ${medalha} bg-black/20 select-none px-3 py-3 flex flex-col gap-2`}
+      onClick={() => onSelect?.(gerente)}
+      className={`rounded-xl border ${medalha} bg-black/20 select-none px-3 py-3 flex flex-col gap-2 ${
+        onSelect ? "cursor-pointer hover:bg-black/30 transition-colors" : ""
+      }
+    ${isSelected ? "bg-secundary/20 border-secundary" : "bg-black/20"}
+      }`}
     >
       {/* Cabeçalho | posição + nome + clientes */}
       <div className="flex items-start gap-2">

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useBanco } from "../hooks/useBanco";
+import { useBanco } from "../../hooks/useBanco";
 import { useNavigate } from "react-router-dom";
 
 // Lucide icon's
@@ -35,7 +35,7 @@ export default function FormLogin() {
       const user = await login(form.email, form.senha);
 
       // Redireciona após login
-      navigate("/home");
+      navigate("/");
     } catch (err) {
       setError(err.message || "Email ou senha inválidos.");
     } finally {
