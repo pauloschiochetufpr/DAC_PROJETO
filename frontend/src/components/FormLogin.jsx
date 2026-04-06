@@ -2,6 +2,9 @@ import { useState } from "react";
 import { useBanco } from "../hooks/useBanco";
 import { useNavigate } from "react-router-dom";
 
+// Lucide icon's
+import { Eye, EyeClosed } from "lucide-react";
+
 export default function FormLogin() {
   const [form, setForm] = useState({
     email: "",
@@ -90,7 +93,11 @@ export default function FormLogin() {
             onClick={() => setShowPassword((prev) => !prev)}
             className="ml-2 text-xs text-zinc-300 hover:text-white transition"
           >
-            {showPassword ? "Ocultar" : "Mostrar"}
+            {showPassword ? (
+              <Eye className="text-secundary z-[100]" size={20} />
+            ) : (
+              <EyeClosed className="text-secundary z-[100]" size={20} />
+            )}
           </button>
         </div>
       </div>
