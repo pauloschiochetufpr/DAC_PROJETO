@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 
 // Mock's
-import { getGerentesAdmin } from "../../mocks/adminMockData";
+import {
+  getGerentesAdmin,
+  getGerentesAdminOrdenado,
+} from "../../mocks/adminMockData";
 
 // Lucide
 import {
@@ -22,7 +25,12 @@ const fmtBRL = (v) =>
 const cpfMask = (cpf) =>
   cpf.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
 
-export default function GerentesLista({ onSelect = null, selectedId = null }) {
+export default function GerentesLista({
+  onSelect = null,
+  selectedId = null,
+  modo = "ranking",
+  refreshKey = 0,
+}) {
   // State gerentes
   const [gerentes, setGerentes] = useState([]);
 
@@ -33,7 +41,10 @@ export default function GerentesLista({ onSelect = null, selectedId = null }) {
   // Simula GET /admin/gerentes
   useEffect(() => {
     let cancelado = false;
-    getGerentesAdmin().then((res) => {
+    const fetchFn =
+      modo === "alfabetico" ? getGerentesAdminOrdenado : getGerentesAdmin;
+
+    fetchFn().then((res) => {
       if (cancelado) return;
       if (res.status === 200) {
         setGerentes(res.data);
@@ -46,7 +57,7 @@ export default function GerentesLista({ onSelect = null, selectedId = null }) {
     return () => {
       cancelado = true;
     };
-  }, []);
+  }, [modo, refreshKey]);
 
   return (
     <div className="flex flex-col w-full h-full gap-0">
