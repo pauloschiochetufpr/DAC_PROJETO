@@ -238,7 +238,7 @@ export default function Perfil() {
                             }));
                           }}
                           onBlur={() => {
-                            // Ao sair do campo → formata para 2 casas
+                            // Ao sair do campo -> formata para 2 casas
                             setForm((prev) => ({
                               ...prev,
                               salario: Number(prev.salario || 0).toFixed(2),

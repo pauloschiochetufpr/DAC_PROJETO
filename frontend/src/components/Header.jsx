@@ -1,8 +1,14 @@
-import Logo from "../assets/logo/LogoEscura.svg";
+import { Link } from "react-router-dom";
+
+// SVG's
+import Logo from "../assets/logo/logoEscura.svg";
+
+// i18n
 import { useLanguage } from "../hooks/useLanguage";
 import { t } from "../lib/i18n";
 
 export default function Header() {
+  // State da língua
   const { lang } = useLanguage();
 
   return (
@@ -25,7 +31,9 @@ export default function Header() {
 
       {/* Identidade */}
       <div className="flex items-center md:justify-start justify-center h-full w-full select-none gap-8">
-        <img src={Logo} alt="MasterBank" className="h-32" />
+        <Link to="/" className="select-none">
+          <img src={Logo} alt="MasterBank" className="h-32" />
+        </Link>
         <div className="flex-col justify-center items-start flex-1 hidden md:flex">
           <h1
             className="font-long-cang text-3xl lg:5xl 2xl:text-5xl text-secundary dark:text-secundary 

@@ -6,11 +6,11 @@ import SecundaryBorder from "../assets/icons/SecundaryBorder.svg";
 export default function NotFound() {
   return (
     <div
-      className=" pt-32
-    text-center flex flex-col gap-8 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
-    items-center justify-center"
+      className="
+      text-center flex flex-col gap-8
+      items-center justify-center"
     >
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3 mt-[20rem]">
         <h1 className="text-3xl font-semibold font-orienta">
           Página não encontrada
         </h1>

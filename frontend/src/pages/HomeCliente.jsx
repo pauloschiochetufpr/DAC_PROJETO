@@ -1,5 +1,6 @@
 // SVG's
 import WaveSimpleRed from "../components/WaveSimpleRed";
+import WaveSimpleRedReverse from "../components/WaveSimpleRedReverse";
 import SecundaryBorder from "../assets/icons/SecundaryBorder.svg";
 
 // Lucide icon's
@@ -17,6 +18,8 @@ import { useBanco } from "../hooks/useBanco";
 import Credito from "../components/emprestimo/Credito";
 /// Extrato
 import Extrato from "../components/listas/Extrato";
+/// Extrato mobyle
+import MiniExtratoMob from "../components/listas/MiniExtratoMob";
 
 export default function HomeCliente() {
   // Mock renderizado
@@ -58,7 +61,7 @@ export default function HomeCliente() {
         </div>
         {/* Container do saldo */}
         <div
-          className="w-[80rem] xl:w-[30rem] md:w-[45rem] 2xl:w-[45rem] h-[25rem] md:h-[30rem] bg-transparent border-[0.5rem]
+          className="w-[80rem] xl:w-[30rem] md:w-[45rem] 2xl:w-[45rem] h-[25rem] md:h-[31rem] xl:h-[35rem] 2xl:h-[30rem] bg-transparent border-[0.5rem]
           border-secundaryDark
           rounded-[21px] flex flex-col z-[100] shadow-dourado"
         >
@@ -89,7 +92,7 @@ export default function HomeCliente() {
                           font-bold font-istok-web select-none
                           "
               >
-                <div className="bg-black/40 rounded-lg px-6 py-2 pt-3 select-none text-nowrap font-istok-web">
+                <div className="bg-black/50 shadow-inner shadow-black rounded-lg px-4 py-2 select-none text-nowrap font-orienta">
                   Número da conta: {conta}
                 </div>
               </h1>
@@ -161,22 +164,22 @@ export default function HomeCliente() {
 
               {/* Segunda fita do conteúdo (informações adicionais) */}
               <div
-                className="flex flex-col 
+                className="flex flex-col 2xl:flex-row
                               gap-[1.3rem] mt-[2.3rem]
-                              md:mt-[3rem] md:gap-[2rem]
+                              md:mt-[3rem] md:gap-[2rem] xl:gap-[1rem]
                               xl:mt-[5rem]"
               >
                 <Link
                   className=" text-2xl xl:text-4xl font-orienta flex items-center justify-center h-fit w-fit
-                    px-12 py-3 xl:px-12 xl:py-4 rounded-full relative overflow-hidden
-                    select-none border-2 border-secundaryDark
-                    xl:duration-200 xl:ease-out xl:transition-all xl:hover:shadow-lg xl:hover:shadow-brandDark
-                    xl:active:shadow-none font-extrabold"
+                    px-12 py-3 xl:px-12 xl:py-4 rounded-md relative overflow-hidden
+                    select-none border-2 border-secundaryDark group
+                    xl:duration-200 xl:ease-out xl:transition-all
+                    font-extrabold"
                   to="/operations"
                 >
                   <div
                     className="absolute inset-0 w-full h-full z-0 pointer-events-none overflow-hidden
-                                "
+                                opacity-65 group-hover:opacity-100 transition-opacity duration-300"
                   >
                     <div className="absolute left-0 top-0 w-full h-full bg-white/[0.05] z-[14]"></div>
                     <div className="absolute left-0 top-0 w-full h-full flex flex-row z-[13]">
@@ -188,22 +191,22 @@ export default function HomeCliente() {
                       <div className=" flex-1 bg-gradient-to-r from-transparent to-black/[0.32] z-[13]"></div>
                     </div>
                     <div className="absolute left-0 top-0 w-full h-full bg-gradient-to-t from-transparent to-black/40 z-[12]"></div>
-                    <WaveSimpleRed className="w-full h-full" />
+                    <WaveSimpleRedReverse className="w-full h-full" />
                   </div>
                   <span className="relative z-10 ">TRANSAÇÕES</span>
                 </Link>
                 <Link
                   className="text-2xl xl:text-4xl font-orienta flex items-center justify-center
-                    h-fit w-fit min-w-[15rem]
-                    px-12 py-3 xl:px-12 xl:py-4 rounded-full relative overflow-hidden
+                    h-fit w-fit 2xl:min-w-[15rem] xl:min-w-[20rem] min-w-[15rem]
+                    px-12 py-3 xl:px-12 xl:py-4 rounded-md relative overflow-hidden group
                     select-none border-2 border-secundaryDark
-                    xl:duration-200 xl:ease-out xl:transition-all xl:hover:shadow-lg xl:hover:shadow-brandDark
-                    xl:active:shadow-none xl:hidden font-extrabold"
+                    xl:duration-200 xl:ease-out xl:transition-all
+                    font-extrabold"
                   to="/extrato"
                 >
                   <div
                     className="absolute inset-0 w-full h-full z-0 pointer-events-none overflow-hidden
-                                "
+                                opacity-65 group-hover:opacity-100 transition-opacity duration-300"
                   >
                     <div className="absolute left-0 top-0 w-full h-full bg-white/[0.05] z-[14]"></div>
                     <div className="absolute left-0 top-0 w-full h-full flex flex-row z-[13]">
@@ -215,7 +218,7 @@ export default function HomeCliente() {
                       <div className=" flex-1 bg-gradient-to-r from-transparent to-black/[0.32] z-[13]"></div>
                     </div>
                     <div className="absolute left-0 top-0 w-full h-full bg-gradient-to-t from-transparent to-black/40 z-[12]"></div>
-                    <WaveSimpleRed className="w-full h-full" />
+                    <WaveSimpleRedReverse className="w-full h-full" />
                   </div>
                   <span className="relative z-10 ">EXTRATO</span>
                 </Link>
@@ -229,6 +232,12 @@ export default function HomeCliente() {
         className="w-full h-fit bg-gradient-to-t from-brandDark to-red-700 flex xl:flex-row md:items-center
                   flex-col items-center justify-center xl:px-[1.8rem] py-12 pt-4 xl:pt-36 md:justify-end"
       >
+        <div
+          className="w-full h-fit mt-10
+         relative flex justify-center items-center overflow-hidden sm:hidden"
+        >
+          <MiniExtratoMob showInfo={showInfo} />
+        </div>
         {/* Crédito */}
         <div
           className="xl:w-[40rem] w-[90%] xl:h-[40rem] h-[70rem]

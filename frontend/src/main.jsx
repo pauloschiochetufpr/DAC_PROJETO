@@ -8,6 +8,7 @@ import App from "./App";
 import { ThemeProvider } from "./context/theme.provider";
 import { LanguageProvider } from "./context/language.provider";
 import { BancoProvider } from "./context/banco.provider";
+import { GerenteProvider } from "./context/gerente.provider";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
@@ -15,7 +16,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <ThemeProvider>
         <LanguageProvider>
           <BancoProvider>
-            <App />
+            <GerenteProvider>
+              <App />
+            </GerenteProvider>
           </BancoProvider>
         </LanguageProvider>
       </ThemeProvider>

@@ -1,42 +1,69 @@
-import { useTheme } from "../hooks/useTheme";
-import { useLanguage } from "../hooks/useLanguage";
+// Componentes do gerente
+import ListaAprovacao from "../components/gerente/ListaAprovacao";
+import ListaClientes from "../components/gerente/ListaClientes";
+import Podium from "../components/listas/Podium";
+import BotaoPergaminho from "../components/UI/BotaoPergaminho";
+
+// Lucide
+import { UserRoundSearch } from "lucide-react";
+
+// ID do gerente logado (simulação simples)
+import { GERENTE_ID } from "../mocks/gerenteMockData";
 
 export default function HomeGerente() {
-  const { theme, setTheme } = useTheme();
-  const { lang, setLang } = useLanguage();
-
   return (
-    <div className="relative flex flex-col items-center">
+    <div
+      className="relative flex flex-col items-center w-full min-h-screen
+                  pt-[12rem] md:pt-[14rem] pb-12 gap-12"
+    >
+      {/* Fundo gradiente */}
       <div
-        className="h-[50rem] w-full flex items-center justify-end p-20 bg-gradient-to-tr from-brand/40 to-transparent relative
-                      "
+        className=" absolute top-0 left-0 z-[0] inset-0 w-full h-full
+                    bg-gradient-to-b from-brand/30 via-brandDark/60 to-brandDark
+                    pointer-events-none"
+      />
+
+      {/* Container principal | divide em 2 para CELL */}
+      <div
+        className="relative z-[1] w-full xl:max-h-[68vh] 2xl:max-h-[73vh] md:px-4 px-2
+                    flex flex-col xl:flex-row gap-8 xl:gap-5"
       >
-        <div className="shadow-lg w-[40rem] h-[40rem] absolute left-0 bottom-0"></div>
+        {/* Aprovação de Autocadastros */}
         <div
-          className="w-[45rem] h-[35rem] bg-gradient-to-b from-secundaryDark to-secundary
-                    shadow-lg shadow-secundaryDark/30 rounded-2xl p-2 flex flex-col z-[100]"
+          className="xl:h-[68vh] 2xl:h-[73vh] w-full xl:min-w-[30%] xl:w-[30%] 2xl:min-w-[30%] 2xl:w-[30%]
+           bg-brandDark/50 backdrop-blur-lg
+                      rounded-2xl border border-secundary/70 shadow-dourado-sutil
+                      "
         >
-          <div className="bg-green-300 h-[6rem] rounded-t-xl w-full"></div>
-          <div className="bg-brandDark flex-1 rounded-b-xl">
-            <h1>item 1</h1>
+          <ListaAprovacao idGerente={GERENTE_ID} />
+        </div>
+
+        {/* Consulta de Clientes */}
+        <div
+          className="w-full xl:h-[68vh] 2xl:h-[73vh] bg-brandDark/50 backdrop-blur-lg
+                      rounded-2xl border border-secundary/70 shadow-dourado-sutil
+                      "
+        >
+          <ListaClientes idGerente={GERENTE_ID} />
+        </div>
+      </div>
+      {/* Container secundário | Botões de navegação + pódio */}
+      <div className="xl:flex-row flex-col gap-10 flex h-fit w-full mt-10 md:px-32 z-[200]">
+        <div className="w-full h-fit justify-center items-center flex">
+          <div className="w-screen xl:w-fit h-fit sm:py-16 xl:px-10 xl:py-8 bg-black/20 shadow-inner shadow-black/70 md:rounded-md">
+            <Podium />
+          </div>
+        </div>
+        <div className="w-full h-fit justify-center flex flex-row xl:mt-14">
+          <div className="h-[12rem] w-[60%] md:w-[10rem]">
+            <BotaoPergaminho
+              text={"Consulta especializada"}
+              icon={UserRoundSearch}
+              ref={"/consulta_especializada"}
+            />
           </div>
         </div>
       </div>
-
-      <div className="w-full h-[50rem] bg-lightDark"></div>
-      <button
-        className="px-4 py-2 bg-zinc-200 dark:bg-zinc-700"
-        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-      >
-        Toggle theme
-      </button>
-
-      <button
-        className="px-4 py-2 bg-zinc-200 dark:bg-zinc-700"
-        onClick={() => setLang(lang === "pt" ? "en" : "pt")}
-      >
-        Toggle language
-      </button>
     </div>
   );
 }
