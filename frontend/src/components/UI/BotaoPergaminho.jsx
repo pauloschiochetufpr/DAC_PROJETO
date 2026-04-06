@@ -81,7 +81,7 @@ export default function BotaoPergaminho({ text, icon: Icon, ref }) {
             text-md font-semibold font-istok-web
               relative overflow-visible select-none"
       >
-        <h1 className="pt-[3rem]">{text}</h1>
+        <h1 className="pt-[3rem] ">{text}</h1>
         {/* Pergaminho inicio */}
         <div
           ref={pergaminhoRef}
@@ -164,7 +164,7 @@ export default function BotaoPergaminho({ text, icon: Icon, ref }) {
           {/* Rolo 2 - em fluxo normal; desliza para baixo via GSAP */}
           <div
             ref={rolo2Ref}
-            className="w-full h-8 overflow-hidden
+            className="w-full h-8 overflow-hidden relative
                     bg-brand
                     rounded-l-[20px] rounded-r-[20px]
                     flex flex-row justify-between z-[1]"

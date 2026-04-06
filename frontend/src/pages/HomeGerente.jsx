@@ -49,15 +49,17 @@ export default function HomeGerente() {
       </div>
       {/* Container secundário | Botões de navegação + pódio */}
       <div className="xl:flex-row flex-col gap-10 flex h-fit w-full mt-10 md:px-32 z-[200]">
-        <div className="w-full h-fit">
-          <Podium />
+        <div className="w-full h-fit justify-center items-center flex">
+          <div className="w-screen xl:w-fit h-fit sm:py-16 xl:px-10 xl:py-8 bg-black/20 shadow-inner shadow-black/70 md:rounded-md">
+            <Podium />
+          </div>
         </div>
-        <div className="w-full h-fit justify-center flex flex-row">
+        <div className="w-full h-fit justify-center flex flex-row xl:mt-14">
           <div className="h-[12rem] w-[60%] md:w-[10rem]">
             <BotaoPergaminho
               text={"Consulta especializada"}
               icon={UserRoundSearch}
-              ref={"consultaGerente"}
+              ref={"/consulta_especializada"}
             />
           </div>
         </div>

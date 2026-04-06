@@ -11,7 +11,7 @@ export function GerenteProvider({ children }) {
   const [pendentes, setPendentes] = useState(clientesPendentesInicial);
   const [clientes, setClientes] = useState(clientesAprovadosInicial);
 
-  // ── GET /clientes?filtro=... ──────────────────────────────────────────
+  // GET /clientes?filtro=...
   const getClientesFiltrados = useCallback(
     (filtro, idGerente) =>
       new Promise((resolve) => {
@@ -54,7 +54,29 @@ export function GerenteProvider({ children }) {
     [pendentes, clientes],
   );
 
-  // ── PUT /clientes/:cpf/aprovar ────────────────────────────────────────
+  // GET /cliente/:cpf
+  /**
+   * Busca um único cliente pelo CPF exato em *todos* os clientes aprovados,
+   * independente do gerente. Simula o endpoint real GET /cliente/{cpf}.
+   */
+  const getClientePorCpf = useCallback(
+    (cpf) =>
+      new Promise((resolve) => {
+        try {
+          const encontrado = clientes.find((c) => c.cpf === cpf);
+          if (!encontrado) {
+            resolve({ status: 404, message: "Cliente não encontrado." });
+          } else {
+            resolve({ status: 200, data: encontrado });
+          }
+        } catch {
+          resolve({ status: 500, message: "Erro interno do mock." });
+        }
+      }),
+    [clientes],
+  );
+
+  // PUT /clientes/:cpf/aprovar
   const aprovarCliente = useCallback(
     (cpf) =>
       new Promise((resolve) => {
@@ -112,7 +134,7 @@ export function GerenteProvider({ children }) {
     [],
   );
 
-  // ── PUT /clientes/:cpf/rejeitar ───────────────────────────────────────
+  // PUT /clientes/:cpf/rejeitar
   const rejeitarCliente = useCallback(
     (cpf, motivo) =>
       new Promise((resolve) => {
@@ -151,6 +173,7 @@ export function GerenteProvider({ children }) {
         pendentes,
         clientes,
         getClientesFiltrados,
+        getClientePorCpf,
         aprovarCliente,
         rejeitarCliente,
       }}

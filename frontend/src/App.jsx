@@ -8,6 +8,7 @@ import HomeCliente from "./pages/HomeCliente";
 import HomeAdmin from "./pages/HomeAdmin";
 import NotFound from "./pages/NotFound";
 import OperationsCli from "./pages/OperationsCli";
+import ConsultaEspecializada from "./pages/ConsultaEspecializada";
 
 {
   /* O route guard do Home é mais robusto e visa detectar qual o tipo de usuário toda vez
@@ -33,6 +34,10 @@ export default function App() {
   return (
     <MainLayout>
       <Routes>
+        <Route
+          path="/consulta_especializada"
+          element={<ConsultaEspecializada />}
+        />
         <Route path="/" element={HomeCorreto} />
         <Route path="/perfil" element={<Perfil />} />
         <Route path="/operations" element={<OperationsCli />} />

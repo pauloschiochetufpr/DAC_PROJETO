@@ -268,20 +268,23 @@ export default function ListaClientes({ idGerente }) {
 // Campo de detalhe (label + valor)
 function Detail({ label, value }) {
   return (
-    <p
+    <button
+      onClick={() => navigator.clipboard.writeText(String(value))}
       className="group cursor-pointer text-xs 2xl:text-sm relative overflow-hidden
     text-contrastDark flex flex-col 2xl:flex-row gap-2 p-2 border-2 border-black/20 rounded-sm select-none"
     >
-      <span className="text-secundary font-semibold">{label} | </span>
+      <span className="text-secundary font-semibold 2xl:text-center text-left">
+        {label} |{" "}
+      </span>
       <div className="flex flex-row gap-1 2xl:gap-2 items-center">
         <span className="text-contrast">{value}</span>
-        <button
+        <div
           className="group-hover:text-white transition-colors duration-75 2xl:pl-1
                            absolute top-2 right-2 2xl:static"
         >
           <Copy size={16} />
-        </button>
+        </div>
       </div>
-    </p>
+    </button>
   );
 }
