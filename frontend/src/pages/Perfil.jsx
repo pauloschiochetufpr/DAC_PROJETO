@@ -4,6 +4,7 @@ import { useBanco } from "../hooks/useBanco";
 import { MetalSurface } from "../components/MetalSurface";
 import WaveSimpleRed from "../components/WaveSimpleRed";
 import SecundaryBorder from "../assets/icons/SecundaryBorder.svg";
+import { ArrowLeft } from "lucide-react";
 
 export default function Perfil() {
   const { client, contaInfo, atualizarPerfil, saldo } = useBanco();
@@ -71,40 +72,36 @@ export default function Perfil() {
   }
 
   return (
-    <div className="mt-56 p-6 mx-auto relative flex flex-col justify-center items-end md:flex-row gap-24">
-      <div className="absolute top-6 left-6 z-[200]">
+    <div className="mt-56 p-6 mx-auto relative flex flex-col justify-center items-center lg:items-end lg:flex-row gap-24">
+      <div className="fixed top-52 left-6 z-[50]">
         <Link to="/">
-          <div className="relative w-32 h-10 rounded-xl overflow-hidden cursor-pointer group">
-            {/* SOMBRA SUPERIOR */}
-            <div className="absolute inset-0 bg-[linear-gradient(to_bottom,#00000090,#00000040_40%,transparent_80%)]" />
-
-            {/* VOLUME */}
-            <div className="absolute inset-0 bg-[linear-gradient(to_top,#00000040,transparent_50%,#ffffff05)]" />
-
-            {/* REFLEXO LATERAL */}
-            <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.08),transparent_30%,transparent_70%,rgba(255,255,255,0.08))]" />
-
-            {/* BORDA BRILHO HOVER */}
-            <div className="absolute inset-0 border border-transparent group-hover:border-orange-300/40 group-hover:shadow-[0_0_10px_rgba(255,120,80,0.25)] transition-all duration-300 rounded-xl" />
-
-            {/* TEXTO */}
-            <div className="relative z-10 flex items-center justify-center h-full text-sm text-secundary group-hover:text-orange-300 transition">
-              <span className="mr-2 group-hover:-translate-x-1 transition">
-                ←
-              </span>
-              Voltar
-            </div>
-          </div>
+          <button
+            className="
+        group flex items-center gap-2
+        text-secundary text-3xl md:text-4xl
+        transition-all duration-200
+        hover:text-orange-300 font-long-cang
+      "
+          >
+            <ArrowLeft
+              className="
+          w-5 h-5 md:w-6 md:h-6 
+          transition-transform duration-200
+          group-hover:-translate-x-1
+        "
+            />
+            <span>Voltar</span>
+          </button>
         </Link>
       </div>
-      <div className="relative order-1 md:order-2 w-[36vw] flex flex-col items-center mx-auto md:mx-0">
+      <div className="relative order-1 lg:order-2 w-[36vw] flex flex-col items-center mx-auto lg:mx-0">
         <div className="relative flex flex-col items-center justify-center">
           {/* WRAPPER DA LANTERNA */}
-          <div className="flex flex-col items-center md:w-[26vw] w-[74vw]">
+          <div className="flex flex-col items-center lg:w-[26vw] w-[74vw]">
             {/* Top cap */}
             <MetalSurface
               variant="top"
-              className="absolute md:w-[20vw] w-[60vw] h-10 rounded-t-xl z-[100]"
+              className="absolute lg:w-[20vw] w-[60vw] h-10 rounded-t-xl z-[100]"
             >
               {/* luz */}
               <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(255,110,70,0.45),transparent_65%)]" />
@@ -152,20 +149,20 @@ export default function Perfil() {
                         }}
                         className={`
                       group
-                      md:py-5 py-3 px-3
-                      flex flex-col md:flex-row md:items-center md:justify-between
+                      lg:py-5 py-3 px-3
+                      flex flex-col lg:flex-row lg:items-center lg:justify-between
                       gap-2 md:gap-8
                       `}
                       >
                         {/* LABEL */}
-                        <label className="text-lg font-medium text-secundary text-center md:text-left md:w-1/3">
+                        <label className="text-lg font-medium text-secundary text-center lg:text-left lg:w-1/3">
                           {f.label}
                         </label>
 
                         {/* INPUT CONTAINER */}
                         <div
                           className={`
-                          md:w-2/3 w-full rounded-lg px-3 py-2 transition-all duration-300
+                          lg:w-2/3 w-full rounded-lg px-3 py-2 transition-all duration-300
                           ${
                             isFieldEditable
                               ? "bg-white/5 border border-white/10 group-hover:border-orange-300/40 group-hover:shadow-[0_0_10px_rgba(255,120,80,0.25)]"
@@ -186,7 +183,7 @@ export default function Perfil() {
                             disabled={!isFieldEditable}
                             readOnly={isReadOnly}
                             className={`
-                            w-full bg-transparent outline-none text-lg text-center md:text-left
+                            w-full bg-transparent outline-none text-lg text-center lg:text-left
                             ${isFieldEditable ? "text-zinc-100" : "text-zinc-300"}
                             `}
                           />
@@ -196,19 +193,19 @@ export default function Perfil() {
                   })}
 
                   {/* 💰 SALÁRIO + LIMITE NA MESMA LINHA */}
-                  <div className="py-3 px-3 flex flex-col md:flex-row gap-4">
+                  <div className="py-3 px-3 flex flex-col lg:flex-row gap-4">
                     {/* SALÁRIO */}
                     <div
-                      className="flex-1 group flex flex-col md:flex-row md:items-center gap-2 md:gap-4"
+                      className="flex-1 group flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-4"
                       onClick={() => handleFieldClick("salario")}
                     >
-                      <label className="text-lg text-secundary text-center md:text-left md:w-2/3">
+                      <label className="text-lg text-secundary text-center lg:text-left lg:w-2/3">
                         Salário (R$)
                       </label>
 
                       <div
                         className={`
-                        md:w-2/3 w-full rounded-lg px-3 py-2 transition-all duration-300
+                        lg:w-2/3 w-full rounded-lg px-3 py-2 transition-all duration-300
                         ${
                           isEditing
                             ? "bg-white/5 border border-white/10 group-hover:border-orange-300/40 group-hover:shadow-[0_0_10px_rgba(255,120,80,0.25)]"
@@ -245,18 +242,18 @@ export default function Perfil() {
                             }));
                           }}
                           disabled={!isEditing}
-                          className="w-full bg-transparent outline-none text-lg text-center md:text-left text-zinc-100"
+                          className="w-full bg-transparent outline-none text-lg text-center lg:text-left text-zinc-100"
                         />
                       </div>
                     </div>
 
                     {/* LIMITE */}
-                    <div className="flex-1 flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
-                      <label className="text-lg text-secundary text-center md:text-left md:w-1/3">
+                    <div className="flex-1 flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-4">
+                      <label className="text-lg text-secundary text-center lg:text-left lg:w-1/3">
                         Limite (R$)
                       </label>
 
-                      <div className="md:w-2/3 w-full rounded-lg px-3 py-2">
+                      <div className="lg:w-2/3 w-full rounded-lg px-3 py-2">
                         <input
                           type="text"
                           value={calcularLimiteParaSalario(
@@ -269,7 +266,7 @@ export default function Perfil() {
                           ).toFixed(2)}
                           readOnly
                           disabled
-                          className="w-full bg-transparent outline-none text-lg text-center md:text-left text-zinc-300"
+                          className="w-full bg-transparent outline-none text-lg text-center lg:text-left text-zinc-300"
                         />
                       </div>
                     </div>
@@ -282,17 +279,17 @@ export default function Perfil() {
           {/* Bottom cap */}
           <MetalSurface
             variant="bottom"
-            className="absolute md:w-[20vw] w-[60vw] h-8 rounded-b-xl z-[100]"
+            className="absolute lg:w-[20vw] w-[60vw] h-8 rounded-b-xl z-[100]"
           >
             <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(255,110,70,0.45),transparent_65%)]" />
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center_top,rgba(255,140,90,0.35),transparent_60%)]" />
           </MetalSurface>
           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 flex flex-col items-center z-[10]">
             {/* 🌑 CONTACT SHADOW (entre cap e botão) */}
-            <ContactShadow className="relative -bottom-1 md:w-[18vw] w-[54vw] h-4 z-[90]" />
+            <ContactShadow className="relative -bottom-1 lg:w-[18vw] w-[54vw] h-4 z-[90]" />
             {/* Edit/Save buttons estilizado como parte da lanterna */}
             <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 z-[10]">
-              <div className="relative w-[48vw] sm:w-40 md:w-48 h-10 rounded-b-2xl overflow-hidden">
+              <div className="relative w-[48vw] sm:w-40 lg:w-48 h-10 rounded-b-2xl overflow-hidden">
                 {/* 1. BASE (mais escura que o cap) */}
                 <div className="absolute inset-0 bg-secundaryDark" />
 
@@ -321,7 +318,7 @@ export default function Perfil() {
                     <>
                       <button
                         onClick={handleSave}
-                        className="flex-1 text-green-400 text-xs md:text-sm hover:bg-white/5 transition"
+                        className="flex-1 text-green-400 text-xs lg:text-sm hover:bg-white/5 transition"
                       >
                         Salvar
                       </button>
@@ -330,7 +327,7 @@ export default function Perfil() {
 
                       <button
                         onClick={handleCancel}
-                        className="flex-1 text-brand text-xs md:text-sm hover:bg-white/5 transition"
+                        className="flex-1 text-brand text-xs lg:text-sm hover:bg-white/5 transition"
                       >
                         Cancelar
                       </button>
@@ -343,13 +340,19 @@ export default function Perfil() {
         </div>
       </div>
       <div
-        className="order-2 md:order-1 w-[40rem] h-[30rem] 
-  border-[0.4rem] border-secundaryDark rounded-[21px]
-  flex flex-col z-[100] shadow-dourado overflow-hidden"
+        className="
+    order-2 lg:order-1
+    w-full max-w-[42rem]
+    h-auto lg:h-[30rem]
+    border-[0.3rem] lg:border-[0.4rem]
+    border-secundaryDark
+    rounded-2xl lg:rounded-[21px]
+    flex flex-col z-[100]
+    shadow-dourado overflow-hidden
+  "
       >
-        {/* HEADER DECORATIVO */}
-        <div className="relative overflow-hidden w-full h-[5rem] md:h-[6rem]">
-          {/* camadas de brilho */}
+        {/* HEADER */}
+        <div className="relative overflow-hidden w-full h-[4rem] sm:h-[5rem] lg:h-[6rem]">
           <div className="absolute inset-0 bg-white/[0.05] z-[14]" />
 
           <div className="absolute inset-0 flex z-[13]">
@@ -366,66 +369,101 @@ export default function Perfil() {
 
           <WaveSimpleRed className="z-[10]" />
 
-          {/* título */}
-          <div className="absolute inset-0 flex items-center justify-center z-[20]">
-            <h2 className="text-xl md:text-4xl font-orienta text-secundary">
+          <div className="absolute inset-0 flex items-center justify-center z-[20] px-2">
+            <h2 className="text-xl sm:text-xl md:text-3xl lg:text-4xl font-orienta text-secundary text-center">
               Informações da Conta
             </h2>
           </div>
         </div>
 
         {/* CORPO */}
-        <div className="relative flex-1 bg-gradient-to-b from-brandDark/70 to-brand/60 flex flex-col items-center justify-start px-6 pt-10 gap-10">
-          {/* overlays */}
+        <div
+          className="
+      relative flex-1
+      bg-gradient-to-b from-brandDark/70 to-brand/60
+      flex flex-col items-center justify-start
+      px-4 sm:px-6 lg:px-8
+      py-6 sm:py-8 lg:py-10
+      gap-6 lg:gap-10
+    "
+        >
           <div className="absolute inset-0 bg-gradient-to-t from-transparent to-black/25 z-[11]" />
           <div className="absolute inset-0 bg-white/[0.02] z-[12]" />
 
-          {/* CONTEÚDO */}
-          <div className="relative z-[20] w-full flex flex-col items-center gap-10">
+          <div className="relative z-[20] w-full flex flex-col items-center gap-6 md:gap-10">
             {/* SALDO */}
             <div
-              className="font-long-cang relative w-[80%] h-[5rem] flex items-center justify-center
-        border-y-[3px] border-secundary group"
+              className="
+          font-long-cang relative
+          w-[90%] sm:w-[80%]
+          h-[4rem] sm:h-[5rem]
+          flex items-center justify-center
+          border-y-[2px] sm:border-y-[3px]
+          border-secundary
+        "
             >
-              {/* efeito fundo */}
               <div className="absolute inset-0 bg-white/[0.05]" />
               <div className="absolute inset-0 flex">
                 <div className="w-1/2 bg-gradient-to-r from-transparent to-brand/60" />
                 <div className="flex-1 bg-gradient-to-l from-transparent to-brand/60" />
               </div>
+
+              {/* bordas decorativas menores no mobile */}
               <img
                 src={SecundaryBorder}
-                alt="Borda esquerda"
-                className="absolute left-0 top-1/2 -translate-x-[45%] -translate-y-1/2 h-[7rem] w-auto object-contain
-                                select-none pointer-events-none"
+                alt=""
+                className="
+            absolute left-0 top-1/2
+            -translate-x-[45%] -translate-y-1/2
+            h-[5rem] sm:h-[7rem]
+            pointer-events-none select-none
+          "
               />
 
               <img
                 src={SecundaryBorder}
-                alt="Borda direita"
-                className="absolute right-0 top-1/2 translate-x-[45%] -translate-y-1/2 h-[7rem] w-auto object-contain
-                                scale-x-[-1] select-none pointer-events-none"
+                alt=""
+                className="
+            absolute right-0 top-1/2
+            translate-x-[45%] -translate-y-1/2
+            h-[5rem] sm:h-[7rem]
+            scale-x-[-1]
+            pointer-events-none select-none
+          "
               />
 
-              <span className="relative z-[5] text-3xl sm:text-5xl md:text-6xl  text-secundary font-semibold">
+              <span
+                className="
+            relative z-[5]
+            text-3xl sm:text-5xl md:text-5xl lg:text-6xl
+            text-secundary font-semibold
+          "
+              >
                 R$ {Number(saldo ?? 0).toFixed(2)}
               </span>
             </div>
 
-            {/* NÚMERO DA CONTA */}
-            <div className="w-full flex flex-col items-center gap-2">
-              <span className="text-secundary text-xl">Número da Conta</span>
-              <span className="text-xl font-medium text-zinc-100">
-                {contaInfo.conta}
-              </span>
-            </div>
+            {/* INFO GRID */}
+            <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-6 text-center">
+              {/* CONTA */}
+              <div className="flex flex-col gap-1">
+                <span className="text-secundary text-xl sm:text-lg md:text-2xl opacity-80">
+                  Número da Conta
+                </span>
+                <span className="text-base sm:text-lg md:text-xl font-medium text-zinc-100 break-all">
+                  {contaInfo.conta}
+                </span>
+              </div>
 
-            {/* GERENTE */}
-            <div className="w-full flex flex-col items-center gap-2">
-              <span className="text-secundary text-xl">Gerente</span>
-              <span className="text-xl font-medium text-zinc-100">
-                {contaInfo.gerente}
-              </span>
+              {/* GERENTE */}
+              <div className="flex flex-col gap-1">
+                <span className="text-secundary text-xl sm:text-lg md:text-xl opacity-80">
+                  Gerente
+                </span>
+                <span className="text-base sm:text-lg md:text-xl font-medium text-zinc-100">
+                  {contaInfo.gerente}
+                </span>
+              </div>
             </div>
           </div>
         </div>

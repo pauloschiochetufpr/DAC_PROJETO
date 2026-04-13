@@ -255,6 +255,9 @@ function gerarClientesAdmin() {
 
 export const clientesAdminData = gerarClientesAdmin();
 
+let gerentesState = [...gerentesData];
+let clientesState = [...clientesAdminData];
+
 // Mock de chamadas HTTP
 
 /**
@@ -290,6 +293,41 @@ export const getGerentesAdmin = () =>
       resolve({ status: 200, data: sorted });
     } catch {
       resolve({ status: 500, message: "Erro interno do mock." });
+    }
+  });
+
+/**
+ * GET /admin/gerentes
+ * Retorna gerentes com estatísticas agregadas dos clientes.
+ * Ordenado por ordem alfabética (R19).
+ */
+export const getGerentesAdminOrdenado = () =>
+  new Promise((resolve) => {
+    try {
+      const data = gerentesState
+        .map((ger) => {
+          const clientesGer = clientesState.filter(
+            (c) => c.idGerente === ger.id,
+          );
+
+          const somaSaldosPositivos = clientesGer
+            .filter((c) => c.saldo >= 0)
+            .reduce((acc, c) => acc + c.saldo, 0);
+          const somaSaldosNegativos = clientesGer
+            .filter((c) => c.saldo < 0)
+            .reduce((acc, c) => acc + c.saldo, 0);
+          return {
+            ...ger,
+            totalClientes: clientesGer.length,
+            somaSaldosPositivos,
+            somaSaldosNegativos,
+          };
+        })
+        .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+
+      resolve({ status: 200, data });
+    } catch {
+      resolve({ status: 500, message: "Erro ao buscar gerentes." });
     }
   });
 
@@ -358,4 +396,111 @@ export const searchClientesAdmin = (termo, limit = 8) =>
         resolve({ status: 500, message: "Erro interno do mock." });
       }
     }, 60);
+  });
+
+// POST /admin/gerentes
+// Atualiza ou cria um gerente. Se id estiver presente, atualiza; caso contrário, cria novo gerente.
+// RF17
+export const createGerente = (novoGerente) =>
+  new Promise((resolve) => {
+    try {
+      const id =
+        gerentesState.length > 0
+          ? Math.max(...gerentesState.map((g) => g.id)) + 1
+          : 1;
+
+      const gerente = { id, ...novoGerente };
+
+      gerentesState.push(gerente);
+
+      // R17
+      if (gerentesState.length > 1) {
+        const gerComMais = gerentesState
+          .map((g) => ({
+            gerente: g,
+            total: clientesState.filter((c) => c.idGerente === g.id).length,
+          }))
+          .sort((a, b) => b.total - a.total)[0];
+
+        const clientesDoGer = clientesState.filter(
+          (c) => c.idGerente === gerComMais.gerente.id,
+        );
+
+        if (clientesDoGer.length > 0) {
+          const clienteEscolhido = clientesDoGer
+            .filter((c) => c.saldo >= 0)
+            .sort((a, b) => a.saldo - b.saldo)[0];
+
+          if (clienteEscolhido) {
+            clienteEscolhido.idGerente = id;
+          }
+        }
+      }
+
+      resolve({ status: 201, data: gerente });
+    } catch {
+      resolve({ status: 500, message: "Erro ao criar gerente" });
+    }
+  });
+
+// DELETE /admin/gerentes/:id
+// simula remoção de gerente. Reatribui clientes para o gerente com menos clientes. Não permite remoção se for o último gerente
+// RF18
+export const deleteGerente = (id) =>
+  new Promise((resolve) => {
+    try {
+      if (gerentesState.length <= 1) {
+        resolve({
+          status: 400,
+          message: "Não é possível remover o último gerente",
+        });
+        return;
+      }
+
+      const clientesDoGer = clientesState.filter((c) => c.idGerente === id);
+
+      const destino = gerentesState
+        .filter((g) => g.id !== id)
+        .map((g) => ({
+          gerente: g,
+          total: clientesState.filter((c) => c.idGerente === g.id).length,
+        }))
+        .sort((a, b) => a.total - b.total)[0];
+
+      clientesDoGer.forEach((c) => {
+        c.idGerente = destino.gerente.id;
+      });
+
+      gerentesState = gerentesState.filter((g) => g.id !== id);
+
+      resolve({ status: 200 });
+    } catch {
+      resolve({ status: 500, message: "Erro ao remover gerente" });
+    }
+  });
+
+// PATCH /admin/gerentes/:id
+// simula atualização de gerente. Não permite alterar CPF (único e identificador).
+// RF20
+export const updateGerente = (id, dados) =>
+  new Promise((resolve) => {
+    try {
+      const index = gerentesState.findIndex((g) => g.id === id);
+
+      if (index === -1) {
+        resolve({ status: 404, message: "Gerente não encontrado" });
+        return;
+      }
+
+      gerentesState[index] = {
+        ...gerentesState[index],
+        nome: dados.nome,
+        email: dados.email,
+        telefone: dados.telefone,
+      };
+
+      resolve({ status: 200, data: gerentesState[index] });
+    } catch {
+      resolve({ status: 500, message: "Erro ao atualizar gerente" });
+    }
   });

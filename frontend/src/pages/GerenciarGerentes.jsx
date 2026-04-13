@@ -4,6 +4,11 @@ import { useState } from "react";
 
 export default function GerenciarGerentes() {
   const [gerenteSelecionado, setGerenteSelecionado] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleRefresh = () => {
+    setRefreshKey((k) => k + 1);
+  };
 
   return (
     <div
@@ -29,8 +34,10 @@ export default function GerenciarGerentes() {
                      border border-secundary/70 shadow-dourado-sutil overflow-hidden"
         >
           <GerentesLista
+            modo="alfabetico"
             onSelect={setGerenteSelecionado}
             selectedId={gerenteSelecionado?.id}
+            refreshKey={refreshKey}
           />
         </div>
         <div className="align-middle justify-center">
@@ -46,7 +53,11 @@ export default function GerenciarGerentes() {
                        bg-brandDark/50 backdrop-blur-lg rounded-2xl
                        border border-secundary/70 shadow-dourado-sutil overflow-hidden"
         >
-          <GerenteForm gerenteSelecionado={gerenteSelecionado} />
+          <GerenteForm
+            gerenteSelecionado={gerenteSelecionado}
+            onRefresh={handleRefresh}
+            onClear={() => setGerenteSelecionado(null)}
+          />
         </div>
       </div>
     </div>

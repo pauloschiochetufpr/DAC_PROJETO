@@ -1,4 +1,9 @@
 import { useState, useRef, useEffect, useMemo } from "react";
+import {
+  createGerente,
+  updateGerente,
+  deleteGerente,
+} from "../../mocks/adminMockData";
 
 // Mock's
 import { useGerente } from "../../hooks/useGerente";
@@ -16,7 +21,11 @@ import {
 } from "lucide-react";
 
 // Componente principal
-export default function GerenteForm({ gerenteSelecionado }) {
+export default function GerenteForm({
+  gerenteSelecionado,
+  onRefresh,
+  onClear,
+}) {
   // Formatadores
   const cpfMask = (cpf) =>
     String(cpf).replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
@@ -48,38 +57,33 @@ export default function GerenteForm({ gerenteSelecionado }) {
     }
   }, [gerenteSelecionado]);
 
-  const handleSalvar = () => {
-    if (!form.nome || !form.cpf || !form.email || !form.telefone) {
-      alert("Preencha todos os campos obrigatórios");
-      return;
-    }
-
-    if (!form.id && !form.senha) {
-      alert("Senha é obrigatória para novo gerente");
-      return;
-    }
+  const handleSalvar = async () => {
+    let res;
 
     if (form.id) {
-      console.log("UPDATE", form);
+      res = await updateGerente(form.id, form);
     } else {
-      console.log("CREATE", form);
+      res = await createGerente(form);
+    }
+
+    if (res.status === 200 || res.status === 201) {
+      onRefresh?.();
+      onClear?.();
+    } else {
+      alert(res.message);
     }
   };
 
-  const handleExcluir = () => {
-    if (!form.id) return;
+  const handleExcluir = async () => {
+    const res = await deleteGerente(form.id);
 
-    // regra simulada
-    const totalGerentes = 1; // depois vem do contexto
-
-    if (totalGerentes <= 1) {
-      alert("Não é possível remover o último gerente");
-      return;
+    if (res.status === 200) {
+      onRefresh?.();
+      onClear?.();
+    } else {
+      alert(res.message);
     }
-
-    console.log("DELETE", form.id);
   };
-
   return (
     <div className="flex flex-col w-full gap-6 py-10 px-6">
       {/* Cabeçalho */}
