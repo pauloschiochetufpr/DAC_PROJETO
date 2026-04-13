@@ -2,12 +2,14 @@ package com.dac.auth.service;
 
 import com.dac.auth.dto.request.LoginRequestDTO;
 import com.dac.auth.dto.response.LoginResponseDTO;
+import com.dac.auth.entity.Session;
 import com.dac.auth.entity.Usuario;
 import com.dac.auth.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class AuthService {
@@ -18,9 +20,10 @@ public class AuthService {
     @Autowired
     private JwtService jwtService;
 
-    public LoginResponseDTO login(LoginRequestDTO request) {
+    @Autowired
+    private RefreshTokenService refreshTokenService;
 
-        // 1. autentica
+    public LoginResponseDTO login(LoginRequestDTO request) {
         Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(request.getEmail());
         if (usuarioOpt.isEmpty()) {
             throw new RuntimeException("Usuário não encontrado");
@@ -31,25 +34,39 @@ public class AuthService {
             throw new RuntimeException("Senha inválida");
         }
 
-        // 2. gera o token
+        String deviceId = request.getDeviceId() != null
+            ? request.getDeviceId()
+            : UUID.randomUUID().toString();
+
+        refreshTokenService.registerOrUpdateDevice(
+            usuario.getCpf(),
+            deviceId,
+            request.getDeviceName() != null ? request.getDeviceName() : "unknown",
+            request.getIp() != null ? request.getIp() : "unknown"
+        );
+
         String token = jwtService.generateToken(
             usuario.getCpf(),
             usuario.getEmail(),
-            usuario.getTipo()
+            usuario.getTipo(),
+            deviceId
         );
 
-        // 3. monta o objeto usuario
+        // cria a session e pega o refreshId
+        Session session = refreshTokenService.createSession(usuario.getCpf(), deviceId);
+
         LoginResponseDTO.UsuarioDTO usuarioDTO = new LoginResponseDTO.UsuarioDTO();
         usuarioDTO.setCpf(usuario.getCpf());
         usuarioDTO.setEmail(usuario.getEmail());
         usuarioDTO.setTipo(usuario.getTipo());
 
-        // 4. monta a resposta no formato da spec
         LoginResponseDTO response = new LoginResponseDTO();
         response.setAccess_token(token);
         response.setToken_tipo("bearer");
         response.setTipo(usuario.getTipo().toUpperCase());
         response.setUsuario(usuarioDTO);
+        response.setDeviceId(deviceId);
+        response.setRefreshToken(session.getRefreshId());
 
         return response;
     }
