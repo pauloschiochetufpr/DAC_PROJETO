@@ -8,7 +8,7 @@ export default function Login() {
   const [isLogin, setIsLogin] = useState(true);
 
   return (
-    <div className="w-screen h-[calc(100vh-48px)] relative overflow-hidden">
+    <div className="w-screen lg:h-[calc(100vh-48px)] min-h-[calc(100vh-48px)] relative overflow-hidden p-12">
       {/* Background */}
       <div
         className="absolute inset-0 bg-cover bg-center"
@@ -21,7 +21,7 @@ export default function Login() {
       {/* Content */}
       <div className="relative z-10 flex h-full pt-44">
         {/* Right Side - Form */}
-        <div className="flex w-full md:w-1/2 justify-center items-center px-4">
+        <div className="flex w-full lg:w-1/2 justify-center items-center px-4">
           <div
             className="w-[90%] max-w-xl border-[0.4rem] border-secundaryDark rounded-[21px] 
             flex flex-col overflow-hidden shadow-dourado"
@@ -94,8 +94,8 @@ export default function Login() {
         </div>
 
         {/* Left Side - Branding */}
-        <div className="hidden md:flex flex-col justify-center items-start w-1/2 p-16 text-white">
-          <div className="bg-black/20 p-6 rounded-3xl">
+        <div className="hidden lg:flex flex-col justify-center items-start w-1/2 p-16 text-white">
+          <div className="bg-black/30 p-6 rounded-3xl">
             <h1 className="text-8xl font-long-cang text-secundary mb-6">
               Bem-vindo
             </h1>
