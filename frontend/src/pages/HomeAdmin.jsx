@@ -8,7 +8,15 @@ import BotaoPergaminho from "../components/UI/BotaoPergaminho";
 import { Construction } from "lucide-react";
 import { UserRoundSearch } from "lucide-react";
 
+// i18n
+import { useLanguage } from "../hooks/useLanguage";
+import { t } from "../lib/i18n";
+
 export default function HomeAdmin() {
+  // i18n
+  const { lang } = useLanguage();
+  const GenGerBt = t(lang, "HomeAdmin.manage_managers");
+
   return (
     <div
       className="relative flex flex-col items-center w-full min-h-screen
@@ -50,7 +58,7 @@ export default function HomeAdmin() {
                     xl:flex flex-col justify-center items-center xl:py-12 xl:text-xl gap-2 text-secundary select-none"
             >
               <Construction className="mb-2" size={70} />
-              <h1>Mais funcionalidades em breve [...]</h1>
+              <h1>{t(lang, "HomeAdmin.more_features_coming")}</h1>
             </div>
           </div>
 
@@ -67,7 +75,7 @@ export default function HomeAdmin() {
       <div className="w-full h-fit justify-center flex flex-row xl:mt-10">
         <div className="h-[12rem] w-[60%] md:w-[10rem]">
           <BotaoPergaminho
-            text={"Gerenciamento de Gerentes"}
+            text={GenGerBt}
             icon={UserRoundSearch}
             ref={"/gerenciar_gerentes"}
           />

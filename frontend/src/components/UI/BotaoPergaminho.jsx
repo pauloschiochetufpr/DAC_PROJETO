@@ -81,7 +81,7 @@ export default function BotaoPergaminho({ text, icon: Icon, ref }) {
             text-md font-semibold font-istok-web
               relative overflow-visible select-none"
       >
-        <h1 className="pt-[3rem] ">{text}</h1>
+        <h1 className="pt-[3rem]">{text}</h1>
         {/* Pergaminho inicio */}
         <div
           ref={pergaminhoRef}

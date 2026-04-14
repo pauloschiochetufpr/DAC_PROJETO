@@ -6,6 +6,10 @@ const COR_POSITIVO = "#4ade80"; // green-400 (Tailwind css)
 const COR_NEGATIVO = "#f87171"; // red-400 (Tailwind css)
 const COR_NEUTRO = "#a3a3a3"; // neutral-400 (Tailwind css)
 
+// i18n
+import { useLanguage } from "../../hooks/useLanguage";
+import { t } from "../../lib/i18n";
+
 // Dado pronto (derivado do mock, não muda em runtime nessa tela)
 function calcularTotais(clientes) {
   let positivos = 0,
@@ -46,6 +50,9 @@ function calcularPaths(fatias, total, cx, cy, r) {
 
 // SVG de pizza simples sem dependências
 function PizzaSVG({ fatias }) {
+  //i18n
+  const { lang } = useLanguage();
+
   const total = fatias.reduce((s, f) => s + f.valor, 0);
   if (total === 0) return null;
 
@@ -80,24 +87,40 @@ function PizzaSVG({ fatias }) {
         dominantBaseline="top"
         fontSize="6"
         fill="#9c9c9c"
-              fontFamily="sans-serif"
+        fontFamily="sans-serif"
       >
-        clientes
+        {t(lang, "GraficoSaldos.center_label")}
       </text>
     </svg>
   );
 }
 
 export default function GraficoSaldos() {
+  //i18n
+  const { lang } = useLanguage();
+
+  // Outras variáveis
   const { positivos, negativos, neutros } = useMemo(
     () => calcularTotais(clientesAdminData),
     [],
   );
 
   const fatias = [
-    { label: "Positivos", valor: positivos, cor: COR_POSITIVO },
-    { label: "Negativos", valor: negativos, cor: COR_NEGATIVO },
-    { label: "Neutros", valor: neutros, cor: COR_NEUTRO },
+    {
+      label: t(lang, "GraficoSaldos.positive"),
+      valor: positivos,
+      cor: COR_POSITIVO,
+    },
+    {
+      label: t(lang, "GraficoSaldos.negative"),
+      valor: negativos,
+      cor: COR_NEGATIVO,
+    },
+    {
+      label: t(lang, "GraficoSaldos.neutral"),
+      valor: neutros,
+      cor: COR_NEUTRO,
+    },
   ];
 
   const total = positivos + negativos + neutros;
@@ -111,7 +134,7 @@ export default function GraficoSaldos() {
       {/* Título */}
       <div className="px-4 pt-3 pb-2 flex-shrink-0">
         <h2 className="font-orienta text-secundary text-base md:text-lg select-none">
-          Distribuição de Saldos
+          {t(lang, "GraficoSaldos.title")}
         </h2>
       </div>
 

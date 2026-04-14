@@ -40,14 +40,6 @@ export default function GerenciarGerentes() {
             refreshKey={refreshKey}
           />
         </div>
-        <div className="align-middle justify-center">
-          <button
-            onClick={() => setGerenteSelecionado(null)}
-            className="bg-secundary px-4 py-2 rounded text-black font-semibold"
-          >
-            Novo Gerente
-          </button>
-        </div>
         <div
           className="w-full h-fit xl:flex-1 xl:min-h-0
                        bg-brandDark/50 backdrop-blur-lg rounded-2xl

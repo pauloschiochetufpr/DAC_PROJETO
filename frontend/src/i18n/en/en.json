@@ -6,5 +6,46 @@
   "Header": {
     "title": "Don't fight the fees",
     "subtitle": "Master the art of \"Effortless Investing\"!"
+  },
+  "Footer": {
+    "supported_ongs": "Supported NGOs",
+    "privacy_policy": "Privacy Policy",
+    "copyright": "(FAKE COMPANY) MasterBank. All rights reserved"
+  },
+  "HomeAdmin": {
+    "manage_managers": "Manage Managers",
+    "more_features_coming": "More features coming soon [...]"
+  },
+  "GraficoSaldos": {
+    "title": "Balance Distribution",
+    "positive": "Positive",
+    "negative": "Negative",
+    "neutral": "Neutral",
+    "center_label": "clients"
+  },
+  "ClientesAdminLista": {
+    "title": "Client Report",
+    "search_placeholder": "Search by name or email",
+    "results": {
+      "no_results": "No clients found with",
+      "client-found": "client found",
+      "clients-found": "clients found"
+    },
+    "table": {
+      "cpfConta": "CPF | Account",
+      "name": "Name",
+      "manager": "Manager",
+      "balance": "Balance | Salary",
+      "credit": "Credit"
+    }
+  },
+  "GerentesAdminLista": {
+    "title": "Managers",
+    "labels": {
+      "clients": "Clients",
+      "phone": "Phone",
+      "positiveBalances": "Positive Balances",
+      "negativeBalances": "Negative Balances"
+    }
   }
 }

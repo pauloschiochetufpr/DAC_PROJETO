@@ -1,5 +1,9 @@
 ﻿import { useState, useEffect, useRef, useCallback } from "react";
 
+// i18n
+import { useLanguage } from "../../hooks/useLanguage";
+import { t } from "../../lib/i18n";
+
 // Mock's
 import {
   getClientesAdminPaginado,
@@ -38,6 +42,9 @@ const LIMITE_INICIAL = 15;
 const LIMITE_MAIS = 10;
 
 export default function ClientesAdminLista() {
+  // State da língua
+  const { lang } = useLanguage();
+
   // Lazy load states
   const offsetRef = useRef(0);
   const [itens, setItens] = useState([]);
@@ -200,7 +207,7 @@ export default function ClientesAdminLista() {
                        select-none text-center z-[19] px-5 py-2 pb-3 bg-black/50 rounded-md
                        shadow-inner shadow-black"
           >
-            Relatório de Clientes
+            {t(lang, "ClientesAdminLista.title")}
           </div>
         </div>
       </div>
@@ -223,7 +230,7 @@ export default function ClientesAdminLista() {
             if (e.key === "Escape") setMostrarPopup(false);
           }}
           onFocus={() => inputBusca.trim() && setMostrarPopup(true)}
-          placeholder="Pesquisar por CPF ou Nome"
+          placeholder={t(lang, "ClientesAdminLista.search_placeholder")}
           className="w-full pl-9 pr-9 py-2 rounded-xl bg-brandDark/80 border border-secundaryDark/40
                      text-contrast placeholder-contrastDark font-inter text-sm
                      focus:outline-none focus:border-secundary/60 transition-colors"
@@ -257,7 +264,8 @@ export default function ClientesAdminLista() {
             {!loadingPopup && sugestoes.length === 0 && (
               <div className="flex items-center gap-2 px-4 py-3 text-contrastDark font-inter text-sm select-none">
                 <UserRoundSearch size={16} className="shrink-0" />
-                Nenhum cliente encontrado com &quot;{inputBusca}&quot;
+                {t(lang, "ClientesAdminLista.results.no_results")} &quot;
+                {inputBusca}&quot;
               </div>
             )}
 
@@ -288,8 +296,8 @@ export default function ClientesAdminLista() {
         {modoFiltro && (
           <div className="absolute -bottom-5 left-0 font-inter text-[10px] text-secundary/70 select-none">
             {clientesFiltro.length === 1
-              ? "1 cliente selecionado"
-              : `${clientesFiltro.length} clientes encontrados`}
+              ? `1 ${t(lang, "ClientesAdminLista.results.client-found")}`
+              : `${clientesFiltro.length} ${t(lang, "ClientesAdminLista.results.clients-found")}`}
           </div>
         )}
       </div>
@@ -325,19 +333,19 @@ export default function ClientesAdminLista() {
                 <thead className="sticky top-0 z-10">
                   <tr className="bg-brandDark/95 border-b border-secundaryDark/40">
                     <th className="px-3 py-2.5 text-secundary font-semibold whitespace-nowrap">
-                      Nome
+                      {t(lang, "ClientesAdminLista.table.name")}
                     </th>
                     <th className="px-2 py-2.5 text-secundary font-semibold whitespace-nowrap hidden sm:table-cell">
-                      CPF | Conta
+                      {t(lang, "ClientesAdminLista.table.cpfConta")}
                     </th>
                     <th className="px-2 py-2.5 text-secundary font-semibold whitespace-nowrap hidden sm:table-cell">
-                      Saldo | Salário
+                      {t(lang, "ClientesAdminLista.table.balance")}
                     </th>
                     <th className="px-2 py-2.5 text-secundary font-semibold whitespace-nowrap hidden sm:table-cell">
-                      Gerente
+                      {t(lang, "ClientesAdminLista.table.manager")}
                     </th>
                     <th className="px-2 py-2.5 text-secundary font-semibold whitespace-nowrap">
-                      Crédito
+                      {t(lang, "ClientesAdminLista.table.credit")}
                     </th>
                   </tr>
                 </thead>

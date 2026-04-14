@@ -9,14 +9,20 @@ import {
   ExternalLink,
 } from "lucide-react";
 
+// i18n
+import { t } from "../lib/i18n";
+import { useLanguage } from "../hooks/useLanguage";
+
 const languages = [
   { value: "pt", label: "Português" },
   { value: "en", label: "English" },
 ];
 
 export default function Footer() {
+  // States de idioma + dropdown
   const [open, setOpen] = useState(false);
-  const [selected, setSelected] = useState(languages[0]);
+  const { lang, setLang } = useLanguage();
+  const selected = languages.find((l) => l.value === lang) ?? languages[0];
   const desktopRef = useRef(null);
   const mobileRef = useRef(null);
 
@@ -48,13 +54,15 @@ export default function Footer() {
             className="flex flex-row font-istok-web font-semibold text-base gap-1 w-full items-center justify-center
             hover:underline"
           >
-            ONG's apoiadas <SquareArrowOutUpRight size={12} />
+            {t(lang, "Footer.supported_ongs")}
+            <SquareArrowOutUpRight size={12} />
           </button>
           <button
             className="flex flex-row font-istok-web font-semibold text-base gap-1 w-full items-center justify-center
             hover:underline"
           >
-            Politicas de privacidade <SquareArrowOutUpRight size={12} />
+            {t(lang, "Footer.privacy_policy")}{" "}
+            <SquareArrowOutUpRight size={12} />
           </button>
         </div>
 
@@ -150,7 +158,7 @@ export default function Footer() {
                 <li
                   key={lang.value}
                   onClick={() => {
-                    setSelected(lang);
+                    setLang(lang.value);
                     setOpen(false);
                   }}
                   className={`
@@ -215,7 +223,7 @@ export default function Footer() {
             <li
               key={lang.value}
               onClick={() => {
-                setSelected(lang);
+                setLang(lang.value);
                 setOpen(false);
               }}
               className={`
@@ -235,8 +243,7 @@ export default function Footer() {
 
       {/* Copyright */}
       <div className="select-none flex flex-row text-md text-center xl:text-md pt-24">
-        © {new Date().getFullYear()}  (FAKE COMPANY) MasterBank. Todos os
-        direitos reservados.
+        © {new Date().getFullYear()} {t(lang, "Footer.copyright")}
       </div>
     </footer>
   );

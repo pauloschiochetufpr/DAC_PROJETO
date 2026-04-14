@@ -6,5 +6,46 @@
   "Header": {
     "title": "Não lute contra as taxas",
     "subtitle": "Domine a técnica do \"Investimento Sem Esforço\"!"
+  },
+  "Footer": {
+    "supported_ongs": "ONG's apoiadas",
+    "privacy_policy": "Política de Privacidade",
+    "copyright": "(FAKE COMPANY) MasterBank. Todos os direitos reservados"
+  },
+  "HomeAdmin": {
+    "manage_managers": "Gerenciar gerentes",
+    "more_features_coming": "Mais funcionalidades em breve [...]"
+  },
+  "GraficoSaldos": {
+    "title": "Distribuição dos Saldos",
+    "positive": "Positivos",
+    "negative": "Negativos",
+    "neutral": "Neutros",
+    "center_label": "clientes"
+  },
+  "ClientesAdminLista": {
+    "title": "Relatório de Clientes",
+    "search_placeholder": "Pesquisar por nome ou email",
+    "results": {
+      "no_results": "Nenhum cliente encontrado com",
+      "client-found": "cliente encontrado",
+      "clients-found": "clientes encontrados"
+    },
+    "table": {
+      "cpfConta": "CPF | Conta",
+      "name": "Nome",
+      "manager": "Gerente",
+      "balance": "Saldo | Salário",
+      "credit": "Crédito"
+    }
+  },
+  "GerentesAdminLista": {
+    "title": "Gerentes",
+    "labels": {
+      "clients": "Clientes",
+      "phone": "Telefone",
+      "positiveBalances": "Saldos Positivos",
+      "negativeBalances": "Saldos Negativos"
+    }
   }
 }

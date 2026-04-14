@@ -8,7 +8,7 @@ export default function Login() {
   const [isLogin, setIsLogin] = useState(true);
 
   return (
-    <div className="w-screen lg:h-[calc(100vh-48px)] min-h-[calc(100vh-48px)] relative overflow-hidden p-12">
+    <div className="w-screen lg:h-[calc(100vh-48px)] min-h-[calc(100vh-48px)] relative overflow-hidden 2xl:p-12 pb-12">
       {/* Background */}
       <div
         className="absolute inset-0 bg-cover bg-center"
