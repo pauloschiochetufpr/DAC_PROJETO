@@ -21,15 +21,12 @@ public class GerenteController {
     @GetMapping
     public ResponseEntity<?> listar(
             @RequestParam(value = "filtro", required = false) String filtro) {
-
-        if ("dashboard".equalsIgnoreCase(filtro)) {
-            // precisa dos dados do conta-service
+        try {
             List<DadoGerente> gerentes = gerenteService.listarTodos();
             return ResponseEntity.ok(gerentes);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
-
-        List<DadoGerente> gerentes = gerenteService.listarTodos();
-        return ResponseEntity.ok(gerentes);
     }
 
     @PostMapping
