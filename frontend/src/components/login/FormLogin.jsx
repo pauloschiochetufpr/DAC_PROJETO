@@ -5,7 +5,12 @@ import { useNavigate } from "react-router-dom";
 // Lucide icon's
 import { Eye, EyeClosed } from "lucide-react";
 
+// i18n
+import { useLanguage } from "../../hooks/useLanguage";
+import { t } from "../../lib/i18n";
+
 export default function FormLogin() {
+  const { lang } = useLanguage();
   const [form, setForm] = useState({
     email: "",
     senha: "",
@@ -38,7 +43,8 @@ export default function FormLogin() {
       // Redireciona após login
       navigate("/");
     } catch (err) {
-      setError(err.message || "Email ou senha inválidos.");
+      const errorKey = err.code || "invalid_credentials";
+      setError(t(lang, `LoginPage.login.errors.${errorKey}`));
     } finally {
       setLoading(false);
     }
@@ -49,7 +55,7 @@ export default function FormLogin() {
       {/* EMAIL */}
       <div className="group flex flex-col gap-1">
         <label htmlFor="email" className="text-secundary text-sm">
-          Email
+          {t(lang, "LoginPage.login.fields.email.label")}
         </label>
         <div
           className="rounded-lg px-3 py-2 bg-white/5 border border-white/10
@@ -66,7 +72,7 @@ export default function FormLogin() {
             onChange={handleChange}
             required
             autoComplete="email"
-            placeholder="seu@email.com"
+            placeholder={t(lang, "LoginPage.login.fields.email.placeholder")}
             className="w-full bg-transparent outline-none text-zinc-100 placeholder-zinc-400"
           />
         </div>
@@ -75,7 +81,7 @@ export default function FormLogin() {
       {/* SENHA */}
       <div className="group flex flex-col gap-1">
         <label htmlFor="senha" className="text-secundary text-sm">
-          Senha
+          {t(lang, "LoginPage.login.fields.password.label")}
         </label>
 
         <div
@@ -93,7 +99,7 @@ export default function FormLogin() {
             onChange={handleChange}
             required
             autoComplete="current-password"
-            placeholder="********"
+            placeholder={t(lang, "LoginPage.login.fields.password.placeholder")}
             className="w-full bg-transparent outline-none text-zinc-100 placeholder-zinc-400"
           />
 
@@ -126,7 +132,9 @@ export default function FormLogin() {
         active:shadow-none
         disabled:opacity-50"
       >
-        {loading ? "Entrando..." : "Entrar"}
+        {loading
+          ? t(lang, "LoginPage.login.actions.loading")
+          : t(lang, "LoginPage.login.actions.submit")}
       </button>
     </form>
   );

@@ -47,5 +47,33 @@
       "positiveBalances": "Positive Balances",
       "negativeBalances": "Negative Balances"
     }
+  },
+  "LoginPage": {
+    "titleLogin": "Login",
+    "titleRegister": "Sign Up",
+    "tabLogin": "Login",
+    "tabRegister": "Sign Up",
+    "welcomeTitle": "Welcome",
+    "welcomeDescription": "Access your account or create a new one to start your journey with our bank. Take control of your finances with ease and security.",
+    "login": {
+      "fields": {
+        "email": {
+          "label": "Email",
+          "placeholder": "your@email.com"
+        },
+        "password": {
+          "label": "Password",
+          "placeholder": "Enter your password"
+        }
+      },
+      "actions": {
+        "submit": "Sign In",
+        "loading": "Signing in..."
+      },
+      "errors": {
+        "invalid_credentials": "Invalid email or password."
+      }
+    },
+    "register": {}
   }
 }

@@ -47,5 +47,33 @@
       "positiveBalances": "Saldos Positivos",
       "negativeBalances": "Saldos Negativos"
     }
+  },
+  "LoginPage": {
+    "titleLogin": "Login",
+    "titleRegister": "Cadastro",
+    "tabLogin": "Login",
+    "tabRegister": "Cadastro",
+    "welcomeTitle": "Bem-vindo",
+    "welcomeDescription": "Acesse sua conta ou crie um novo cadastro para começar sua jornada junto ao nosso banco. Domine suas finanças com facilidade e segurança.",
+    "login": {
+      "fields": {
+        "email": {
+          "label": "Email",
+          "placeholder": "seu@email.com"
+        },
+        "password": {
+          "label": "Senha",
+          "placeholder": "Digite sua senha"
+        }
+      },
+      "actions": {
+        "submit": "Entrar",
+        "loading": "Entrando..."
+      },
+      "errors": {
+        "invalid_credentials": "Email ou senha inválidos."
+      }
+    },
+    "register": {}
   }
 }
