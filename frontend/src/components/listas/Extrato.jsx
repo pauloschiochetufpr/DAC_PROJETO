@@ -1,50 +1,36 @@
 import React from "react";
 import { Link } from "react-router-dom";
+
+// Mock's
 import { useBanco } from "../../hooks/useBanco";
 import { formatarData } from "../../lib/dataUtils";
+
+// Lucide
 import {
   ArrowRightFromLine,
   BanknoteArrowUp,
   BanknoteArrowDown,
   HandCoins,
-  Coins,
 } from "lucide-react";
 
+// Formatadores
 const currencyFormatter = new Intl.NumberFormat("pt-BR", {
   style: "currency",
   currency: "BRL",
 });
 
-const gruposTipoValor = {
-  negativo: new Set(["pagamento", "saque"]),
-  positivo: new Set(["transferencia", "deposito"]),
-};
-
-const getValorPrefixo = (tipo) => {
-  const tipoNormalizado = String(tipo || "").toLowerCase();
-
-  if (gruposTipoValor.negativo.has(tipoNormalizado)) {
-    return "-";
-  }
-
-  if (gruposTipoValor.positivo.has(tipoNormalizado)) {
-    return "+";
-  }
-
+const getValorPrefixo = (tipo, origem, conta) => {
+  if (tipo === "saque") return "-";
+  if (tipo === "deposito") return "+";
+  if (tipo === "transferencia") return origem === conta ? "-" : "+";
   return "";
 };
 
-const getValorClasseTexto = (tipo) => {
-  const tipoNormalizado = String(tipo || "").toLowerCase();
-
-  if (gruposTipoValor.negativo.has(tipoNormalizado)) {
-    return "text-red-600";
-  }
-
-  if (gruposTipoValor.positivo.has(tipoNormalizado)) {
-    return "text-green-600";
-  }
-
+const getValorClasseTexto = (tipo, origem, conta) => {
+  if (tipo === "saque") return "text-red-600";
+  if (tipo === "deposito") return "text-green-600";
+  if (tipo === "transferencia")
+    return origem === conta ? "text-red-600" : "text-green-600";
   return "text-black";
 };
 
@@ -56,9 +42,6 @@ const getIconeTipo = (tipo) => {
   if (tipoNormalizado === "deposito") {
     return <BanknoteArrowDown size={24} className="text-secundary" />;
   }
-  if (tipoNormalizado === "pagamento") {
-    return <Coins size={24} className="text-secundary" />;
-  }
   if (tipoNormalizado === "transferencia") {
     return <HandCoins size={24} className="text-secundary" />;
   }
@@ -66,7 +49,7 @@ const getIconeTipo = (tipo) => {
 
 export default function Extrato({ showInfo }) {
   // Mock renderizado
-  const { movimentacoes } = useBanco();
+  const { movimentacoes, conta } = useBanco();
 
   // Conversões e mascaras
   const masked = "R$ --,--";
@@ -132,7 +115,7 @@ export default function Extrato({ showInfo }) {
           ></div>
           <div
             className="extrato-scroll h-full w-full overflow-x-hidden overflow-y-auto text-xs
-          z-[15] absolute"
+          z-[15] absolute md:overscroll-none"
           >
             {movimentacoes.map((item) => {
               const { dataFormatada, horario } = formatarData(item.data);
@@ -169,10 +152,10 @@ export default function Extrato({ showInfo }) {
                     <div className="flex flex-row w-fit h-full pr-2 justify-center items-center">
                       <div
                         className={`flex flex-row bg-white rounded-sm py-1.5 px-2 min-w-24 w-fit h-fit
-                          items-center justify-center gap-[3px] ${getValorClasseTexto(item.tipo)}`}
+                          items-center justify-center gap-[3px] ${getValorClasseTexto(item.tipo, item.origem, conta)}`}
                       >
                         <span className="w-3 text-center">
-                          {getValorPrefixo(item.tipo)}
+                          {getValorPrefixo(item.tipo, item.origem, conta)}
                         </span>
 
                         {showInfo ? (

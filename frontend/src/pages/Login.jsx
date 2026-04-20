@@ -1,14 +1,19 @@
 import { useState } from "react";
-import FormLogin from "../components/FormLogin";
-import FormCad from "../components/FormCad";
+import FormLogin from "../components/login/FormLogin";
+import FormCad from "../components/login/FormCad";
 import templeBg from "../assets/temple.jpg";
 import WaveSimpleRed from "../components/WaveSimpleRed";
 
+// i18n
+import { useLanguage } from "../hooks/useLanguage";
+import { t } from "../lib/i18n";
+
 export default function Login() {
+  const { lang } = useLanguage();
   const [isLogin, setIsLogin] = useState(true);
 
   return (
-    <div className="w-screen h-[calc(100vh-48px)] relative overflow-hidden">
+    <div className="w-screen lg:h-[calc(100vh-48px)] min-h-[calc(100vh-48px)] relative overflow-hidden 2xl:p-12 pb-12">
       {/* Background */}
       <div
         className="absolute inset-0 bg-cover bg-center"
@@ -21,7 +26,7 @@ export default function Login() {
       {/* Content */}
       <div className="relative z-10 flex h-full pt-44">
         {/* Right Side - Form */}
-        <div className="flex w-full md:w-1/2 justify-center items-center px-4">
+        <div className="flex w-full lg:w-1/2 justify-center items-center px-4">
           <div
             className="w-[90%] max-w-xl border-[0.4rem] border-secundaryDark rounded-[21px] 
             flex flex-col overflow-hidden shadow-dourado"
@@ -46,7 +51,9 @@ export default function Login() {
 
               <div className="absolute inset-0 flex items-center justify-center z-[20]">
                 <h2 className="text-xl md:text-2xl font-orienta text-secundary">
-                  {isLogin ? "Login" : "Cadastro"}
+                  {isLogin
+                    ? t(lang, "LoginPage.titleLogin")
+                    : t(lang, "LoginPage.titleRegister")}
                 </h2>
               </div>
             </div>
@@ -69,7 +76,7 @@ export default function Login() {
                         : "text-zinc-300 hover:text-white"
                     }`}
                   >
-                    Login
+                    {t(lang, "LoginPage.tabLogin")}
                   </button>
 
                   <button
@@ -80,7 +87,7 @@ export default function Login() {
                         : "text-zinc-300 hover:text-white"
                     }`}
                   >
-                    Cadastro
+                    {t(lang, "LoginPage.tabRegister")}
                   </button>
                 </div>
 
@@ -94,15 +101,13 @@ export default function Login() {
         </div>
 
         {/* Left Side - Branding */}
-        <div className="hidden md:flex flex-col justify-center items-start w-1/2 p-16 text-white">
-          <div className="bg-black/20 p-6 rounded-3xl">
+        <div className="hidden lg:flex flex-col justify-center items-start w-1/2 p-16 text-white">
+          <div className="bg-black/30 p-6 rounded-3xl">
             <h1 className="text-8xl font-long-cang text-secundary mb-6">
-              Bem-vindo
+              {t(lang, "LoginPage.welcomeTitle")}
             </h1>
             <p className="text-lg text-zinc-200 max-w-2xl">
-              Acesse sua conta ou crie um novo cadastro para começar sua jornada
-              junto ao nosso banco. Domine suas finanças com facilidade e
-              segurança.
+              {t(lang, "LoginPage.welcomeDescription")}
             </p>
           </div>
         </div>

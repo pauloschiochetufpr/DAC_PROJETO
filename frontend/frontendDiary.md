@@ -1,8 +1,9 @@
-# FrontEnd Master Bank
+﻿# FrontEnd Master Bank
 
 ## Hooks
 
-- Token (Auth)
+- useLanguage
+- useTheme (deprecated)
 
 ## Pages
 
@@ -11,23 +12,41 @@
   - Administrador
   - Cliente
 
-- Login (Geral)
+- Extrato (Cliente)
+
+- Login/Autocad (Geral)
 
 - Perfil (Cliente)
 - Página de transações (Cliente)
 - Página de transferência (Transações -> Transferência) (Cliente)
 
-- Crud de gerente (Administrador)
-
 ## Components
+
+#### Genéricos
+
+- Footer
+- Header
+- WaveSimplRed
+- MetalSurface
+
+#### Listas
 
 - Extrato (componente da Home Cliente)
 
-- Consulta geral de clientes (Componente da Home Gerente)
-- Consultar cliente especifico com pesquisa por cpf (Componente da Home Gerente)
-- Consultar 3 melhores clientes (Componente da Home Gerente)
+#### Gerente
 
-- Relatório de clientes (Componente da Home Administrador)
+- CardAprovacao
+- ListaAprovacao
+- ListaClientes
+
+#### Operations
+
+- ScrollBox
+- ScrollOperation
+
+#### Emprestimo
+
+- Credito
 
 ## Security
 
@@ -54,27 +73,27 @@ Regras que forçam reautenticação por senha:
 
 1. **Refresh expirado (sliding window)**
 
-- Se o `refresh` expirou (lastUsed + sliding TTL > limite) → exigir senha.
+- Se o `refresh` expirou (lastUsed + sliding TTL > limite) -> exigir senha.
 
 2. **Absolute max expirado**
 
-- Se o tempo total de sessão ultrapassa o `absolute max` → exigir senha para nova sessão.
+- Se o tempo total de sessão ultrapassa o `absolute max` -> exigir senha para nova sessão.
 
 3. **Device mismatch**
 
-- Se o `refresh` recebido não corresponde ao `deviceId` registrado (fingerprint/IP/userAgent incompatível) → bloquear e exigir reauth.
+- Se o `refresh` recebido não corresponde ao `deviceId` registrado (fingerprint/IP/userAgent incompatível) -> bloquear e exigir reauth.
 - Ação imediata: marcar o `refreshId` como `revoked` e bloquear o `deviceId` se houver suspeita.
 
 4. **Refresh reuse (replay) detectado**
 
-- Se um `refreshId` já inválido reaparece → sinal de comprometimento. Procedimento:
+- Se um `refreshId` já inválido reaparece -> sinal de comprometimento. Procedimento:
   - Invalida todos os `refreshId` da mesma `deviceId` e/ou `sessionId`.
   - Marca o `deviceId` como `blacklisted` (ou `compromised`).
   - Exige login normal com senha em todos os dispositivos do usuário.
 
 5. **Longa inatividade**
 
-- Se `lastUsedAt` ultrapassa threshold de inatividade (p.ex. 30 dias sem uso) → exigir senha.
+- Se `lastUsedAt` ultrapassa threshold de inatividade (p.ex. 30 dias sem uso) -> exigir senha.
 
 6. **Sinais de risco (geolocalização/IP inesperado, mudança de comportamento)**
 
@@ -90,5 +109,5 @@ Regras que forçam reautenticação por senha:
 
 1. Login inicial: cria `access` (JWT curto) + `refresh` (opaco rotativo); registra `refreshId` em `sessions` ligado ao `deviceId`.
 2. App usa `access`. Ao expirar, chama `/auth/refresh` enviando cookie `refresh`.
-3. Server valida `refreshId` + `device` → se OK: emite novo `access` e novo `refresh` (invalida antigo); atualiza `lastUsedAt`.
+3. Server valida `refreshId` + `device` -> se OK: emite novo `access` e novo `refresh` (invalida antigo); atualiza `lastUsedAt`.
 4. Se mismatch/reuse/suspeita: revoga sessão(s), marca `deviceId` como blacklisted, exige reauth (senha).

@@ -3,6 +3,8 @@ import { gsap } from "gsap";
 import waves from "../../assets/pattern/NotDone/waves.svg";
 import ScrollOperation from "./ScrollOperation";
 
+import { useBanco } from "../../hooks/useBanco";
+
 export default function ScrollBox({ title, isOpen, onToggle }) {
   const lidRef = useRef(null);
   const boxRef = useRef(null);
@@ -18,6 +20,10 @@ export default function ScrollBox({ title, isOpen, onToggle }) {
     conta: "",
   });
 
+  const { adicionarTransacao, saldo, client } = useBanco();
+  const [resultado, setResultado] = useState(null);
+  const contasValidas = ["1234", "3245", "9999"];
+
   const flow = {
     Depósito: ["valor", "confirmar", "resultado"],
     Saque: ["valor", "confirmar", "resultado"],
@@ -26,6 +32,17 @@ export default function ScrollBox({ title, isOpen, onToggle }) {
 
   const currentFlow = flow[title] || [];
   const visibleSteps = currentFlow.slice(0, step);
+
+  function parseValor(valorFormatado) {
+    if (!valorFormatado) return 0;
+    return Number(
+      valorFormatado
+        .replace("R$", "")
+        .replace(/\./g, "")
+        .replace(",", ".")
+        .trim(),
+    );
+  }
 
   // 💰 FORMATADOR
   const formatCurrency = (value) => {
@@ -255,20 +272,84 @@ export default function ScrollBox({ title, isOpen, onToggle }) {
                   {visibleSteps.includes("confirmar") && (
                     <button
                       className="text-green-600 rounded hover:text-green-500 select-none"
-                      onClick={() => setStep(step + 1)}
+                      onClick={async () => {
+                        const valorNumerico = parseValor(form.valor);
+
+                        if (!valorNumerico || valorNumerico <= 0) return;
+
+                        let tipoOperacao;
+                        if (title === "Depósito") tipoOperacao = "deposito";
+                        if (title === "Saque") tipoOperacao = "saque";
+                        if (title === "Transferência")
+                          tipoOperacao = "transferencia";
+
+                        // 🔴 VALIDAÇÃO DE CONTA (transferência)
+                        if (tipoOperacao === "transferencia") {
+                          if (!contasValidas.includes(form.conta)) {
+                            setResultado({
+                              status: "error",
+                              message: "Conta destino não existe.",
+                            });
+                            setStep(step + 1);
+                            return;
+                          }
+                        }
+
+                        const res = await adicionarTransacao({
+                          tipo: tipoOperacao,
+                          origem: "1234",
+                          destino: form.conta || "----",
+                          valor: valorNumerico,
+                        });
+
+                        if (res.status !== 200) {
+                          setResultado({
+                            status: "error",
+                            message: res.message,
+                          });
+                        } else {
+                          setResultado({
+                            status: "success",
+                            message: "Operação realizada com sucesso.",
+                            detalhes: {
+                              valor: form.valor,
+                              conta: form.conta,
+                            },
+                          });
+                        }
+
+                        setStep(step + 1);
+                      }}
                     >
                       Confirmar
                     </button>
                   )}
 
                   {/* RESULTADO */}
-                  {visibleSteps.includes("resultado") && (
-                    <div className="text-sm text-center bg-contrastDark/25 text-secundary p-1 rounded">
-                      <p className="select-none">Operação: {title}</p>
-                      {title === "Transferência" && (
-                        <p className="select-none">Conta: {form.conta}</p>
+                  {visibleSteps.includes("resultado") && resultado && (
+                    <div
+                      className={`text-sm text-center p-1 rounded ${
+                        resultado.status === "error"
+                          ? "bg-red-900/40 text-red-300"
+                          : "bg-green-900/40 text-green-300"
+                      }`}
+                    >
+                      {resultado.status === "error" ? (
+                        <>
+                          <p className="font-semibold">Erro</p>
+                          <p>{resultado.message}</p>
+                        </>
+                      ) : (
+                        <>
+                          <p>Operação: {title}</p>
+
+                          {title === "Transferência" && (
+                            <p>Conta: {resultado.detalhes?.conta}</p>
+                          )}
+
+                          <p>Valor: {resultado.detalhes?.valor}</p>
+                        </>
                       )}
-                      <p className="select-none">Valor: {form.valor}</p>
                     </div>
                   )}
                 </div>

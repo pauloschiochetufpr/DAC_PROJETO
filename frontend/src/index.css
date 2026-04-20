@@ -1,4 +1,4 @@
-/* Font (carregadas de src/assets/fonts) */
+﻿/* Font (carregadas de src/assets/fonts) */
 @font-face {
   font-family: "Inter";
   src: url("./assets/fonts/Inter/Inter-100.woff2") format("woff2");
@@ -232,6 +232,35 @@
     #000 100%
   );
   mask-image: radial-gradient(47px at 0 50%, transparent 99%, #000 100%);
+}
+
+/* Versões neutras: apenas a máscara da borda côncava.
+   circle closest-corner -> raio = height/2 (distância ao canto mais próximo),
+   gerando uma semicircunferência perfeita, independente de width/height. */
+.parchment-roll-edge-neutral-left {
+  -webkit-mask-image: radial-gradient(
+    circle closest-corner at 100% 50%,
+    transparent 99%,
+    black 100%
+  );
+  mask-image: radial-gradient(
+    circle closest-corner at 100% 50%,
+    transparent 99%,
+    black 100%
+  );
+}
+
+.parchment-roll-edge-neutral-right {
+  -webkit-mask-image: radial-gradient(
+    circle closest-corner at 0% 50%,
+    transparent 99%,
+    black 100%
+  );
+  mask-image: radial-gradient(
+    circle closest-corner at 0% 50%,
+    transparent 99%,
+    black 100%
+  );
 }
 
 /* Scrollbar Global: Firefox + WebKit */

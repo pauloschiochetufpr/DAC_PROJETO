@@ -1,5 +1,7 @@
 package com.dac.cliente.entity;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -30,6 +32,8 @@ public class Cliente {
 
     @Enumerated(EnumType.STRING)
     private StatusCliente status;
+
+    private LocalDateTime dataAprovacao;
 
     public String getCpf() {
         return cpf;
@@ -111,4 +115,11 @@ public class Cliente {
         this.status = status;
     }
 
+    public LocalDateTime getDataAprovacao(){
+        return dataAprovacao;
+    }
+
+    public void setDataAprovacao(LocalDateTime dataAprovacao) {
+        this.dataAprovacao = dataAprovacao;
+    }
 }
