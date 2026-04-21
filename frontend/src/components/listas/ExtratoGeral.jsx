@@ -6,6 +6,10 @@ import { useBanco } from "../../hooks/useBanco";
 // Utilitários
 import { formatarData } from "../../lib/dataUtils";
 
+// i18n
+import { useLanguage } from "../../hooks/useLanguage";
+import { t } from "../../lib/i18n";
+
 // Lucide
 import {
   BanknoteArrowUp,
@@ -61,13 +65,6 @@ const addDays = (date, n) => {
 // Labels de interface
 
 const TIPOS = ["todos", "deposito", "saque", "transferencia"];
-
-const TIPO_LABEL = {
-  todos: "Todos",
-  deposito: "Depósito",
-  saque: "Saque",
-  transferencia: "Transferência",
-};
 
 const IconeTipo = ({ tipo, className }) => {
   const p = { size: 18, className };
@@ -133,6 +130,9 @@ const saldoNoFimDoDia = (dateStr, todasMovs, saldoAtual, conta) => {
 };
 
 export default function ExtratoGeral() {
+  // i18n
+  const { lang } = useLanguage();
+
   // Mock
   const { conta, saldo, movimentacoes } = useBanco();
 
@@ -156,20 +156,20 @@ export default function ExtratoGeral() {
       if (res.status === 200) {
         setResultado(res.data);
       } else if (res.status === 401) {
-        setErro({ code: 401, msg: "Sessão expirada. Faça login novamente." });
+        setErro({ code: 401, key: "ExtratoGeral.errors.session_expired" });
       } else if (res.status === 403) {
         setErro({
           code: 403,
-          msg: "Você não tem permissão para consultar este extrato.",
+          key: "ExtratoGeral.errors.forbidden",
         });
       } else {
         setErro({
           code: res.status,
-          msg: "Erro ao consultar extrato. Tente novamente.",
+          key: "ExtratoGeral.errors.generic",
         });
       }
     } catch {
-      setErro({ code: 0, msg: "Falha de conexão. Verifique sua internet." });
+      setErro({ code: 0, key: "ExtratoGeral.errors.connection" });
     } finally {
       setLoading(false);
     }
@@ -247,16 +247,16 @@ export default function ExtratoGeral() {
           <div className="flex items-center gap-2">
             <Wallet size={20} className="text-secundary" />
             <h2 className="text-contrast font-orienta text-xl">
-              Extrato Bancário
+              {t(lang, "ExtratoGeral.title")}
             </h2>
           </div>
           <p className="text-xs text-contrast/65 font-inter ml-7 select-text">
-            Conta&nbsp;
+            {t(lang, "ExtratoGeral.account_label")}&nbsp;
             <span className="text-contrast font-semibold">{conta}</span>
           </p>
           <div className="mt-2 ml-7">
             <p className="text-xs text-contrast/65 uppercase tracking-wide">
-              Saldo atual
+              {t(lang, "ExtratoGeral.balance_label")}
             </p>
             <p
               className={`font-inter font-semibold text-lg select-text tabular-nums ${
@@ -273,17 +273,17 @@ export default function ExtratoGeral() {
         {/* Período */}
         <div className="flex flex-col gap-3">
           <span className="text-xs text-contrast/80 font-inter uppercase tracking-wide select-none">
-            Período
+            {t(lang, "ExtratoGeral.period_label")}
           </span>
 
           {/* Presets */}
           <div className="grid grid-cols-4 gap-1.5">
             {[
-              { label: "7 dias", dias: 7 },
-              { label: "30 dias", dias: 30 },
-              { label: "6 meses", dias: 180 },
-              { label: "1 ano", dias: 365 },
-            ].map(({ label, dias }) => (
+              { key: "ExtratoGeral.presets.7_days", dias: 7 },
+              { key: "ExtratoGeral.presets.30_days", dias: 30 },
+              { key: "ExtratoGeral.presets.6_months", dias: 180 },
+              { key: "ExtratoGeral.presets.1_year", dias: 365 },
+            ].map(({ key, dias }) => (
               <button
                 key={dias}
                 onClick={() => setPreset(dias)}
@@ -292,7 +292,7 @@ export default function ExtratoGeral() {
                            hover:bg-secundary/10 active:scale-95
                            transition-all duration-150 select-none"
               >
-                {label}
+                {t(lang, key)}
               </button>
             ))}
           </div>
@@ -300,7 +300,9 @@ export default function ExtratoGeral() {
           {/* Inputs de data personalizados */}
           <div className="flex flex-col gap-2 mt-1">
             <label className="flex flex-col gap-1">
-              <span className="text-xs text-contrast/80 select-none">De</span>
+              <span className="text-xs text-contrast/80 select-none">
+                {t(lang, "ExtratoGeral.date_from")}
+              </span>
               <input
                 type="date"
                 value={dataInicio}
@@ -313,7 +315,9 @@ export default function ExtratoGeral() {
               />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="text-xs text-contrast/80 select-none">Até</span>
+              <span className="text-xs text-contrast/80 select-none">
+                {t(lang, "ExtratoGeral.date_to")}
+              </span>
               <input
                 type="date"
                 value={dataFim}
@@ -327,7 +331,7 @@ export default function ExtratoGeral() {
             </label>
             {dataInvalida && (
               <p className="text-xs text-red-400 font-inter select-text">
-                A data inicial não pode ser posterior à data final.
+                {t(lang, "ExtratoGeral.date_invalid")}
               </p>
             )}
           </div>
@@ -338,7 +342,7 @@ export default function ExtratoGeral() {
         {/* Filtro por tipo */}
         <div className="flex flex-col gap-3">
           <span className="text-xs text-contrast/80 font-inter uppercase tracking-wide select-none">
-            Tipo de operação
+            {t(lang, "ExtratoGeral.type_label")}
           </span>
           <div className="flex flex-wrap gap-2">
             {TIPOS.map((tipo) => (
@@ -353,7 +357,7 @@ export default function ExtratoGeral() {
                                 : "border-secundary/40 text-contrast/80 hover:border-secundary/70 hover:text-contrast"
                             }`}
               >
-                {TIPO_LABEL[tipo]}
+                {t(lang, `ExtratoGeral.tipo.${tipo}`)}
               </button>
             ))}
           </div>
@@ -367,7 +371,7 @@ export default function ExtratoGeral() {
           <div className="flex-1 flex flex-col items-center justify-center py-24 gap-3 select-none">
             <LoaderCircle size={36} className="text-secundary animate-spin" />
             <p className="text-contrast/100 font-inter text-sm">
-              Carregando extrato...
+              {t(lang, "ExtratoGeral.loading")}
             </p>
           </div>
         )}
@@ -377,7 +381,7 @@ export default function ExtratoGeral() {
           <div className="flex-1 flex flex-col items-center justify-center py-24 gap-3 select-none">
             <AlertCircle size={36} className="text-red-400 select-none" />
             <p className="text-red-400 font-inter text-sm font-medium">
-              {erro.msg}
+              {t(lang, erro.key)}
             </p>
           </div>
         )}
@@ -387,7 +391,7 @@ export default function ExtratoGeral() {
           <div className="flex-1 flex flex-col items-center justify-center py-24 gap-3 select-none">
             <Calendar size={36} className="text-contrast/100" />
             <p className="text-contrast/90 font-inter text-sm">
-              Corrija o período para visualizar o extrato.
+              {t(lang, "ExtratoGeral.date_fix_prompt")}
             </p>
           </div>
         )}
@@ -399,7 +403,7 @@ export default function ExtratoGeral() {
               <div className="flex-1 flex flex-col items-center justify-center py-24 gap-3 select-none">
                 <Calendar size={36} className="text-contrast/100" />
                 <p className="text-contrast/100 font-inter text-sm">
-                  Nenhum dado para o período selecionado.
+                  {t(lang, "ExtratoGeral.empty_period")}
                 </p>
               </div>
             )}
@@ -429,8 +433,8 @@ export default function ExtratoGeral() {
                 {movsExibir.length === 0 ? (
                   <div className="px-5 py-3 text-xs text-contrast/80 font-inter italic select-none">
                     {temMovimentos
-                      ? "Nenhuma movimentação do tipo selecionado."
-                      : "Sem movimentações."}
+                      ? t(lang, "ExtratoGeral.empty_filter")
+                      : t(lang, "ExtratoGeral.empty_day")}
                   </div>
                 ) : (
                   movsExibir.map((mov) => {
@@ -465,13 +469,14 @@ export default function ExtratoGeral() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-sm font-inter font-medium text-contrast">
-                              {TIPO_LABEL[mov.tipo] ?? mov.tipo}
+                              {t(lang, `ExtratoGeral.tipo.${mov.tipo}`) ??
+                                mov.tipo}
                             </span>
                             {mov.tipo === "transferencia" && (
                               <span className="text-xs text-contrast/60 select-text">
                                 {entrada
-                                  ? `de ${mov.origem}`
-                                  : `para ${mov.destino}`}
+                                  ? `${t(lang, "ExtratoGeral.transfer_from")} ${mov.origem}`
+                                  : `${t(lang, "ExtratoGeral.transfer_to")} ${mov.destino}`}
                               </span>
                             )}
                           </div>

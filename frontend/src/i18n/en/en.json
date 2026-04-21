@@ -10,7 +10,8 @@
   "Footer": {
     "supported_ongs": "Supported NGOs",
     "privacy_policy": "Privacy Policy",
-    "copyright": "(FAKE COMPANY) MasterBank. All rights reserved"
+    "copyright": "(FAKE COMPANY) MasterBank. All rights reserved",
+    "Know-or-networks": "Check out our social medias!"
   },
   "HomeAdmin": {
     "manage_managers": "Manage Managers",
@@ -37,6 +38,60 @@
       "manager": "Manager",
       "balance": "Balance | Salary",
       "credit": "Credit"
+    }
+  },
+  "ExtratoGeral": {
+    "title": "Bank Statement",
+    "account_label": "Account",
+    "balance_label": "Current Balance",
+    "period_label": "Period",
+    "presets": {
+      "7_days": "7 days",
+      "30_days": "30 days",
+      "6_months": "6 months",
+      "1_year": "1 year"
+    },
+    "date_from": "From",
+    "date_to": "To",
+    "date_invalid": "Start date cannot be after end date.",
+    "type_label": "Operation Type",
+    "tipo": {
+      "todos": "All",
+      "deposito": "Deposit",
+      "saque": "Withdrawal",
+      "transferencia": "Transfer"
+    },
+    "loading": "Loading statement...",
+    "date_fix_prompt": "Fix the period to view the statement.",
+    "empty_period": "No data for the selected period.",
+    "empty_filter": "No transactions of the selected type.",
+    "empty_day": "No transactions.",
+    "transfer_from": "from",
+    "transfer_to": "to",
+    "errors": {
+      "session_expired": "Session expired. Please log in again.",
+      "forbidden": "You don't have permission to view this statement.",
+      "generic": "Error loading statement. Try again.",
+      "connection": "Connection failed. Check your internet."
+    }
+  },
+  "GerenteForm": {
+    "title_edit": "Edit Manager",
+    "title_create": "Register Manager",
+    "section_personal": "Personal Data",
+    "fields": {
+      "cpf": "CPF",
+      "nome": "Name",
+      "email": "E-mail",
+      "telefone": "Phone",
+      "senha": "Password"
+    },
+    "email_warning": "The e-mail must contain '@' and a valid domain (e.g.: user@domain.com)",
+    "actions": {
+      "update": "Update",
+      "create": "Create",
+      "delete": "Delete",
+      "new_manager": "New Manager"
     }
   },
   "GerentesAdminLista": {

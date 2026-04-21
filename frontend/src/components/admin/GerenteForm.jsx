@@ -11,12 +11,19 @@ import WaveSimpleRedReverse from "../WaveSimpleRedReverse";
 // Lucide
 import { AlertCircle } from "lucide-react";
 
+// i18n
+import { useLanguage } from "../../hooks/useLanguage";
+import { t } from "../../lib/i18n";
+
 // Componente principal
 export default function GerenteForm({
   gerenteSelecionado,
   onRefresh,
   onClear,
 }) {
+  // i18n
+  const { lang } = useLanguage();
+
   // Formatadores
   const cpfMask = (cpf) =>
     String(cpf).replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
@@ -122,7 +129,9 @@ export default function GerenteForm({
         md:w-fit w-[14rem] h-fit select-none z-[200] left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2"
         >
           <h2 className="font-orienta text-xl md:text-3xl text-secundary">
-            {form.id ? "Editar Gerente" : "Cadastrar Gerente"}
+            {form.id
+              ? t(lang, "GerenteForm.title_edit")
+              : t(lang, "GerenteForm.title_create")}
           </h2>
         </div>
       </div>
@@ -135,27 +144,27 @@ export default function GerenteForm({
             className="text-secundary font-semibold font-inter mb-4 text-sm uppercase
                        tracking-wider border-b border-secundary/60 pb-2"
           >
-            Dados Pessoais
+            {t(lang, "GerenteForm.section_personal")}
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             <Input
-              label="CPF"
+              label={t(lang, "GerenteForm.fields.cpf")}
               value={form.cpf ? cpfMask(form.cpf) : ""}
               disabled={!!form.id}
               onChange={(v) => setForm({ ...form, cpf: v })}
             />
 
             <Input
-              label="Nome"
+              label={t(lang, "GerenteForm.fields.nome")}
               value={form.nome}
               onChange={(v) => setForm({ ...form, nome: v })}
             />
 
             <Input
-              label="E-mail"
+              label={t(lang, "GerenteForm.fields.email")}
               value={form.email}
               onChange={(v) => setForm({ ...form, email: v })}
-              warningMessage="O e-mail deve conter '@' e um domínio válido (ex: usuario@dominio.com)"
+              warningMessage={t(lang, "GerenteForm.email_warning")}
               warn={
                 form.email.length > 0 &&
                 !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)
@@ -163,7 +172,7 @@ export default function GerenteForm({
             />
 
             <Input
-              label="Telefone"
+              label={t(lang, "GerenteForm.fields.telefone")}
               value={form.telefone ? telefoneMask(form.telefone) : ""}
               onChange={(v) =>
                 setForm({
@@ -174,7 +183,7 @@ export default function GerenteForm({
             />
 
             <Input
-              label="Senha"
+              label={t(lang, "GerenteForm.fields.senha")}
               value={form.senha}
               type="password"
               onChange={(v) => setForm({ ...form, senha: v })}
@@ -186,7 +195,9 @@ export default function GerenteForm({
             onClick={handleSalvar}
             className="bg-secundaryDark hover:bg-secundary px-4 py-2 h-[2.6rem] rounded-sm text-white font-semibold"
           >
-            {form.id ? "Atualizar" : "Criar"}
+            {form.id
+              ? t(lang, "GerenteForm.actions.update")
+              : t(lang, "GerenteForm.actions.create")}
           </button>
 
           {form.id && (
@@ -195,7 +206,7 @@ export default function GerenteForm({
               className="bg-brand/20 px-4 py-2 h-[2.6rem] hover:bg-brand border border-brand
               rounded-sm text-white"
             >
-              Excluir
+              {t(lang, "GerenteForm.actions.delete")}
             </button>
           )}
           {form.id != null && (
@@ -205,7 +216,7 @@ export default function GerenteForm({
               active:bg-secundary
               text-white font-semibold"
             >
-              Novo Gerente
+              {t(lang, "GerenteForm.actions.new_manager")}
             </button>
           )}
         </div>
