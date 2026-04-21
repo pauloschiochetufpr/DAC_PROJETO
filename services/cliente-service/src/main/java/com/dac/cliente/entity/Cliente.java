@@ -1,5 +1,7 @@
 package com.dac.cliente.entity;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
@@ -25,7 +27,11 @@ public class Cliente {
     @Enumerated(EnumType.STRING)
     private StatusCliente status;
 
+    // usado quando o cliente é rejeitado
     private String motivoRejeicao;
+
+    // usado quando o cliente é aprovado
+    private LocalDateTime dataAprovacao;
 
     public String getCpf() {
         return cpf;
@@ -100,7 +106,7 @@ public class Cliente {
     }
 
     public StatusCliente getStatus() {
-    return status;
+        return status;
     }
 
     public void setStatus(StatusCliente status) {
@@ -113,5 +119,13 @@ public class Cliente {
 
     public void setMotivoRejeicao(String motivoRejeicao) {
         this.motivoRejeicao = motivoRejeicao;
+    }
+
+    public LocalDateTime getDataAprovacao() {
+        return dataAprovacao;
+    }
+
+    public void setDataAprovacao(LocalDateTime dataAprovacao) {
+        this.dataAprovacao = dataAprovacao;
     }
 }

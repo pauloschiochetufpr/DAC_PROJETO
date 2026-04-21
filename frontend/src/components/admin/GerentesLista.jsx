@@ -1,5 +1,9 @@
 import { useState, useEffect } from "react";
 
+// i18n
+import { useLanguage } from "../../hooks/useLanguage";
+import { t } from "../../lib/i18n";
+
 // Mock's
 import {
   getGerentesAdmin,
@@ -31,6 +35,9 @@ export default function GerentesLista({
   modo = "ranking",
   refreshKey = 0,
 }) {
+  // State da língua
+  const { lang } = useLanguage();
+
   // State gerentes
   const [gerentes, setGerentes] = useState([]);
 
@@ -83,7 +90,7 @@ export default function GerentesLista({
                        select-none text-center z-[19] px-5 py-2 pb-3 bg-black/50 rounded-md
                        shadow-inner shadow-black"
           >
-            Gerentes
+            {t(lang, "GerentesAdminLista.title")}
           </div>
         </div>
       </div>
@@ -115,6 +122,7 @@ export default function GerentesLista({
                 posicao={idx + 1}
                 onSelect={onSelect}
                 isSelected={selectedId === ger.id}
+                modo={modo}
               />
             ))}
           </div>
@@ -125,7 +133,10 @@ export default function GerentesLista({
 }
 
 // Card individual de gerente
-function CardGerente({ gerente, posicao, onSelect, isSelected }) {
+function CardGerente({ gerente, posicao, onSelect, isSelected, modo }) {
+  // State da língua
+  const { lang } = useLanguage();
+
   const medalha =
     posicao === 1
       ? "border-yellow-400/60"
@@ -141,14 +152,16 @@ function CardGerente({ gerente, posicao, onSelect, isSelected }) {
       className={`rounded-xl border ${medalha} bg-black/20 select-none px-3 py-3 flex flex-col gap-2 ${
         onSelect ? "cursor-pointer hover:bg-black/30 transition-colors" : ""
       }
-    ${isSelected ? "bg-secundary/20 border-secundary" : "bg-black/20"}
+    ${isSelected ? "bg-secundary/5 border-secundary" : "bg-black/20"}
       }`}
     >
       {/* Cabeçalho | posição + nome + clientes */}
       <div className="flex items-start gap-2">
-        <span className="font-orienta text-secundary text-base w-6 text-center flex-shrink-0 leading-tight">
-          {posicao}º
-        </span>
+        {modo === "ranking" && (
+          <span className="font-orienta text-secundary text-base w-6 text-center flex-shrink-0 leading-tight">
+            {posicao}º
+          </span>
+        )}
         <div className="flex-1 min-w-0">
           <div className="font-orienta text-contrast text-sm leading-tight truncate">
             {gerente.nome}
@@ -160,7 +173,8 @@ function CardGerente({ gerente, posicao, onSelect, isSelected }) {
         <div className="flex items-center gap-1 flex-shrink-0">
           <Users size={13} className="text-contrastDark" />
           <span className="font-inter text-contrast text-xs">
-            {gerente.totalClientes} clientes
+            {gerente.totalClientes}{" "}
+            {t(lang, "GerentesAdminLista.labels.clients")}
           </span>
         </div>
       </div>
@@ -169,7 +183,10 @@ function CardGerente({ gerente, posicao, onSelect, isSelected }) {
       <div className="flex flex-col gap-0.5 border-t border-secundaryDark/20 pt-2">
         <Row label="CPF" valor={cpfMask(gerente.cpf)} />
         <Row label="E-mail" valor={gerente.email} />
-        <Row label="Telefone" valor={gerente.telefone} />
+        <Row
+          label={t(lang, "GerentesAdminLista.labels.phone")}
+          valor={gerente.telefone}
+        />
       </div>
 
       {/* Saldos e resultados */}
@@ -177,7 +194,9 @@ function CardGerente({ gerente, posicao, onSelect, isSelected }) {
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1 text-green-400/80">
             <TrendingUp size={12} />
-            <span className="font-inter text-[10px]">Saldos Positivos</span>
+            <span className="font-inter text-[10px]">
+              {t(lang, "GerentesAdminLista.labels.positiveBalances")}
+            </span>
           </div>
           <span className="font-inter text-[10px] text-green-400 font-medium">
             {fmtBRL(gerente.somaSaldosPositivos)}
@@ -186,7 +205,9 @@ function CardGerente({ gerente, posicao, onSelect, isSelected }) {
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1 text-red-400/80">
             <TrendingDown size={12} />
-            <span className="font-inter text-[10px]">Saldos Negativos</span>
+            <span className="font-inter text-[10px]">
+              {t(lang, "GerentesAdminLista.labels.negativeBalances")}
+            </span>
           </div>
           <span className="font-inter text-[10px] text-red-400 font-medium">
             -{fmtBRL(gerente.somaSaldosNegativos)}

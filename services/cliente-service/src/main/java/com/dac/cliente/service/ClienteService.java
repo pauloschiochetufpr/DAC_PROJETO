@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Service
@@ -19,22 +20,24 @@ public class ClienteService {
 
     public void autocadastro(AutocadastroRequestDTO dto) {
 
-        if (repository.existsById(dto.getCpf())) {
-            throw new RuntimeException("Cliente já existe");
+        validarAutocadastro(dto);
+
+        String cpf = normalizarDocumento(dto.getCpf());
+
+        if (repository.existsById(cpf)) {
+            throw new RuntimeException("Cliente já existe ou está pendente");
         }
 
         Cliente c = new Cliente();
-        c.setCpf(dto.getCpf());
-        c.setNome(dto.getNome());
-        c.setEmail(dto.getEmail());
-        c.setTelefone(dto.getTelefone());
+        c.setCpf(cpf);
+        c.setNome(normalizarTexto(dto.getNome()));
+        c.setEmail(normalizarEmail(dto.getEmail()));
+        c.setTelefone(normalizarTexto(dto.getTelefone()));
         c.setSalario(dto.getSalario());
-        c.setEndereco(dto.getEndereco());
-        c.setCep(dto.getCep());
-        c.setCidade(dto.getCidade());
-        c.setEstado(dto.getEstado());
-
-        // ✅ agora usando ENUM
+        c.setEndereco(normalizarTexto(dto.getEndereco()));
+        c.setCep(normalizarDocumento(dto.getCep()));
+        c.setCidade(normalizarTexto(dto.getCidade()));
+        c.setEstado(normalizarUf(dto.getEstado()));
         c.setStatus(StatusCliente.PENDENTE);
 
         repository.save(c);
@@ -65,13 +68,13 @@ public class ClienteService {
         Cliente c = repository.findById(cpf)
                 .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
 
-        c.setNome(dto.getNome());
-        c.setEmail(dto.getEmail());
+        c.setNome(normalizarTexto(dto.getNome()));
+        c.setEmail(normalizarEmail(dto.getEmail()));
         c.setSalario(dto.getSalario());
-        c.setEndereco(dto.getEndereco());
-        c.setCep(dto.getCep());
-        c.setCidade(dto.getCidade());
-        c.setEstado(dto.getEstado());
+        c.setEndereco(normalizarTexto(dto.getEndereco()));
+        c.setCep(normalizarDocumento(dto.getCep()));
+        c.setCidade(normalizarTexto(dto.getCidade()));
+        c.setEstado(normalizarUf(dto.getEstado()));
 
         repository.save(c);
     }
@@ -80,7 +83,6 @@ public class ClienteService {
         Cliente c = repository.findById(cpf)
                 .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
 
-        // ✅ ENUM
         c.setStatus(StatusCliente.APROVADO);
 
         repository.save(c);
@@ -90,11 +92,62 @@ public class ClienteService {
         Cliente c = repository.findById(cpf)
                 .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
 
-        // ✅ ENUM
         c.setStatus(StatusCliente.REJEITADO);
         c.setMotivoRejeicao(motivo);
 
         repository.save(c);
+    }
+
+    // ================= VALIDAÇÕES =================
+
+    private void validarAutocadastro(AutocadastroRequestDTO dto) {
+
+        if (dto == null) throw new IllegalArgumentException("Dados obrigatórios");
+
+        if (estaVazio(dto.getCpf())) throw new IllegalArgumentException("CPF obrigatório");
+        if (estaVazio(dto.getNome())) throw new IllegalArgumentException("Nome obrigatório");
+        if (estaVazio(dto.getEmail())) throw new IllegalArgumentException("Email obrigatório");
+        if (dto.getSalario() == null || dto.getSalario() < 0)
+            throw new IllegalArgumentException("Salário inválido");
+        if (estaVazio(dto.getEndereco())) throw new IllegalArgumentException("Endereço obrigatório");
+        if (estaVazio(dto.getCep())) throw new IllegalArgumentException("CEP obrigatório");
+        if (estaVazio(dto.getCidade())) throw new IllegalArgumentException("Cidade obrigatória");
+        if (estaVazio(dto.getEstado())) throw new IllegalArgumentException("Estado obrigatório");
+
+        String cpf = normalizarDocumento(dto.getCpf());
+        if (cpf.length() != 11) throw new IllegalArgumentException("CPF inválido");
+
+        String cep = normalizarDocumento(dto.getCep());
+        if (cep.length() != 8) throw new IllegalArgumentException("CEP inválido");
+
+        String email = normalizarEmail(dto.getEmail());
+        if (!email.contains("@") || email.startsWith("@") || email.endsWith("@"))
+            throw new IllegalArgumentException("Email inválido");
+
+        String estado = normalizarUf(dto.getEstado());
+        if (estado.length() != 2) throw new IllegalArgumentException("UF inválida");
+    }
+
+    // ================= NORMALIZAÇÃO =================
+
+    private String normalizarTexto(String v) {
+        return v == null ? null : v.trim();
+    }
+
+    private String normalizarEmail(String v) {
+        return v == null ? null : v.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private String normalizarDocumento(String v) {
+        return v == null ? null : v.replaceAll("\\D", "");
+    }
+
+    private String normalizarUf(String v) {
+        return v == null ? null : v.trim().toUpperCase(Locale.ROOT);
+    }
+
+    private boolean estaVazio(String v) {
+        return v == null || v.trim().isEmpty();
     }
 
     // ================= DTO MAPPERS =================

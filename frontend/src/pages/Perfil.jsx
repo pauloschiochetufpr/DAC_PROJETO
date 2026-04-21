@@ -4,7 +4,7 @@ import { useBanco } from "../hooks/useBanco";
 import { MetalSurface } from "../components/MetalSurface";
 import WaveSimpleRed from "../components/WaveSimpleRed";
 import SecundaryBorder from "../assets/icons/SecundaryBorder.svg";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 
 export default function Perfil() {
   const { client, contaInfo, atualizarPerfil, saldo } = useBanco();
@@ -15,6 +15,7 @@ export default function Perfil() {
   const [isEditing, setIsEditing] = useState(false);
   const [fieldEditing, setFieldEditing] = useState({});
   const [form, setForm] = useState({});
+  const [profileSection, setProfileSection] = useState("dados");
 
   function calcularLimiteParaSalario(salario, saldoAtual) {
     const base = salario >= 2000 ? salario / 2 : 0;
@@ -73,7 +74,7 @@ export default function Perfil() {
 
   return (
     <div className="mt-56 p-6 mx-auto relative flex flex-col justify-center items-center lg:items-end lg:flex-row gap-24">
-      <div className="fixed top-52 left-6 z-[50]">
+      <div className="absolute -top-4 left-6 z-[50]">
         <Link to="/">
           <button
             className="
@@ -127,84 +128,121 @@ export default function Perfil() {
             <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.2),transparent_30%,transparent_70%,rgba(0,0,0,0.2))]" />
             <div className="bg-brand p-0 flex flex-col">
               <div className="pt-6 p-4 flex-1 flex flex-col">
+                {/* SETA DIREITA → ENDEREÇO */}
+                {profileSection === "dados" && (
+                  <button
+                    onClick={() => setProfileSection("endereco")}
+                    className="
+      absolute right-2 top-1/2 -translate-y-1/2 p-2
+      transition-all duration-300 flex flex-row
+      hover:scale-110 text-secundary
+      z-20
+    "
+                  >
+                    <span className="hidden sm:block md:block lg:hidden xl:block text-sm">
+                      Endereço
+                    </span>
+                    <ArrowRight className="w-5 h-5 md:w-6 md:h-6" />
+                  </button>
+                )}
+
+                {/* SETA ESQUERDA ← DADOS */}
+                {profileSection === "endereco" && (
+                  <button
+                    onClick={() => setProfileSection("dados")}
+                    className="
+      absolute left-2 top-1/2 -translate-y-1/2 p-2
+      transition-all duration-300 flex flex-row
+      hover:scale-110 text-secundary
+      z-20
+    "
+                  >
+                    <ArrowLeft className="w-5 h-5 md:w-6 md:h-6" />
+                    <span className="hidden sm:block md:block lg:hidden xl:block text-sm">
+                      Dados
+                    </span>
+                  </button>
+                )}
                 <div className="relative z-10 p-4 pt-6 flex flex-col">
-                  {/* CAMPOS NORMAIS */}
-                  {[
-                    { key: "nome", label: "Nome" },
-                    { key: "cpf", label: "CPF", alwaysDisabled: true },
-                    { key: "email", label: "E-mail" },
-                    { key: "telefone", label: "Telefone" },
-                  ].map((f) => {
-                    const isReadOnly = !!f.readOnly;
-                    const isAlwaysDisabled = !!f.alwaysDisabled;
+                  {profileSection === "dados" ? (
+                    <>
+                      {/* CAMPOS NORMAIS */}
+                      {[
+                        { key: "nome", label: "Nome" },
+                        { key: "cpf", label: "CPF", alwaysDisabled: true },
+                        { key: "email", label: "E-mail" },
+                        { key: "telefone", label: "Telefone" },
+                      ].map((f) => {
+                        const isReadOnly = !!f.readOnly;
+                        const isAlwaysDisabled = !!f.alwaysDisabled;
 
-                    const isFieldEditable =
-                      !isReadOnly && !isAlwaysDisabled && isEditing;
+                        const isFieldEditable =
+                          !isReadOnly && !isAlwaysDisabled && isEditing;
 
-                    return (
-                      <div
-                        key={f.key}
-                        onClick={() => {
-                          if (!f.alwaysDisabled) handleFieldClick(f.key);
-                        }}
-                        className={`
+                        return (
+                          <div
+                            key={f.key}
+                            onClick={() => {
+                              if (!f.alwaysDisabled) handleFieldClick(f.key);
+                            }}
+                            className={`
                       group
                       lg:py-5 py-3 px-3
                       flex flex-col lg:flex-row lg:items-center lg:justify-between
-                      gap-2 md:gap-8
+                      gap-2 lg:gap-0 xl:gap-8
                       `}
-                      >
-                        {/* LABEL */}
-                        <label className="text-lg font-medium text-secundary text-center lg:text-left lg:w-1/3">
-                          {f.label}
-                        </label>
+                          >
+                            {/* LABEL */}
+                            <label className="text-sm sm:text-lg lg:text-sm xl:text-lg font-medium text-secundary text-center lg:text-left lg:w-1/3">
+                              {f.label}
+                            </label>
 
-                        {/* INPUT CONTAINER */}
-                        <div
-                          className={`
-                          lg:w-2/3 w-full rounded-lg px-3 py-2 transition-all duration-300
+                            {/* INPUT CONTAINER */}
+                            <div
+                              className={`
+                          lg:w-2/3 w-full rounded-lg px-3 lg:pl-0 py-2 transition-all duration-300
                           ${
                             isFieldEditable
                               ? "bg-white/5 border border-white/10 group-hover:border-orange-300/40 group-hover:shadow-[0_0_10px_rgba(255,120,80,0.25)]"
                               : "bg-transparent border border-transparent"
                           }
                           `}
-                        >
-                          <input
-                            name={f.key}
-                            type={f.key === "saldo" ? "number" : "text"}
-                            step={f.key === "saldo" ? "0.01" : undefined}
-                            value={
-                              isEditing
-                                ? (form?.[f.key] ?? "")
-                                : (client?.[f.key] ?? "")
-                            }
-                            onChange={handleChange}
-                            disabled={!isFieldEditable}
-                            readOnly={isReadOnly}
-                            className={`
-                            w-full bg-transparent outline-none text-lg text-center lg:text-left
+                            >
+                              <input
+                                name={f.key}
+                                type={f.key === "saldo" ? "number" : "text"}
+                                step={f.key === "saldo" ? "0.01" : undefined}
+                                value={
+                                  isEditing
+                                    ? (form?.[f.key] ?? "")
+                                    : (client?.[f.key] ?? "")
+                                }
+                                onChange={handleChange}
+                                disabled={!isFieldEditable}
+                                readOnly={isReadOnly}
+                                className={`
+                            w-full bg-transparent outline-none text-sm sm:text-lg lg:text-sm xl:text-lg text-center lg:text-left
                             ${isFieldEditable ? "text-zinc-100" : "text-zinc-300"}
                             `}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
 
-                  {/* 💰 SALÁRIO + LIMITE NA MESMA LINHA */}
-                  <div className="py-3 px-3 flex flex-col lg:flex-row gap-4">
-                    {/* SALÁRIO */}
-                    <div
-                      className="flex-1 group flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-4"
-                      onClick={() => handleFieldClick("salario")}
-                    >
-                      <label className="text-lg text-secundary text-center lg:text-left lg:w-2/3">
-                        Salário (R$)
-                      </label>
+                      {/* 💰 SALÁRIO + LIMITE NA MESMA LINHA */}
+                      <div className="py-3 px-3 flex flex-col xl:flex-row gap-4">
+                        {/* SALÁRIO */}
+                        <div
+                          className="flex-1 group flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-4"
+                          onClick={() => handleFieldClick("salario")}
+                        >
+                          <label className="text-sm sm:text-lg lg:text-sm xl:text-lg text-secundary text-center lg:text-left xl:w-2/3">
+                            Salário (R$)
+                          </label>
 
-                      <div
-                        className={`
+                          <div
+                            className={`
                         lg:w-2/3 w-full rounded-lg px-3 py-2 transition-all duration-300
                         ${
                           isEditing
@@ -212,65 +250,129 @@ export default function Perfil() {
                             : "bg-transparent border border-transparent"
                         }
                         `}
-                      >
-                        <input
-                          name="salario"
-                          type="text"
-                          inputMode="decimal"
-                          value={
-                            isEditing
-                              ? (form.salario ?? "").toString()
-                              : Number(client?.salario ?? 0).toFixed(2)
-                          }
-                          onChange={(e) => {
-                            let value = e.target.value;
+                          >
+                            <input
+                              name="salario"
+                              type="text"
+                              inputMode="decimal"
+                              value={
+                                isEditing
+                                  ? (form.salario ?? "").toString()
+                                  : Number(client?.salario ?? 0).toFixed(2)
+                              }
+                              onChange={(e) => {
+                                let value = e.target.value;
 
-                            // Permite apenas números e ponto
-                            value = value.replace(",", "."); // suporte BR
-                            if (!/^\d*\.?\d*$/.test(value)) return;
+                                // Permite apenas números e ponto
+                                value = value.replace(",", "."); // suporte BR
+                                if (!/^\d*\.?\d*$/.test(value)) return;
 
-                            setForm((prev) => ({
-                              ...prev,
-                              salario: value,
-                            }));
-                          }}
-                          onBlur={() => {
-                            // Ao sair do campo -> formata para 2 casas
-                            setForm((prev) => ({
-                              ...prev,
-                              salario: Number(prev.salario || 0).toFixed(2),
-                            }));
-                          }}
-                          disabled={!isEditing}
-                          className="w-full bg-transparent outline-none text-lg text-center lg:text-left text-zinc-100"
-                        />
+                                setForm((prev) => ({
+                                  ...prev,
+                                  salario: value,
+                                }));
+                              }}
+                              onBlur={() => {
+                                // Ao sair do campo -> formata para 2 casas
+                                setForm((prev) => ({
+                                  ...prev,
+                                  salario: Number(prev.salario || 0).toFixed(2),
+                                }));
+                              }}
+                              disabled={!isEditing}
+                              className="w-full bg-transparent outline-none text-sm sm:text-lg lg:text-sm xl:text-lg text-center lg:text-left text-zinc-100"
+                            />
+                          </div>
+                        </div>
+
+                        {/* LIMITE */}
+                        <div className="flex-1 flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-4">
+                          <label className="text-sm sm:text-lg lg:text-sm xl:text-lg text-secundary text-center lg:text-left xl:w-1/3">
+                            Limite (R$)
+                          </label>
+
+                          <div className="lg:w-2/3 w-full rounded-lg px-3 py-2">
+                            <input
+                              type="text"
+                              value={calcularLimiteParaSalario(
+                                isEditing
+                                  ? (form.salario ?? client?.salario ?? 0)
+                                  : (client?.salario ?? 0),
+                                isEditing
+                                  ? (form.saldo ?? client?.saldo ?? 0)
+                                  : (client?.saldo ?? 0),
+                              ).toFixed(2)}
+                              readOnly
+                              disabled
+                              className="w-full bg-transparent outline-none text-sm sm:text-lg lg:text-sm xl:text-lg text-center lg:text-left text-zinc-300"
+                            />
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    </>
+                  ) : (
+                    <>
+                      {/* ================= ENDEREÇO ================= */}
 
-                    {/* LIMITE */}
-                    <div className="flex-1 flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-4">
-                      <label className="text-lg text-secundary text-center lg:text-left lg:w-1/3">
-                        Limite (R$)
-                      </label>
+                      {[
+                        { key: "cep", label: "CEP" },
+                        { key: "rua", label: "Rua" },
+                        { key: "numero", label: "Número" },
+                        { key: "bairro", label: "Bairro" },
+                        { key: "cidade", label: "Cidade" },
+                        { key: "estado", label: "Estado" },
+                      ].map((f) => {
+                        const isFieldEditable = isEditing;
 
-                      <div className="lg:w-2/3 w-full rounded-lg px-3 py-2">
-                        <input
-                          type="text"
-                          value={calcularLimiteParaSalario(
-                            isEditing
-                              ? (form.salario ?? client?.salario ?? 0)
-                              : (client?.salario ?? 0),
-                            isEditing
-                              ? (form.saldo ?? client?.saldo ?? 0)
-                              : (client?.saldo ?? 0),
-                          ).toFixed(2)}
-                          readOnly
-                          disabled
-                          className="w-full bg-transparent outline-none text-lg text-center lg:text-left text-zinc-300"
-                        />
-                      </div>
-                    </div>
-                  </div>
+                        return (
+                          <div
+                            key={f.key}
+                            onClick={() => handleFieldClick(f.key)}
+                            className="
+              group
+              lg:py-5 py-3 px-8
+              flex flex-col lg:flex-row
+              lg:items-center lg:justify-between
+              gap-2 md:gap-8
+            "
+                          >
+                            <label className="text-sm sm:text-lg lg:text-sm xl:text-lg font-medium text-secundary text-center lg:text-left lg:w-1/3">
+                              {f.label}
+                            </label>
+
+                            <div
+                              className={`
+                lg:w-2/3 w-full rounded-lg px-3 py-2
+                transition-all duration-300
+                ${
+                  isFieldEditable
+                    ? "bg-white/5 border border-white/10 group-hover:border-orange-300/40"
+                    : "bg-transparent border border-transparent"
+                }
+              `}
+                            >
+                              <input
+                                name={f.key}
+                                type="text"
+                                value={
+                                  isEditing
+                                    ? (form?.[f.key] ?? "")
+                                    : (client?.[f.key] ?? "")
+                                }
+                                onChange={handleChange}
+                                disabled={!isFieldEditable}
+                                className="
+                  w-full bg-transparent outline-none
+                  text-sm sm:text-lg lg:text-sm xl:text-lg text-center lg:text-left
+                  text-zinc-100
+                "
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </>
+                  )}
                 </div>
               </div>
             </div>

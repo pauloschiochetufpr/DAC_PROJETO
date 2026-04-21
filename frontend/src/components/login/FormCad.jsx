@@ -38,17 +38,22 @@ function Field({
   value,
   onChange,
   full,
+  autoComplete,
 }) {
   return (
     <div className={`group flex flex-col gap-1 ${full ? "md:col-span-2" : ""}`}>
-      <label className="text-secundary text-sm">{label}</label>
+      <label htmlFor={name} className="text-secundary text-sm">
+        {label}
+      </label>
       <div className="rounded-lg px-3 py-2 bg-white/5 border border-white/10 transition-all duration-300 group-hover:border-orange-300/40 focus-within:border-orange-300/60 focus-within:shadow-[0_0_10px_rgba(255,120,80,0.25)]">
         <input
           type={type}
+          id={name}
           name={name}
           value={value || ""}
           onChange={onChange}
           placeholder={placeholder}
+          autoComplete={autoComplete}
           className="w-full bg-transparent outline-none text-zinc-100 placeholder-zinc-400"
         />
       </div>
@@ -155,6 +160,7 @@ export default function FormCad() {
             value={form.nome}
             onChange={handleChange}
             placeholder="Seu nome"
+            autoComplete="name"
             full
           />
           <Field
@@ -163,6 +169,7 @@ export default function FormCad() {
             value={form.cpf}
             onChange={handleChange}
             placeholder="000.000.000-00"
+            autoComplete="off"
           />
           <Field
             label="Telefone"
@@ -170,6 +177,7 @@ export default function FormCad() {
             value={form.telefone}
             onChange={handleChange}
             placeholder="(00) 00000-0000"
+            autoComplete="tel"
           />
           <Field
             label="Email"
@@ -178,6 +186,7 @@ export default function FormCad() {
             value={form.email}
             onChange={handleChange}
             placeholder="email@email.com"
+            autoComplete="email"
             full
           />
         </div>
@@ -192,6 +201,7 @@ export default function FormCad() {
             value={form.cep}
             onChange={handleChange}
             placeholder="00000-000"
+            autoComplete="postal-code"
           />
           <Field
             label="Número"
@@ -207,6 +217,7 @@ export default function FormCad() {
             value={form.logradouro}
             onChange={handleChange}
             placeholder="Rua..."
+            autoComplete="street-address"
             full
           />
           <Field
@@ -215,6 +226,7 @@ export default function FormCad() {
             value={form.complemento}
             onChange={handleChange}
             placeholder="Apto..."
+            autoComplete="address-line2"
             full
           />
 
@@ -224,6 +236,7 @@ export default function FormCad() {
             value={form.cidade}
             onChange={handleChange}
             placeholder="Cidade"
+            autoComplete="address-level2"
           />
           <Field
             label="Estado"
@@ -231,6 +244,7 @@ export default function FormCad() {
             value={form.estado}
             onChange={handleChange}
             placeholder="Estado"
+            autoComplete="address-level1"
           />
         </div>
       )}
@@ -272,7 +286,8 @@ export default function FormCad() {
             <button
               type="button"
               onClick={prevStep}
-              className="text-zinc-300 hover:text-white"
+              className="text-white ml-2 rounded-sm px-5 bg-secundary/0
+              hover:bg-secundaryDark/50 transition-colors duration-150"
             >
               Voltar
             </button>
@@ -283,7 +298,11 @@ export default function FormCad() {
               type="button"
               onClick={nextStep}
               disabled={!canNext()}
-              className="ml-auto px-4 py-2 border border-secundaryDark text-secundary rounded-lg disabled:opacity-40"
+              className={`ml-auto px-4 py-2 border border-secundaryDark bg-secundaryDark/40
+              text-white rounded-sm disabled:opacity-40 transition-colors duration-150
+              ${!canNext() ? "" : "cursor-pointer hover:bg-secundaryDark/50"}
+              
+              `}
             >
               Próximo
             </button>

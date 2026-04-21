@@ -6,5 +6,74 @@
   "Header": {
     "title": "Não lute contra as taxas",
     "subtitle": "Domine a técnica do \"Investimento Sem Esforço\"!"
+  },
+  "Footer": {
+    "supported_ongs": "ONG's apoiadas",
+    "privacy_policy": "Política de Privacidade",
+    "copyright": "(FAKE COMPANY) MasterBank. Todos os direitos reservados"
+  },
+  "HomeAdmin": {
+    "manage_managers": "Gerenciar gerentes",
+    "more_features_coming": "Mais funcionalidades em breve [...]"
+  },
+  "GraficoSaldos": {
+    "title": "Distribuição dos Saldos",
+    "positive": "Positivos",
+    "negative": "Negativos",
+    "neutral": "Neutros",
+    "center_label": "clientes"
+  },
+  "ClientesAdminLista": {
+    "title": "Relatório de Clientes",
+    "search_placeholder": "Pesquisar por nome ou email",
+    "results": {
+      "no_results": "Nenhum cliente encontrado com",
+      "client-found": "cliente encontrado",
+      "clients-found": "clientes encontrados"
+    },
+    "table": {
+      "cpfConta": "CPF | Conta",
+      "name": "Nome",
+      "manager": "Gerente",
+      "balance": "Saldo | Salário",
+      "credit": "Crédito"
+    }
+  },
+  "GerentesAdminLista": {
+    "title": "Gerentes",
+    "labels": {
+      "clients": "Clientes",
+      "phone": "Telefone",
+      "positiveBalances": "Saldos Positivos",
+      "negativeBalances": "Saldos Negativos"
+    }
+  },
+  "LoginPage": {
+    "titleLogin": "Login",
+    "titleRegister": "Cadastro",
+    "tabLogin": "Login",
+    "tabRegister": "Cadastro",
+    "welcomeTitle": "Bem-vindo",
+    "welcomeDescription": "Acesse sua conta ou crie um novo cadastro para começar sua jornada junto ao nosso banco. Domine suas finanças com facilidade e segurança.",
+    "login": {
+      "fields": {
+        "email": {
+          "label": "Email",
+          "placeholder": "seu@email.com"
+        },
+        "password": {
+          "label": "Senha",
+          "placeholder": "Digite sua senha"
+        }
+      },
+      "actions": {
+        "submit": "Entrar",
+        "loading": "Entrando..."
+      },
+      "errors": {
+        "invalid_credentials": "Email ou senha inválidos."
+      }
+    },
+    "register": {}
   }
 }
