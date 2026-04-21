@@ -15,7 +15,6 @@ public class DevService {
     @Autowired
     private ClienteRepository clienteRepository;
 
-    @SuppressWarnings("null")
     @Transactional
     public void resetComMocks() {
         clienteRepository.deleteAll();
@@ -35,6 +34,7 @@ public class DevService {
     private Cliente cliente(String cpf, String nome, String email,
                             Double salario, String cidade, String estado,
                             StatusCliente status) {
+
         Cliente c = new Cliente();
         c.setCpf(cpf);
         c.setNome(nome);
@@ -43,6 +43,7 @@ public class DevService {
         c.setCidade(cidade);
         c.setEstado(estado);
         c.setStatus(status);
+
         return c;
     }
 }

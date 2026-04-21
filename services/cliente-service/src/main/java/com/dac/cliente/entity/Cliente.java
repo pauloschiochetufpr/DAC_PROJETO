@@ -1,35 +1,31 @@
 package com.dac.cliente.entity;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.EnumType;
 
 @Entity
-@Table(name = "cliente")
 public class Cliente {
+
     @Id
     private String cpf;
 
     private String nome;
-
     private String email;
-
     private String telefone;
 
     private Double salario;
 
     private String endereco;
-
     private String cep;
-
     private String cidade;
-
     private String estado;
 
     @Enumerated(EnumType.STRING)
     private StatusCliente status;
+
+    private String motivoRejeicao;
 
     public String getCpf() {
         return cpf;
@@ -104,11 +100,18 @@ public class Cliente {
     }
 
     public StatusCliente getStatus() {
-        return status;
+    return status;
     }
 
     public void setStatus(StatusCliente status) {
         this.status = status;
     }
 
+    public String getMotivoRejeicao() {
+        return motivoRejeicao;
+    }
+
+    public void setMotivoRejeicao(String motivoRejeicao) {
+        this.motivoRejeicao = motivoRejeicao;
+    }
 }
