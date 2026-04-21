@@ -69,7 +69,7 @@ export default function Footer() {
         {/* Segunda coluna footer */}
         <div className="h-fit w-full flex flex-col items-center xl:items-start justify-start px-1 xl:px-32 py-6 select-none xl:gap-6 gap-8">
           <h1 className="font-long-cang xl:text-4xl text-3xl text-secundary xl:pb-4 pb-6 text-nowrap w-full text-center">
-            Conheça nossas redes!
+            {t(lang, "Footer.Know-or-networks")}
           </h1>
           <div className="flex flex-col xl:gap-6 gap-8 justify-center items-center w-full">
             <button

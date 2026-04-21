@@ -10,7 +10,8 @@
   "Footer": {
     "supported_ongs": "ONG's apoiadas",
     "privacy_policy": "Política de Privacidade",
-    "copyright": "(FAKE COMPANY) MasterBank. Todos os direitos reservados"
+    "copyright": "(FAKE COMPANY) MasterBank. Todos os direitos reservados",
+    "Know-or-networks": "conheça nossas redes!"
   },
   "HomeAdmin": {
     "manage_managers": "Gerenciar gerentes",
@@ -37,6 +38,60 @@
       "manager": "Gerente",
       "balance": "Saldo | Salário",
       "credit": "Crédito"
+    }
+  },
+  "ExtratoGeral": {
+    "title": "Extrato Bancário",
+    "account_label": "Conta",
+    "balance_label": "Saldo atual",
+    "period_label": "Período",
+    "presets": {
+      "7_days": "7 dias",
+      "30_days": "30 dias",
+      "6_months": "6 meses",
+      "1_year": "1 ano"
+    },
+    "date_from": "De",
+    "date_to": "Até",
+    "date_invalid": "A data inicial não pode ser posterior à data final.",
+    "type_label": "Tipo de operação",
+    "tipo": {
+      "todos": "Todos",
+      "deposito": "Depósito",
+      "saque": "Saque",
+      "transferencia": "Transferência"
+    },
+    "loading": "Carregando extrato...",
+    "date_fix_prompt": "Corrija o período para visualizar o extrato.",
+    "empty_period": "Nenhum dado para o período selecionado.",
+    "empty_filter": "Nenhuma movimentação do tipo selecionado.",
+    "empty_day": "Sem movimentações.",
+    "transfer_from": "de",
+    "transfer_to": "para",
+    "errors": {
+      "session_expired": "Sessão expirada. Faça login novamente.",
+      "forbidden": "Você não tem permissão para consultar este extrato.",
+      "generic": "Erro ao consultar extrato. Tente novamente.",
+      "connection": "Falha de conexão. Verifique sua internet."
+    }
+  },
+  "GerenteForm": {
+    "title_edit": "Editar Gerente",
+    "title_create": "Cadastrar Gerente",
+    "section_personal": "Dados Pessoais",
+    "fields": {
+      "cpf": "CPF",
+      "nome": "Nome",
+      "email": "E-mail",
+      "telefone": "Telefone",
+      "senha": "Senha"
+    },
+    "email_warning": "O e-mail deve conter '@' e um domínio válido (ex: usuario@dominio.com)",
+    "actions": {
+      "update": "Atualizar",
+      "create": "Criar",
+      "delete": "Excluir",
+      "new_manager": "Novo Gerente"
     }
   },
   "GerentesAdminLista": {
