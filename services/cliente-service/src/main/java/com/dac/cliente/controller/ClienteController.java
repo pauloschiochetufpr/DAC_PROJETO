@@ -1,56 +1,78 @@
 package com.dac.cliente.controller;
 
-import com.dac.cliente.dto.request.*;
-import com.dac.cliente.dto.response.*;
+import com.dac.cliente.dto.request.AutocadastroRequestDTO;
+import com.dac.cliente.dto.request.PerfilRequestDTO;
+import com.dac.cliente.dto.request.RejeitarClienteRequestDTO;
+import com.dac.cliente.dto.response.ClienteParaAprovarResponseDTO;
+import com.dac.cliente.dto.response.ClienteResponseDTO;
+import com.dac.cliente.dto.response.DadosClienteResponseDTO;
 import com.dac.cliente.service.ClienteService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/clientes")
 public class ClienteController {
 
     @Autowired
     private ClienteService service;
 
-    @GetMapping
-    public Object listar(@RequestParam(required = false) String filtro) {
+    @PostMapping("/clientes")
+    public ResponseEntity<?> autocadastro(@RequestBody AutocadastroRequestDTO dto) {
+        service.autocadastro(dto);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body("Solicitação de cadastro enviada. Aguarde a aprovação do gerente.");
+    }
 
-        if ("para_aprovar".equals(filtro)) {
-            return service.listarParaAprovar();
+    @GetMapping("/clientes")
+    public ResponseEntity<?> listar(
+            @RequestParam(value = "filtro", required = false) String filtro) {
+
+        if ("para_aprovar".equalsIgnoreCase(filtro)) {
+            List<ClienteParaAprovarResponseDTO> pendentes = service.listarParaAprovar();
+            return ResponseEntity.ok(pendentes);
         }
 
-        throw new RuntimeException("Filtro não suportado");
+        if ("adm_relatorio_clientes".equalsIgnoreCase(filtro)) {
+            List<DadosClienteResponseDTO> relatorio = service.listarParaRelatorio();
+            return ResponseEntity.ok(relatorio);
+        }
+
+        if ("melhores_clientes".equalsIgnoreCase(filtro)) {
+            List<ClienteResponseDTO> melhores = service.listarMelhoresClientes();
+            return ResponseEntity.ok(melhores);
+        }
+
+        List<ClienteResponseDTO> todos = service.listarTodosAprovados();
+        return ResponseEntity.ok(todos);
     }
 
-    @PostMapping
-    public void autocadastro(@RequestBody AutocadastroRequestDTO dto) {
-        service.autocadastro(dto);
+    @GetMapping("/clientes/{cpf}")
+    public ResponseEntity<DadosClienteResponseDTO> consultar(@PathVariable String cpf) {
+        return ResponseEntity.ok(service.consultarPorCpf(cpf));
     }
 
-    @GetMapping("/{cpf}")
-    public DadosClienteResponseDTO buscar(@PathVariable String cpf) {
-        return service.buscarDadosCompletos(cpf);
+    @PutMapping("/clientes/{cpf}")
+    public ResponseEntity<DadosClienteResponseDTO> atualizarPerfil(
+            @PathVariable String cpf,
+            @RequestBody PerfilRequestDTO dto) {
+        return ResponseEntity.ok(service.atualizarPerfil(cpf, dto));
     }
 
-    @PutMapping("/{cpf}")
-    public void atualizar(@PathVariable String cpf,
-                          @RequestBody PerfilRequestDTO dto) {
-        service.atualizarPerfil(cpf, dto);
+    @PostMapping("/clientes/{cpf}/aprovar")
+    public ResponseEntity<?> aprovar(@PathVariable String cpf) {
+        service.aprovarCliente(cpf);
+        return ResponseEntity.ok("Cliente aprovado com sucesso.");
     }
 
-    @PostMapping("/{cpf}/aprovar")
-    public String aprovar(@PathVariable String cpf) {
-        service.aprovar(cpf);
-        return "Cliente aprovado";
-    }
-
-    @PostMapping("/{cpf}/rejeitar")
-    public String rejeitar(@PathVariable String cpf,
-                           @RequestBody RejeitarClienteRequestDTO dto) {
-        service.rejeitar(cpf, dto.getMotivo());
-        return "Cliente rejeitado";
+    @PostMapping("/clientes/{cpf}/rejeitar")
+    public ResponseEntity<?> rejeitar(
+            @PathVariable String cpf,
+            @RequestBody RejeitarClienteRequestDTO dto) {
+        service.rejeitarCliente(cpf, dto.getMotivo());
+        return ResponseEntity.ok("Cliente rejeitado com sucesso.");
     }
 }

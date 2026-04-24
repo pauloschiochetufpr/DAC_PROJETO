@@ -1,13 +1,20 @@
 package com.dac.cliente.service;
 
-import com.dac.cliente.dto.request.*;
-import com.dac.cliente.dto.response.*;
+import com.dac.cliente.dto.request.AutocadastroRequestDTO;
+import com.dac.cliente.dto.request.PerfilRequestDTO;
+import com.dac.cliente.dto.response.ClienteParaAprovarResponseDTO;
+import com.dac.cliente.dto.response.ClienteResponseDTO;
+import com.dac.cliente.dto.response.DadosClienteResponseDTO;
 import com.dac.cliente.entity.Cliente;
 import com.dac.cliente.entity.StatusCliente;
 import com.dac.cliente.repository.ClienteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
@@ -18,14 +25,18 @@ public class ClienteService {
     @Autowired
     private ClienteRepository repository;
 
+    @Transactional
     public void autocadastro(AutocadastroRequestDTO dto) {
-
         validarAutocadastro(dto);
 
         String cpf = normalizarDocumento(dto.getCpf());
 
         if (repository.existsById(cpf)) {
-            throw new RuntimeException("Cliente já existe ou está pendente");
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "Cliente já cadastrado ou aguardando aprovação");
+        }
+        if (repository.existsByEmail(normalizarEmail(dto.getEmail()))) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email já cadastrado");
         }
 
         Cliente c = new Cliente();
@@ -43,6 +54,13 @@ public class ClienteService {
         repository.save(c);
     }
 
+    public List<ClienteResponseDTO> listarTodosAprovados() {
+        return repository.findByStatusOrderByNomeAsc(StatusCliente.APROVADO)
+                .stream()
+                .map(this::toClienteResponseDTO)
+                .collect(Collectors.toList());
+    }
+
     public List<ClienteParaAprovarResponseDTO> listarParaAprovar() {
         return repository.findByStatus(StatusCliente.PENDENTE)
                 .stream()
@@ -50,85 +68,87 @@ public class ClienteService {
                 .collect(Collectors.toList());
     }
 
-    public ClienteResponseDTO buscarPorCpf(String cpf) {
-        Cliente c = repository.findById(cpf)
-                .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
-
-        return toClienteResponse(c);
+    public List<DadosClienteResponseDTO> listarParaRelatorio() {
+        return repository.findByStatusOrderByNomeAsc(StatusCliente.APROVADO)
+                .stream()
+                .map(this::toDadosClienteDTO)
+                .collect(Collectors.toList());
     }
 
-    public DadosClienteResponseDTO buscarDadosCompletos(String cpf) {
-        Cliente c = repository.findById(cpf)
-                .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
-
-        return toDadosDTO(c);
+    public List<ClienteResponseDTO> listarMelhoresClientes() {
+        return repository.findByStatusOrderByNomeAsc(StatusCliente.APROVADO)
+                .stream()
+                .sorted((a, b) -> Double.compare(
+                    b.getSalario() != null ? b.getSalario() : 0,
+                    a.getSalario() != null ? a.getSalario() : 0))
+                .limit(3)
+                .map(this::toClienteResponseDTO)
+                .collect(Collectors.toList());
     }
 
-    public void atualizarPerfil(String cpf, PerfilRequestDTO dto) {
+    public DadosClienteResponseDTO consultarPorCpf(String cpf) {
         Cliente c = repository.findById(cpf)
-                .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Cliente não encontrado"));
+        return toDadosClienteDTO(c);
+    }
 
-        c.setNome(normalizarTexto(dto.getNome()));
-        c.setEmail(normalizarEmail(dto.getEmail()));
-        c.setSalario(dto.getSalario());
-        c.setEndereco(normalizarTexto(dto.getEndereco()));
-        c.setCep(normalizarDocumento(dto.getCep()));
-        c.setCidade(normalizarTexto(dto.getCidade()));
-        c.setEstado(normalizarUf(dto.getEstado()));
+    @Transactional
+    public DadosClienteResponseDTO atualizarPerfil(String cpf, PerfilRequestDTO dto) {
+        Cliente c = repository.findById(cpf)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Cliente não encontrado"));
+
+        if (dto.getEmail() != null && !dto.getEmail().equals(c.getEmail())) {
+            if (repository.existsByEmail(normalizarEmail(dto.getEmail()))) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Email já cadastrado por outro cliente");
+            }
+        }
+
+        if (dto.getNome() != null)     c.setNome(normalizarTexto(dto.getNome()));
+        if (dto.getEmail() != null)    c.setEmail(normalizarEmail(dto.getEmail()));
+        if (dto.getSalario() != null)  c.setSalario(dto.getSalario());
+        if (dto.getEndereco() != null) c.setEndereco(normalizarTexto(dto.getEndereco()));
+        if (dto.getCep() != null)      c.setCep(normalizarDocumento(dto.getCep()));
+        if (dto.getCidade() != null)   c.setCidade(normalizarTexto(dto.getCidade()));
+        if (dto.getEstado() != null)   c.setEstado(normalizarUf(dto.getEstado()));
 
         repository.save(c);
+        return toDadosClienteDTO(c);
     }
 
-    public void aprovar(String cpf) {
+    @Transactional
+    public void aprovarCliente(String cpf) {
         Cliente c = repository.findById(cpf)
-                .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Cliente não encontrado"));
+
+        if (c.getStatus() != StatusCliente.PENDENTE) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "Cliente não está pendente de aprovação");
+        }
 
         c.setStatus(StatusCliente.APROVADO);
-
+        c.setDataAprovacao(LocalDateTime.now());
         repository.save(c);
     }
 
-    public void rejeitar(String cpf, String motivo) {
+    @Transactional
+    public void rejeitarCliente(String cpf, String motivo) {
         Cliente c = repository.findById(cpf)
-                .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Cliente não encontrado"));
+
+        if (c.getStatus() != StatusCliente.PENDENTE) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "Cliente não está pendente de aprovação");
+        }
 
         c.setStatus(StatusCliente.REJEITADO);
         c.setMotivoRejeicao(motivo);
-
         repository.save(c);
     }
-
-    // ================= VALIDAÇÕES =================
-
-    private void validarAutocadastro(AutocadastroRequestDTO dto) {
-
-        if (dto == null) throw new IllegalArgumentException("Dados obrigatórios");
-
-        if (estaVazio(dto.getCpf())) throw new IllegalArgumentException("CPF obrigatório");
-        if (estaVazio(dto.getNome())) throw new IllegalArgumentException("Nome obrigatório");
-        if (estaVazio(dto.getEmail())) throw new IllegalArgumentException("Email obrigatório");
-        if (dto.getSalario() == null || dto.getSalario() < 0)
-            throw new IllegalArgumentException("Salário inválido");
-        if (estaVazio(dto.getEndereco())) throw new IllegalArgumentException("Endereço obrigatório");
-        if (estaVazio(dto.getCep())) throw new IllegalArgumentException("CEP obrigatório");
-        if (estaVazio(dto.getCidade())) throw new IllegalArgumentException("Cidade obrigatória");
-        if (estaVazio(dto.getEstado())) throw new IllegalArgumentException("Estado obrigatório");
-
-        String cpf = normalizarDocumento(dto.getCpf());
-        if (cpf.length() != 11) throw new IllegalArgumentException("CPF inválido");
-
-        String cep = normalizarDocumento(dto.getCep());
-        if (cep.length() != 8) throw new IllegalArgumentException("CEP inválido");
-
-        String email = normalizarEmail(dto.getEmail());
-        if (!email.contains("@") || email.startsWith("@") || email.endsWith("@"))
-            throw new IllegalArgumentException("Email inválido");
-
-        String estado = normalizarUf(dto.getEstado());
-        if (estado.length() != 2) throw new IllegalArgumentException("UF inválida");
-    }
-
-    // ================= NORMALIZAÇÃO =================
 
     private String normalizarTexto(String v) {
         return v == null ? null : v.trim();
@@ -150,7 +170,34 @@ public class ClienteService {
         return v == null || v.trim().isEmpty();
     }
 
-    // ================= DTO MAPPERS =================
+    private void validarAutocadastro(AutocadastroRequestDTO dto) {
+        if (dto == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Dados obrigatórios");
+        if (estaVazio(dto.getCpf()))      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CPF obrigatório");
+        if (estaVazio(dto.getNome()))     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nome obrigatório");
+        if (estaVazio(dto.getEmail()))    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email obrigatório");
+        if (estaVazio(dto.getEndereco())) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Endereço obrigatório");
+        if (estaVazio(dto.getCep()))      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CEP obrigatório");
+        if (estaVazio(dto.getCidade()))   throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cidade obrigatória");
+        if (estaVazio(dto.getEstado()))   throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Estado obrigatório");
+        if (dto.getSalario() == null || dto.getSalario() < 0)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Salário inválido");
+
+        String cpf = normalizarDocumento(dto.getCpf());
+        if (cpf.length() != 11)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CPF inválido");
+
+        String cep = normalizarDocumento(dto.getCep());
+        if (cep.length() != 8)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CEP inválido");
+
+        String email = normalizarEmail(dto.getEmail());
+        if (!email.contains("@") || email.startsWith("@") || email.endsWith("@"))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email inválido");
+
+        String estado = normalizarUf(dto.getEstado());
+        if (estado.length() != 2)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "UF inválida");
+    }
 
     private ClienteParaAprovarResponseDTO toParaAprovarDTO(Cliente c) {
         ClienteParaAprovarResponseDTO dto = new ClienteParaAprovarResponseDTO();
@@ -164,7 +211,7 @@ public class ClienteService {
         return dto;
     }
 
-    private ClienteResponseDTO toClienteResponse(Cliente c) {
+    private ClienteResponseDTO toClienteResponseDTO(Cliente c) {
         ClienteResponseDTO dto = new ClienteResponseDTO();
         dto.setCpf(c.getCpf());
         dto.setNome(c.getNome());
@@ -173,17 +220,14 @@ public class ClienteService {
         dto.setEndereco(c.getEndereco());
         dto.setCidade(c.getCidade());
         dto.setEstado(c.getEstado());
-
         dto.setConta(null);
         dto.setSaldo(null);
         dto.setLimite(null);
-
         return dto;
     }
 
-    private DadosClienteResponseDTO toDadosDTO(Cliente c) {
+    private DadosClienteResponseDTO toDadosClienteDTO(Cliente c) {
         DadosClienteResponseDTO dto = new DadosClienteResponseDTO();
-
         dto.setCpf(c.getCpf());
         dto.setNome(c.getNome());
         dto.setTelefone(c.getTelefone());
@@ -193,15 +237,12 @@ public class ClienteService {
         dto.setCidade(c.getCidade());
         dto.setEstado(c.getEstado());
         dto.setSalario(c.getSalario());
-
         dto.setConta(null);
         dto.setSaldo(null);
         dto.setLimite(null);
-
         dto.setGerente(null);
         dto.setGerente_nome(null);
         dto.setGerente_email(null);
-
         return dto;
     }
 }
