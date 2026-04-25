@@ -31,6 +31,7 @@ export default function App() {
     // Roteamento para Cliente
     HomeCorreto = <HomeCliente />;
   }
+  
   return (
     <MainLayout>
       <Routes>
@@ -45,6 +46,7 @@ export default function App() {
         <Route path="/extrato" element={<ExtratoGeral />} />
 
         <Route path="/login" element={<Login />} />
+        
         {/* Guard global para rotas inexistentes */}
         <Route path="*" element={<NotFound />} />
       </Routes>

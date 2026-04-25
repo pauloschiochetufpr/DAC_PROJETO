@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { useBanco } from "../../hooks/useBanco";
 import { useNavigate } from "react-router-dom";
+
+// API
+import { API } from "../../config";
 
 // Lucide icon's
 import { Eye, EyeClosed } from "lucide-react";
@@ -10,19 +12,22 @@ import { useLanguage } from "../../hooks/useLanguage";
 import { t } from "../../lib/i18n";
 
 export default function FormLogin() {
+  // I18N
   const { lang } = useLanguage();
   const [form, setForm] = useState({
     email: "",
     senha: "",
   });
 
-  const { login } = useBanco();
+  // Navegação
   const navigate = useNavigate();
 
+  // States
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  //Chamada API
   function handleChange(e) {
     const { name, value } = e.target;
     setForm((prev) => ({
@@ -37,13 +42,13 @@ export default function FormLogin() {
     setLoading(true);
 
     try {
-      // eslint-disable-next-line
-      const user = await login(form.email, form.senha);
-
-      // Redireciona após login
+      const response = await API.login(form.email, form.senha);
+      if (response.data?.access_token) {
+        localStorage.setItem("access_token", response.data.access_token);
+      }
       navigate("/");
     } catch (err) {
-      const errorKey = err.code || "invalid_credentials";
+      const errorKey = err.response?.data?.code || "invalid_credentials";
       setError(t(lang, `LoginPage.login.errors.${errorKey}`));
     } finally {
       setLoading(false);
