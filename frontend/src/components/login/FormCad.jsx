@@ -1,5 +1,9 @@
 import { useState } from "react";
 
+// i18n
+import { useLanguage } from "../../hooks/useLanguage";
+import { t } from "../../lib/i18n";
+
 function formatCPF(value) {
   return value
     .replace(/\D/g, "")
@@ -62,6 +66,7 @@ function Field({
 }
 
 export default function FormCad() {
+  const { lang } = useLanguage();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -127,7 +132,7 @@ export default function FormCad() {
       await new Promise((res) => setTimeout(res, 1000));
       setStep(4);
     } catch {
-      setError("Erro ao enviar cadastro.");
+      setError(t(lang, "LoginPage.register.errors.submit_error"));
     } finally {
       setLoading(false);
     }
@@ -155,37 +160,41 @@ export default function FormCad() {
       {step === 1 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Field
-            label="Nome"
+            label={t(lang, "LoginPage.register.fields.nome.label")}
+            placeholder={t(lang, "LoginPage.register.fields.nome.placeholder")}
             name="nome"
+            type="text"
             value={form.nome}
             onChange={handleChange}
-            placeholder="Seu nome"
             autoComplete="name"
             full
           />
           <Field
-            label="CPF"
+            label={t(lang, "LoginPage.register.fields.cpf.label")}
+            placeholder={t(lang, "LoginPage.register.fields.cpf.placeholder")}
             name="cpf"
             value={form.cpf}
             onChange={handleChange}
-            placeholder="000.000.000-00"
             autoComplete="off"
           />
           <Field
-            label="Telefone"
+            label={t(lang, "LoginPage.register.fields.telefone.label")}
+            placeholder={t(
+              lang,
+              "LoginPage.register.fields.telefone.placeholder",
+            )}
             name="telefone"
             value={form.telefone}
             onChange={handleChange}
-            placeholder="(00) 00000-0000"
             autoComplete="tel"
           />
           <Field
-            label="Email"
+            label={t(lang, "LoginPage.register.fields.email.label")}
+            placeholder={t(lang, "LoginPage.register.fields.email.placeholder")}
             name="email"
             type="email"
             value={form.email}
             onChange={handleChange}
-            placeholder="email@email.com"
             autoComplete="email"
             full
           />
@@ -196,54 +205,69 @@ export default function FormCad() {
       {step === 2 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Field
-            label="CEP"
+            label={t(lang, "LoginPage.register.fields.cep.label")}
+            placeholder={t(lang, "LoginPage.register.fields.cep.placeholder")}
             name="cep"
             value={form.cep}
             onChange={handleChange}
-            placeholder="00000-000"
             autoComplete="postal-code"
           />
           <Field
-            label="Número"
+            label={t(lang, "LoginPage.register.fields.numero.label")}
+            placeholder={t(
+              lang,
+              "LoginPage.register.fields.numero.placeholder",
+            )}
             name="numero"
             value={form.numero}
             onChange={handleChange}
-            placeholder="123"
           />
 
           <Field
-            label="Logradouro"
+            label={t(lang, "LoginPage.register.fields.logradouro.label")}
+            placeholder={t(
+              lang,
+              "LoginPage.register.fields.logradouro.placeholder",
+            )}
             name="logradouro"
             value={form.logradouro}
             onChange={handleChange}
-            placeholder="Rua..."
             autoComplete="street-address"
             full
           />
           <Field
-            label="Complemento"
+            label={t(lang, "LoginPage.register.fields.complemento.label")}
+            placeholder={t(
+              lang,
+              "LoginPage.register.fields.complemento.placeholder",
+            )}
             name="complemento"
             value={form.complemento}
             onChange={handleChange}
-            placeholder="Apto..."
             autoComplete="address-line2"
             full
           />
 
           <Field
-            label="Cidade"
+            label={t(lang, "LoginPage.register.fields.cidade.label")}
+            placeholder={t(
+              lang,
+              "LoginPage.register.fields.cidade.placeholder",
+            )}
             name="cidade"
             value={form.cidade}
             onChange={handleChange}
-            placeholder="Cidade"
             autoComplete="address-level2"
           />
           <Field
-            label="Estado"
+            label={t(lang, "LoginPage.register.fields.estado.label")}
+            placeholder={t(
+              lang,
+              "LoginPage.register.fields.estado.placeholder",
+            )}
             name="estado"
             value={form.estado}
             onChange={handleChange}
-            placeholder="Estado"
             autoComplete="address-level1"
           />
         </div>
@@ -253,11 +277,14 @@ export default function FormCad() {
       {step === 3 && (
         <div className="grid grid-cols-1 gap-4">
           <Field
-            label="Salário"
+            label={t(lang, "LoginPage.register.fields.salario.label")}
+            placeholder={t(
+              lang,
+              "LoginPage.register.fields.salario.placeholder",
+            )}
             name="salario"
             value={form.salario}
             onChange={handleChange}
-            placeholder="R$ 0.00"
             full
           />
         </div>
@@ -267,11 +294,10 @@ export default function FormCad() {
       {step === 4 && (
         <div className="flex flex-col items-center justify-center gap-6 text-center py-10">
           <h2 className="text-2xl font-orienta text-secundary">
-            Cadastro enviado!
+            {t(lang, "LoginPage.register.success.title")}
           </h2>
           <p className="text-zinc-300 max-w-lg">
-            Sua solicitação foi enviada para análise. Você receberá um e-mail
-            quando o processo for concluído.
+            {t(lang, "LoginPage.register.success.description")}
           </p>
         </div>
       )}
@@ -289,7 +315,7 @@ export default function FormCad() {
               className="text-white ml-2 rounded-sm px-5 bg-secundary/0
               hover:bg-secundaryDark/50 transition-colors duration-150"
             >
-              Voltar
+              {t(lang, "LoginPage.register.actions.back")}
             </button>
           )}
 
@@ -304,7 +330,7 @@ export default function FormCad() {
               
               `}
             >
-              Próximo
+              {t(lang, "LoginPage.register.actions.next")}
             </button>
           ) : (
             <button
@@ -313,7 +339,9 @@ export default function FormCad() {
               disabled={loading || !canNext()}
               className="ml-auto px-6 py-3 border-2 border-secundaryDark text-secundary rounded-full hover:shadow-lg hover:shadow-brandDark disabled:opacity-50"
             >
-              {loading ? "Enviando..." : "Finalizar"}
+              {loading
+                ? t(lang, "LoginPage.register.actions.loading")
+                : t(lang, "LoginPage.register.actions.submit")}
             </button>
           )}
         </div>

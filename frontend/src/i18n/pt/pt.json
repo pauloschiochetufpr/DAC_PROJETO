@@ -74,6 +74,71 @@
         "invalid_credentials": "Email ou senha inválidos."
       }
     },
-    "register": {}
+    "register": {
+      "steps": {
+        "1": "Dados Pessoais",
+        "2": "Endereço",
+        "3": "Financeiro"
+      },
+      "fields": {
+        "nome": {
+          "label": "Nome",
+          "placeholder": "Seu nome"
+        },
+        "cpf": {
+          "label": "CPF",
+          "placeholder": "000.000.000-00"
+        },
+        "telefone": {
+          "label": "Telefone",
+          "placeholder": "(00) 00000-0000"
+        },
+        "email": {
+          "label": "Email",
+          "placeholder": "email@email.com"
+        },
+        "cep": {
+          "label": "CEP",
+          "placeholder": "00000-000"
+        },
+        "numero": {
+          "label": "Número",
+          "placeholder": "123"
+        },
+        "logradouro": {
+          "label": "Logradouro",
+          "placeholder": "Rua..."
+        },
+        "complemento": {
+          "label": "Complemento",
+          "placeholder": "Apto..."
+        },
+        "cidade": {
+          "label": "Cidade",
+          "placeholder": "Cidade"
+        },
+        "estado": {
+          "label": "Estado",
+          "placeholder": "Estado"
+        },
+        "salario": {
+          "label": "Salário",
+          "placeholder": "R$ 0,00"
+        }
+      },
+      "actions": {
+        "next": "Próximo",
+        "back": "Voltar",
+        "submit": "Finalizar",
+        "loading": "Enviando..."
+      },
+      "success": {
+        "title": "Cadastro enviado!",
+        "description": "Sua solicitação foi enviada para análise. Você receberá um e-mail quando o processo for concluído."
+      },
+      "errors": {
+        "submit_error": "Erro ao enviar cadastro."
+      }
+    }
   }
 }
