@@ -1,7 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import { BancoContext } from "./banco.context";
 import { contaMockInicial, CONTA_CLIENTE } from "../mocks/extratoMockData";
-import { loginMock } from "../mocks/authService";
 import { perfilMockInicial } from "../mocks/perfilMockData";
 import { toBrasiliaIso } from "../lib/dataUtils";
 
