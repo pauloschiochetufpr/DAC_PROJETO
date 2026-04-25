@@ -129,6 +129,71 @@
         "invalid_credentials": "Invalid email or password."
       }
     },
-    "register": {}
+    "register": {
+      "steps": {
+        "1": "Personal Info",
+        "2": "Address",
+        "3": "Financial"
+      },
+      "fields": {
+        "nome": {
+          "label": "Full Name",
+          "placeholder": "Your name"
+        },
+        "cpf": {
+          "label": "CPF",
+          "placeholder": "000.000.000-00"
+        },
+        "telefone": {
+          "label": "Phone",
+          "placeholder": "(00) 00000-0000"
+        },
+        "email": {
+          "label": "Email",
+          "placeholder": "email@email.com"
+        },
+        "cep": {
+          "label": "ZIP Code",
+          "placeholder": "00000-000"
+        },
+        "numero": {
+          "label": "Number",
+          "placeholder": "123"
+        },
+        "logradouro": {
+          "label": "Street",
+          "placeholder": "Street..."
+        },
+        "complemento": {
+          "label": "Complement",
+          "placeholder": "Apt..."
+        },
+        "cidade": {
+          "label": "City",
+          "placeholder": "City"
+        },
+        "estado": {
+          "label": "State",
+          "placeholder": "State"
+        },
+        "salario": {
+          "label": "Salary",
+          "placeholder": "R$ 0.00"
+        }
+      },
+      "actions": {
+        "next": "Next",
+        "back": "Back",
+        "submit": "Finish",
+        "loading": "Submitting..."
+      },
+      "success": {
+        "title": "Registration sent!",
+        "description": "Your request has been submitted for review. You will receive an email once the process is completed."
+      },
+      "errors": {
+        "submit_error": "Error submitting registration."
+      }
+    }
   }
 }

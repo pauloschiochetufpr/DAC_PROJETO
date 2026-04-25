@@ -24,7 +24,7 @@ export default function Login() {
       <div className="absolute inset-0 bg-black/50" />
 
       {/* Content */}
-      <div className="relative z-10 flex h-full pt-44">
+      <div className="relative z-10 flex h-full pt-44 2xl:pt-44 xl:pt-56 lg:pt-56 md:pt-56">
         {/* Right Side - Form */}
         <div className="flex w-full lg:w-1/2 justify-center items-center px-4">
           <div
