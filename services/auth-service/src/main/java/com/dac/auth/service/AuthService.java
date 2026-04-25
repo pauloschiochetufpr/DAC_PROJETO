@@ -56,6 +56,7 @@ public class AuthService {
         Session session = refreshTokenService.createSession(usuario.getCpf(), deviceId);
 
         LoginResponseDTO.UsuarioDTO usuarioDTO = new LoginResponseDTO.UsuarioDTO();
+        usuarioDTO.setNome(usuario.getNome());
         usuarioDTO.setCpf(usuario.getCpf());
         usuarioDTO.setEmail(usuario.getEmail());
         usuarioDTO.setTipo(usuario.getTipo());

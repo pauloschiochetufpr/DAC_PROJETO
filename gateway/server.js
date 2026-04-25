@@ -5,7 +5,7 @@ const cors = require("cors");
 const app = express();
 
 app.use(cors());
-
+app.use(express.json());
 
 const SERVICE_TARGETS = {
   auth: "http://auth-service:8080",
@@ -14,6 +14,16 @@ const SERVICE_TARGETS = {
   gerente: "http://gerente-service:8080",
   saga: "http://saga-service:8080",
 };
+
+/*Função para resposta no backend
+function forwardError(res, err) {
+  if (err.response) {
+    return res.status(err.response.status).json();
+  }
+  console.error("mensagem bonita no gateway:", err.message);
+  NAO TERMINEI, SE QUISER TERMINAR NO MEU LUGAR SINTA-SE A VONTADE
+}
+*/
 
 function createServiceProxy(target, serviceName) {
   return createProxyMiddleware({

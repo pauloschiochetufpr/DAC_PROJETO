@@ -4,6 +4,7 @@ import com.dac.auth.dto.request.LoginRequestDTO;
 import com.dac.auth.dto.request.RefreshRequestDTO;
 import com.dac.auth.dto.request.ValidateRequestDTO;
 import com.dac.auth.dto.response.LoginResponseDTO;
+import com.dac.auth.dto.response.LogoutResponseDTO;
 import com.dac.auth.dto.response.RefreshResponseDTO;
 import com.dac.auth.dto.response.ValidateResponseDTO;
 import com.dac.auth.entity.Session;
@@ -122,6 +123,7 @@ public ResponseEntity<LoginResponseDTO> login(
 
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
             @CookieValue(name = "refreshToken", required = false) String refreshToken,
             HttpServletResponse httpResponse) {
 
@@ -135,6 +137,26 @@ public ResponseEntity<LoginResponseDTO> login(
         refreshCookie.setMaxAge(0);
         httpResponse.addCookie(refreshCookie);
 
+        
+        LogoutResponseDTO logoutResponse = new LogoutResponseDTO();
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            try {
+                String token = authHeader.substring(7);
+                Claims claims = jwtService.validateToken(token);
+                String cpf = claims.getSubject();
+                Usuario usuario = usuarioRepository.findByCpf(cpf).orElse(null);
+                if (usuario != null) {
+                    logoutResponse.setCpf(usuario.getCpf());
+                    logoutResponse.setNome(usuario.getNome());
+                    logoutResponse.setEmail(usuario.getEmail());
+                    logoutResponse.setTipo(usuario.getTipo());
+                }
+            } catch (Exception ignored) {
+                // se o token expirar ainda da logout sem problemas
+            }
+        }
+        
+        
         return ResponseEntity.ok().build();
     }
 }

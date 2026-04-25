@@ -6,6 +6,7 @@ import com.dac.conta.dto.evento.MovimentacaoCriadaEvento;
 import com.dac.conta.dto.request.DepositoRequestDTO;
 import com.dac.conta.dto.request.SaqueRequestDTO;
 import com.dac.conta.dto.request.TransferenciaRequestDTO;
+import com.dac.conta.dto.response.ContaResponseDTO;
 import com.dac.conta.dto.response.ExtratoResponseDTO;
 import com.dac.conta.dto.response.ItemExtratoResponseDTO;
 import com.dac.conta.dto.response.OperacaoResponseDTO;
@@ -172,6 +173,22 @@ public class ContaService {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Conta não encontrada"));
     }
 
+    public ContaResponseDTO consultarContaPorCliente(String clienteCpf) {
+        return contaRRepository.findByClienteCpf(clienteCpf)
+        .map(conta -> {
+            ContaResponseDTO dto = new ContaResponseDTO();
+            dto.setCliente(conta.getClienteCpf());
+            dto.setNumero(conta.getNumero());
+            dto.setSaldo(conta.getSaldo() != null ? conta.getSaldo().doubleValue() : 0.0);
+            dto.setLimite(conta.getLimite() != null ? conta.getLimite().doubleValue() : 0.0);
+            dto.setGerente(conta.getGerenteCpf());
+            dto.setCriacao(conta.getDataCriacao() != null
+            ? conta.getDataCriacao().atStartOfDay() : null);
+            return dto;
+        })
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+            "Conta não encontrada para cliente: " + clienteCpf));
+    }
     // -------------------------
     // Helpers privados
     // -------------------------

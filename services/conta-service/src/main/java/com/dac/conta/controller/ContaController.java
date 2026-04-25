@@ -3,6 +3,7 @@ package com.dac.conta.controller;
 import com.dac.conta.dto.request.DepositoRequestDTO;
 import com.dac.conta.dto.request.SaqueRequestDTO;
 import com.dac.conta.dto.request.TransferenciaRequestDTO;
+import com.dac.conta.dto.response.ContaResponseDTO;
 import com.dac.conta.dto.response.ExtratoResponseDTO;
 import com.dac.conta.dto.response.OperacaoResponseDTO;
 import com.dac.conta.dto.response.SaldoResponseDTO;
@@ -47,5 +48,10 @@ public class ContaController {
     @GetMapping("/{numero}/extrato")
     public ResponseEntity<ExtratoResponseDTO> extrato(@PathVariable String numero) {
         return ResponseEntity.ok(contaService.consultarExtrato(numero));
+    }
+
+    @GetMapping("/por-cliente/{cpf}")
+    public ResponseEntity<ContaResponseDTO> contaPorCliente(@PathVariable String cpf) {
+        return ResponseEntity.ok(contaService.consultarContaPorCliente(cpf));
     }
 }
