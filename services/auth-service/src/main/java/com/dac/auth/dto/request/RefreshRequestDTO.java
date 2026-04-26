@@ -1,8 +1,10 @@
 package com.dac.auth.dto.request;
 
 public class RefreshRequestDTO {
-    private String deviceId;  // frontend manda o deviceId guardado
 
-    public String getDeviceId() { return deviceId; }
-    public void setDeviceId(String deviceId) { this.deviceId = deviceId; }
+    // deviceId enviado pelo frontend no refresh; usado para validar mismatch de dispositivo
+    private String deviceIdOut;
+
+    public String getDeviceId() { return deviceIdOut; }
+    public void setDeviceId(String deviceId) { this.deviceIdOut = deviceId; }
 }

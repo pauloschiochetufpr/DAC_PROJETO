@@ -1,5 +1,6 @@
 package com.dac.auth.listener;
 
+// Spring AMQP / RabbitMQ
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -16,6 +17,7 @@ public class RebootListener {
     @Autowired
     private MongoTemplate mongo;
 
+    // onReboot | escuta fila de reset do saga-service e recria a coleção auth com dados mock
     @RabbitListener(queues = "${rabbitmq.fila.reset:saga.reset}",
                     containerFactory = "rabbitListenerContainerFactory")
     public void onReboot(String mensagem) {

@@ -1,9 +1,12 @@
 package com.dac.auth.service;
 
+// entidades
 import com.dac.auth.entity.Device;
 import com.dac.auth.entity.Session;
+// repositórios
 import com.dac.auth.repository.DeviceRepository;
 import com.dac.auth.repository.SessionRepository;
+// Spring
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,9 +17,12 @@ import java.util.UUID;
 @Service
 public class RefreshTokenService {
 
-    private static final long SLIDING_DAYS = 30;
-    private static final long ABSOLUTE_DAYS = 90;
-    private static final long INACTIVITY_DAYS = 30;
+    // janela deslizante: cada uso renova a expiração por esse período
+    private static final long SLIDING_HOURS    = 12;
+    // limite absoluto: a sessão não pode ser usada além desse tempo desde a criação
+    private static final long ABSOLUTE_HOURS   = 36;
+    // inatividade: sessão revogada se não usada dentro desse intervalo
+    private static final long INACTIVITY_HOURS = 12;
 
     @Autowired
     private SessionRepository sessionRepository;
@@ -24,6 +30,7 @@ public class RefreshTokenService {
     @Autowired
     private DeviceRepository deviceRepository;
 
+    // createSession | cria uma nova sessão de refresh para o usuário e dispositivo informados
     public Session createSession(String userId, String deviceId) {
         Session session = new Session();
         session.setRefreshId(UUID.randomUUID().toString());
@@ -31,14 +38,15 @@ public class RefreshTokenService {
         session.setDeviceId(deviceId);
         session.setIssuedAt(Instant.now());
         session.setLastUsedAt(Instant.now());
-        session.setExpiresAt(Instant.now().plusSeconds(SLIDING_DAYS * 24 * 3600));
-        session.setAbsoluteExpiresAt(Instant.now().plusSeconds(ABSOLUTE_DAYS * 24 * 3600));
+        session.setExpiresAt(Instant.now().plusSeconds(SLIDING_HOURS * 3600));
+        session.setAbsoluteExpiresAt(Instant.now().plusSeconds(ABSOLUTE_HOURS * 3600));
         session.setRevoked(false);
         return sessionRepository.save(session);
     }
 
+    // registerOrUpdateDevice | registra um novo dispositivo ou atualiza lastSeen e IP do existente
     public Device registerOrUpdateDevice(String userId, String deviceId,
-                                          String deviceName, String ip) {
+                                         String deviceName, String ip) {
         return deviceRepository.findByDeviceId(deviceId)
             .map(existing -> {
                 existing.setLastSeen(Instant.now());
@@ -59,6 +67,7 @@ public class RefreshTokenService {
             });
     }
 
+    // rotateSession | valida o refresh token, verifica dispositivo e emite nova sessão (invalidando a anterior)
     public Session rotateSession(String refreshId, String incomingDeviceId, String ip) {
         Session session = sessionRepository.findByRefreshId(refreshId)
             .orElseThrow(() -> new SecurityException("INVALID_TOKEN"));
@@ -94,8 +103,7 @@ public class RefreshTokenService {
             throw new SecurityException("SESSION_EXPIRED");
         }
 
-        Instant inactivityLimit = session.getLastUsedAt()
-            .plusSeconds(INACTIVITY_DAYS * 24 * 3600);
+        Instant inactivityLimit = session.getLastUsedAt().plusSeconds(INACTIVITY_HOURS * 3600);
         if (Instant.now().isAfter(inactivityLimit)) {
             session.setRevoked(true);
             sessionRepository.save(session);
@@ -115,12 +123,13 @@ public class RefreshTokenService {
         newSession.setDeviceId(session.getDeviceId());
         newSession.setIssuedAt(Instant.now());
         newSession.setLastUsedAt(Instant.now());
-        newSession.setExpiresAt(Instant.now().plusSeconds(SLIDING_DAYS * 24 * 3600));
+        newSession.setExpiresAt(Instant.now().plusSeconds(SLIDING_HOURS * 3600));
         newSession.setAbsoluteExpiresAt(session.getAbsoluteExpiresAt());
         newSession.setRevoked(false);
         return sessionRepository.save(newSession);
     }
 
+    // revokeSession | invalida uma sessão pelo refreshId (chamado no logout)
     public void revokeSession(String refreshId) {
         sessionRepository.findByRefreshId(refreshId).ifPresent(session -> {
             session.setRevoked(true);
@@ -128,6 +137,7 @@ public class RefreshTokenService {
         });
     }
 
+    // handleReplay | resposta a reutilização de token já revogado: blacklista o dispositivo e revoga todas as sessões
     private void handleReplay(String deviceId, String userId) {
         revokeAllSessionsOfDevice(deviceId);
         deviceRepository.findByDeviceId(deviceId).ifPresent(device -> {
@@ -136,6 +146,7 @@ public class RefreshTokenService {
         });
     }
 
+    // revokeAllSessionsOfDevice | marca todas as sessões de um dispositivo como revogadas
     private void revokeAllSessionsOfDevice(String deviceId) {
         List<Session> sessions = sessionRepository.findAllByDeviceId(deviceId);
         sessions.forEach(s -> s.setRevoked(true));

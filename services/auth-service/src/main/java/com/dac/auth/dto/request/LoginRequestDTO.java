@@ -1,11 +1,15 @@
 package com.dac.auth.dto.request;
 
 public class LoginRequestDTO {
+
     private String email;
     private String password;
+
+    // fingerprint SHA-256 gerado pelo frontend para rastreamento de dispositivo
     private String deviceId;
+
+    // nome amigável do dispositivo enviado pelo frontend (ex: "Chrome - Windows")
     private String deviceName;
-    private String ip;
 
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
@@ -18,7 +22,4 @@ public class LoginRequestDTO {
 
     public String getDeviceName() { return deviceName; }
     public void setDeviceName(String deviceName) { this.deviceName = deviceName; }
-
-    public String getIp() { return ip; }
-    public void setIp(String ip) { this.ip = ip; }
 }

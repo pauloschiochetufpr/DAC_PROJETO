@@ -1,6 +1,8 @@
 package com.dac.auth.dto.response;
 
 public class RefreshResponseDTO {
+
+    // novo token JWE emitido após rotação da sessão
     private String access_token;
     private String token_tipo = "bearer";
 

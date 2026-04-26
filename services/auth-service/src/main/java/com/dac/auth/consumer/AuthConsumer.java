@@ -1,8 +1,12 @@
 package com.dac.auth.consumer;
 
+// config RabbitMQ
 import com.dac.auth.config.RabbitMQConfig;
+// entidades
 import com.dac.auth.entity.Usuario;
+// repositórios
 import com.dac.auth.repository.UsuarioRepository;
+// Spring AMQP / RabbitMQ
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -16,8 +20,7 @@ public class AuthConsumer {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
-    // criar usuario = gerente-service ou saga-service)
-    // cpf -> nome -> email -> senha -> tipo }
+    // criarUsuario | recebe mensagem do gerente-service ou saga-service e persiste novo usuário
     @RabbitListener(queues = RabbitMQConfig.FILA_AUTH_CRIAR)
     public void criarUsuario(Map<String, String> msg) {
         String cpf   = msg.get("cpf");
@@ -27,7 +30,7 @@ public class AuthConsumer {
         String tipo  = msg.get("tipo");
 
         System.out.println("Auth: criando usuario para CPF " + cpf);
-		
+
         Optional<Usuario> existente = usuarioRepository.findByCpf(cpf);
         if (existente.isPresent()) {
             System.out.println("Auth: usuario com CPF " + cpf + " já existe, ignorando.");
@@ -38,15 +41,14 @@ public class AuthConsumer {
         usuario.setCpf(cpf);
         usuario.setNome(nome);
         usuario.setEmail(email);
-        usuario.setSenhaHash(senha); // precisa do hash com bcrypt 
+        usuario.setSenhaHash(senha); // TODO: aplicar hash bcrypt antes de persistir
         usuario.setTipo(tipo);
 
         usuarioRepository.save(usuario);
         System.out.println("Auth: usuario criado com sucesso para " + email);
     }
 
-    // atualizar usuario = ver se vem gerente-service POREM PRECISA VER PRO CLIENTE TAMBÉM
-    // mensagem = cpf -> nome? -> email? -> senha?
+    // atualizarUsuario | atualiza campos de um usuário existente com os dados recebidos via fila
     @RabbitListener(queues = RabbitMQConfig.FILA_AUTH_ATUALIZAR)
     public void atualizarUsuario(Map<String, String> msg) {
         String cpf = msg.get("cpf");
@@ -63,14 +65,13 @@ public class AuthConsumer {
 
         if (msg.containsKey("nome"))  usuario.setNome(msg.get("nome"));
         if (msg.containsKey("email")) usuario.setEmail(msg.get("email"));
-        if (msg.containsKey("senha")) usuario.setSenhaHash(msg.get("senha")); // precisa do hash
+        if (msg.containsKey("senha")) usuario.setSenhaHash(msg.get("senha")); // TODO: aplicar hash bcrypt
 
         usuarioRepository.save(usuario);
         System.out.println("Auth: usuario " + cpf + " atualizado.");
     }
 
-    // remover user  (gerente-service)
-    // mensagem = cpf
+    // removerUsuario | exclui o usuário do banco a partir do CPF recebido via fila
     @RabbitListener(queues = RabbitMQConfig.FILA_AUTH_REMOVER)
     public void removerUsuario(Map<String, String> msg) {
         String cpf = msg.get("cpf");

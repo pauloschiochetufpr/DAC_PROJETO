@@ -1,8 +1,13 @@
 package com.dac.auth.dto.response;
 
 public class ValidateResponseDTO {
+
+    // CPF do usuário extraído do token
     private String userId;
+
+    // papel do usuário (cliente, gerente, administrador)
     private String role;
+
     private String email;
 
     public ValidateResponseDTO(String userId, String role, String email) {

@@ -1,22 +1,27 @@
-package com.dac.auth.controller;
+﻿package com.dac.auth.controller;
 
+// DTOs
 import com.dac.auth.dto.request.LoginRequestDTO;
 import com.dac.auth.dto.request.RefreshRequestDTO;
-import com.dac.auth.dto.request.ValidateRequestDTO;
 import com.dac.auth.dto.response.LoginResponseDTO;
 import com.dac.auth.dto.response.LogoutResponseDTO;
 import com.dac.auth.dto.response.RefreshResponseDTO;
-import com.dac.auth.dto.response.ValidateResponseDTO;
+// entidades
 import com.dac.auth.entity.Session;
 import com.dac.auth.entity.Usuario;
+// repositórios
 import com.dac.auth.repository.UsuarioRepository;
+// services
 import com.dac.auth.service.AuthService;
 import com.dac.auth.service.JwtService;
 import com.dac.auth.service.RefreshTokenService;
-import io.jsonwebtoken.Claims;
+// nimbus-jose-jwt
+import com.nimbusds.jwt.JWTClaimsSet;
+// jakarta
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+// Spring
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -36,44 +41,30 @@ public class AuthController {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
-@PostMapping("/login")
-public ResponseEntity<LoginResponseDTO> login(
-        @RequestBody LoginRequestDTO request,
-        HttpServletRequest httpRequest,
-        HttpServletResponse httpResponse) {
 
-    request.setIp(httpRequest.getRemoteAddr());
-    LoginResponseDTO response = authService.login(request);
+    // login | autentica credenciais, emite access token JWE e seta cookie HttpOnly de refresh
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponseDTO> login(
+            @RequestBody LoginRequestDTO request,
+            HttpServletRequest httpRequest,
+            HttpServletResponse httpResponse) {
 
-    // usa o refreshToken que já veio do AuthService
-    Cookie refreshCookie = new Cookie("refreshToken", response.getRefreshToken());
-    refreshCookie.setHttpOnly(true);
-    refreshCookie.setPath("/auth/refresh");
-    refreshCookie.setMaxAge(30 * 24 * 60 * 60);
-    httpResponse.addCookie(refreshCookie);
+        // gateway injeta X-Forwarded-For via xfwd:true; fallback para remoteAddr em dev local
+        String ip = httpRequest.getHeader("X-Forwarded-For");
+        if (ip == null || ip.isBlank()) ip = httpRequest.getRemoteAddr();
 
-    // remove do body — já foi pro cookie
-    response.setRefreshToken(null);
+        AuthService.LoginResult result = authService.login(request, ip);
 
-    return ResponseEntity.ok(response);
-}
+        Cookie refreshCookie = new Cookie("refreshToken", result.refreshId());
+        refreshCookie.setHttpOnly(true);
+        refreshCookie.setPath("/auth/refresh");
+        refreshCookie.setMaxAge(12 * 60 * 60); // 12 horas
+        httpResponse.addCookie(refreshCookie);
 
-    @PostMapping("/validate")
-    public ResponseEntity<ValidateResponseDTO> validate(
-            @RequestBody ValidateRequestDTO request) {
-        try {
-            Claims claims = jwtService.validateToken(request.getToken());
-            ValidateResponseDTO response = new ValidateResponseDTO(
-                claims.getSubject(),
-                claims.get("role", String.class),
-                claims.get("email", String.class)
-            );
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.status(401).build();
-        }
+        return ResponseEntity.ok(result.response());
     }
 
+    // refresh | valida cookie de refresh, rotaciona sessão e emite novo access token JWE
     @PostMapping("/refresh")
     public ResponseEntity<RefreshResponseDTO> refresh(
             @RequestBody RefreshRequestDTO request,
@@ -90,20 +81,23 @@ public ResponseEntity<LoginResponseDTO> login(
             Session newSession = refreshTokenService.rotateSession(
                 refreshToken, request.getDeviceId(), ip);
 
-            Usuario usuario = usuarioRepository.findById(newSession.getUserId())
+            // userId null indica inconsistência no banco; não deve ocorrer em fluxo normal
+            String userId = newSession.getUserId();
+            if (userId == null) throw new RuntimeException("Sessão sem userId");
+
+            Usuario usuario = usuarioRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
             String newToken = jwtService.generateToken(
                 usuario.getCpf(),
                 usuario.getEmail(),
-                usuario.getTipo(),
-                newSession.getDeviceId()
+                usuario.getTipo()
             );
 
             Cookie refreshCookie = new Cookie("refreshToken", newSession.getRefreshId());
             refreshCookie.setHttpOnly(true);
             refreshCookie.setPath("/auth/refresh");
-            refreshCookie.setMaxAge(30 * 24 * 60 * 60);
+            refreshCookie.setMaxAge(12 * 60 * 60); // 12 horas
             httpResponse.addCookie(refreshCookie);
 
             RefreshResponseDTO response = new RefreshResponseDTO();
@@ -112,17 +106,20 @@ public ResponseEntity<LoginResponseDTO> login(
 
         } catch (SecurityException e) {
             String msg = e.getMessage();
-            if ("REPLAY_DETECTED".equals(msg) || 
-                "DEVICE_BLACKLISTED".equals(msg) || 
+            if ("REPLAY_DETECTED".equals(msg) ||
+                "DEVICE_BLACKLISTED".equals(msg) ||
                 "DEVICE_MISMATCH".equals(msg)) {
                 return ResponseEntity.status(403).build();
             }
             return ResponseEntity.status(401).build();
+        } catch (Exception e) {
+            return ResponseEntity.status(500).build();
         }
     }
 
+    // logout | revoga sessão, expira cookie e retorna dados do usuário se o access token ainda for válido
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(
+    public ResponseEntity<LogoutResponseDTO> logout(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @CookieValue(name = "refreshToken", required = false) String refreshToken,
             HttpServletResponse httpResponse) {
@@ -131,18 +128,18 @@ public ResponseEntity<LoginResponseDTO> login(
             refreshTokenService.revokeSession(refreshToken);
         }
 
+        // sobrescreve o cookie com maxAge=0 para forçar expiração no browser
         Cookie refreshCookie = new Cookie("refreshToken", "");
         refreshCookie.setHttpOnly(true);
         refreshCookie.setPath("/auth/refresh");
         refreshCookie.setMaxAge(0);
         httpResponse.addCookie(refreshCookie);
 
-        
         LogoutResponseDTO logoutResponse = new LogoutResponseDTO();
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             try {
                 String token = authHeader.substring(7);
-                Claims claims = jwtService.validateToken(token);
+                JWTClaimsSet claims = jwtService.validateToken(token);
                 String cpf = claims.getSubject();
                 Usuario usuario = usuarioRepository.findByCpf(cpf).orElse(null);
                 if (usuario != null) {
@@ -152,11 +149,10 @@ public ResponseEntity<LoginResponseDTO> login(
                     logoutResponse.setTipo(usuario.getTipo());
                 }
             } catch (Exception ignored) {
-                // se o token expirar ainda da logout sem problemas
+                // token expirado ainda permite logout sem erros
             }
         }
-        
-        
-        return ResponseEntity.ok().build();
+
+        return ResponseEntity.ok(logoutResponse);
     }
 }
