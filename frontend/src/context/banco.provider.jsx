@@ -4,6 +4,17 @@ import { contaMockInicial, CONTA_CLIENTE } from "../mocks/extratoMockData";
 import { perfilMockInicial } from "../mocks/perfilMockData";
 import { toBrasiliaIso } from "../lib/dataUtils";
 
+const AUTH_USER_STORAGE_KEY = "auth_user";
+
+function readStoredAuthUser() {
+  try {
+    const stored = localStorage.getItem(AUTH_USER_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : null;
+  } catch {
+    return null;
+  }
+}
+
 // Calcula delta de saldo (positivo = crédito, negativo = débito)
 const calcularDelta = (tipo, origem, valor) => {
   if (tipo === "deposito") return valor;
@@ -20,7 +31,7 @@ export function BancoProvider({ children }) {
     contaMockInicial.movimentacoes,
   );
 
-  const [usuario, setUsuario] = useState(null);
+  const [usuario, setUsuario] = useState(() => readStoredAuthUser());
   const [client, setClient] = useState(perfilMockInicial.client);
   const [contaInfo] = useState(perfilMockInicial.contaInfo);
 
@@ -45,10 +56,15 @@ export function BancoProvider({ children }) {
     });
   }, []);
 
-  const login = useCallback(async (email, senha) => {
-    const res = await loginMock(email, senha);
-    setUsuario(res);
-    return res;
+  const salvarUsuarioAutenticado = useCallback((dadosUsuario) => {
+    setUsuario(dadosUsuario);
+    localStorage.setItem(AUTH_USER_STORAGE_KEY, JSON.stringify(dadosUsuario));
+  }, []);
+
+  const limparUsuarioAutenticado = useCallback(() => {
+    setUsuario(null);
+    localStorage.removeItem(AUTH_USER_STORAGE_KEY);
+    localStorage.removeItem("access_token");
   }, []);
 
   // Ref para leitura síncrona do saldo dentro da Promise sem stale closure
@@ -95,7 +111,8 @@ export function BancoProvider({ children }) {
         contaInfo,
         atualizarPerfil,
         usuario,
-        login,
+        salvarUsuarioAutenticado,
+        limparUsuarioAutenticado,
       }}
     >
       {children}
