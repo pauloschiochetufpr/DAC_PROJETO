@@ -6,7 +6,12 @@ import WaveSimpleRed from "../components/WaveSimpleRed";
 import SecundaryBorder from "../assets/icons/SecundaryBorder.svg";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 
+// i18n
+import { useLanguage } from "../hooks/useLanguage";
+import { t } from "../lib/i18n";
+
 export default function Perfil() {
+  const { lang } = useLanguage();
   const { client, contaInfo, atualizarPerfil, saldo } = useBanco();
   if (!client || !contaInfo) {
     return <div>Carregando...</div>;
@@ -15,13 +20,28 @@ export default function Perfil() {
   const [isEditing, setIsEditing] = useState(false);
   const [fieldEditing, setFieldEditing] = useState({});
   const [form, setForm] = useState({});
-  const [profileSection, setProfileSection] = useState("dados");
+  const [profileSection, setProfileSection] = useState("profile");
 
   function calcularLimiteParaSalario(salario, saldoAtual) {
     const base = salario >= 2000 ? salario / 2 : 0;
     const saldoNegativoAbs = saldoAtual < 0 ? Math.abs(saldoAtual) : 0;
     return base < saldoNegativoAbs ? saldoNegativoAbs : base;
   }
+
+  const fieldMap = {
+    nome: "name",
+    cpf: "cpf",
+    email: "email",
+    telefone: "phone",
+    salario: "salary",
+    limite: "limit",
+    cep: "zipCode",
+    logradouro: "street",
+    numero: "number",
+    bairro: "district",
+    cidade: "city",
+    estado: "state",
+  };
 
   // mantém form sincronizado com o provider
   useEffect(() => {
@@ -91,7 +111,7 @@ export default function Perfil() {
           group-hover:-translate-x-1
         "
             />
-            <span>Voltar</span>
+            <span>{t(lang, "Profile.actions.back")}</span>
           </button>
         </Link>
       </div>
@@ -110,28 +130,28 @@ export default function Perfil() {
             </MetalSurface>
           </div>
 
-          {/* Lantern body (red) */}
+          {/* Lantern body */}
           <div className="relative w-full rounded-3xl overflow-hidden z-[1]">
             {/* 1. BASE */}
             <div className="absolute inset-0 bg-brand" />
 
-            {/* 2. GRADIENTE DE VOLUME (cilindro) */}
+            {/* 2. GRADIENTE DE VOLUME */}
             <div className="absolute inset-0 bg-[linear-gradient(to_right,#00000040,transparent_25%,transparent_75%,#00000040)]" />
 
-            {/* 3. SUAVIZAÇÃO CENTRAL (papel mais fino no meio) */}
+            {/* 3. SUAVIZAÇÃO CENTRAL */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.08),transparent_70%)]" />
 
-            {/* 4. TEXTURA (ribs da lanterna) */}
+            {/* 4. TEXTURA */}
             <div className="absolute inset-0 bg-[repeating-linear-gradient(to_bottom,transparent,transparent_16px,rgba(0,0,0,0.08)_17px)]" />
 
-            {/* 5. LEVE VARIAÇÃO VERTICAL (forma orgânica) */}
+            {/* 5. LEVE VARIAÇÃO VERTICAL */}
             <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.2),transparent_30%,transparent_70%,rgba(0,0,0,0.2))]" />
             <div className="bg-brand p-0 flex flex-col">
               <div className="pt-6 p-4 flex-1 flex flex-col">
                 {/* SETA DIREITA → ENDEREÇO */}
-                {profileSection === "dados" && (
+                {profileSection === "profile" && (
                   <button
-                    onClick={() => setProfileSection("endereco")}
+                    onClick={() => setProfileSection("address")}
                     className="
       absolute right-2 top-1/2 -translate-y-1/2 p-2
       transition-all duration-300 flex flex-row
@@ -140,16 +160,16 @@ export default function Perfil() {
     "
                   >
                     <span className="hidden sm:block md:block lg:hidden xl:block text-sm">
-                      Endereço
+                      {t(lang, "Profile.navigation.toAddress")}
                     </span>
                     <ArrowRight className="w-5 h-5 md:w-6 md:h-6" />
                   </button>
                 )}
 
                 {/* SETA ESQUERDA ← DADOS */}
-                {profileSection === "endereco" && (
+                {profileSection === "address" && (
                   <button
-                    onClick={() => setProfileSection("dados")}
+                    onClick={() => setProfileSection("profile")}
                     className="
       absolute left-2 top-1/2 -translate-y-1/2 p-2
       transition-all duration-300 flex flex-row
@@ -159,19 +179,19 @@ export default function Perfil() {
                   >
                     <ArrowLeft className="w-5 h-5 md:w-6 md:h-6" />
                     <span className="hidden sm:block md:block lg:hidden xl:block text-sm">
-                      Dados
+                      {t(lang, "Profile.navigation.toData")}
                     </span>
                   </button>
                 )}
                 <div className="relative z-10 p-4 pt-6 flex flex-col">
-                  {profileSection === "dados" ? (
+                  {profileSection === "profile" ? (
                     <>
                       {/* CAMPOS NORMAIS */}
                       {[
-                        { key: "nome", label: "Nome" },
-                        { key: "cpf", label: "CPF", alwaysDisabled: true },
-                        { key: "email", label: "E-mail" },
-                        { key: "telefone", label: "Telefone" },
+                        { key: "nome" },
+                        { key: "cpf", alwaysDisabled: true },
+                        { key: "email" },
+                        { key: "telefone" },
                       ].map((f) => {
                         const isReadOnly = !!f.readOnly;
                         const isAlwaysDisabled = !!f.alwaysDisabled;
@@ -185,33 +205,32 @@ export default function Perfil() {
                             onClick={() => {
                               if (!f.alwaysDisabled) handleFieldClick(f.key);
                             }}
-                            className={`
-                      group
-                      lg:py-5 py-3 px-3
-                      flex flex-col lg:flex-row lg:items-center lg:justify-between
-                      gap-2 lg:gap-0 xl:gap-8
-                      `}
+                            className="
+        group
+        lg:py-5 py-3 px-3
+        flex flex-col lg:flex-row lg:items-center lg:justify-between
+        gap-2 lg:gap-0 xl:gap-8
+      "
                           >
                             {/* LABEL */}
                             <label className="text-sm sm:text-lg lg:text-sm xl:text-lg font-medium text-secundary text-center lg:text-left lg:w-1/3">
-                              {f.label}
+                              {t(lang, `Profile.fields.${fieldMap[f.key]}`)}
                             </label>
 
                             {/* INPUT CONTAINER */}
                             <div
                               className={`
-                          lg:w-2/3 w-full rounded-lg px-3 lg:pl-0 py-2 transition-all duration-300
-                          ${
-                            isFieldEditable
-                              ? "bg-white/5 border border-white/10 group-hover:border-orange-300/40 group-hover:shadow-[0_0_10px_rgba(255,120,80,0.25)]"
-                              : "bg-transparent border border-transparent"
-                          }
-                          `}
+          lg:w-2/3 w-full rounded-lg px-3 lg:pl-0 py-2 transition-all duration-300
+          ${
+            isFieldEditable
+              ? "bg-white/5 border border-white/10 group-hover:border-orange-300/40 group-hover:shadow-[0_0_10px_rgba(255,120,80,0.25)]"
+              : "bg-transparent border border-transparent"
+          }
+        `}
                             >
                               <input
                                 name={f.key}
-                                type={f.key === "saldo" ? "number" : "text"}
-                                step={f.key === "saldo" ? "0.01" : undefined}
+                                type="text"
                                 value={
                                   isEditing
                                     ? (form?.[f.key] ?? "")
@@ -221,16 +240,16 @@ export default function Perfil() {
                                 disabled={!isFieldEditable}
                                 readOnly={isReadOnly}
                                 className={`
-                            w-full bg-transparent outline-none text-sm sm:text-lg lg:text-sm xl:text-lg text-center lg:text-left
-                            ${isFieldEditable ? "text-zinc-100" : "text-zinc-300"}
-                            `}
+            w-full bg-transparent outline-none text-sm sm:text-lg lg:text-sm xl:text-lg text-center lg:text-left
+            ${isFieldEditable ? "text-zinc-100" : "text-zinc-300"}
+          `}
                               />
                             </div>
                           </div>
                         );
                       })}
 
-                      {/* 💰 SALÁRIO + LIMITE NA MESMA LINHA */}
+                      {/* SALÁRIO + LIMITE */}
                       <div className="py-3 px-3 flex flex-col xl:flex-row gap-4">
                         {/* SALÁRIO */}
                         <div
@@ -238,7 +257,7 @@ export default function Perfil() {
                           onClick={() => handleFieldClick("salario")}
                         >
                           <label className="text-sm sm:text-lg lg:text-sm xl:text-lg text-secundary text-center lg:text-left xl:w-2/3">
-                            Salário (R$)
+                            {t(lang, "Profile.fields.salary")}
                           </label>
 
                           <div
@@ -288,7 +307,7 @@ export default function Perfil() {
                         {/* LIMITE */}
                         <div className="flex-1 flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-4">
                           <label className="text-sm sm:text-lg lg:text-sm xl:text-lg text-secundary text-center lg:text-left xl:w-1/3">
-                            Limite (R$)
+                            {t(lang, "Profile.fields.limit")}
                           </label>
 
                           <div className="lg:w-2/3 w-full rounded-lg px-3 py-2">
@@ -315,12 +334,12 @@ export default function Perfil() {
                       {/* ================= ENDEREÇO ================= */}
 
                       {[
-                        { key: "cep", label: "CEP" },
-                        { key: "rua", label: "Rua" },
-                        { key: "numero", label: "Número" },
-                        { key: "bairro", label: "Bairro" },
-                        { key: "cidade", label: "Cidade" },
-                        { key: "estado", label: "Estado" },
+                        { key: "cep" },
+                        { key: "logradouro" },
+                        { key: "numero" },
+                        { key: "bairro" },
+                        { key: "cidade" },
+                        { key: "estado" },
                       ].map((f) => {
                         const isFieldEditable = isEditing;
 
@@ -329,27 +348,29 @@ export default function Perfil() {
                             key={f.key}
                             onClick={() => handleFieldClick(f.key)}
                             className="
-              group
-              lg:py-5 py-3 px-8
-              flex flex-col lg:flex-row
-              lg:items-center lg:justify-between
-              gap-2 md:gap-8
-            "
+        group
+        lg:py-5 py-3 px-8
+        flex flex-col lg:flex-row
+        lg:items-center lg:justify-between
+        gap-2 md:gap-8
+      "
                           >
+                            {/* LABEL */}
                             <label className="text-sm sm:text-lg lg:text-sm xl:text-lg font-medium text-secundary text-center lg:text-left lg:w-1/3">
-                              {f.label}
+                              {t(lang, `Profile.fields.${fieldMap[f.key]}`)}
                             </label>
 
+                            {/* INPUT */}
                             <div
                               className={`
-                lg:w-2/3 w-full rounded-lg px-3 py-2
-                transition-all duration-300
-                ${
-                  isFieldEditable
-                    ? "bg-white/5 border border-white/10 group-hover:border-orange-300/40"
-                    : "bg-transparent border border-transparent"
-                }
-              `}
+          lg:w-2/3 w-full rounded-lg px-3 py-2
+          transition-all duration-300
+          ${
+            isFieldEditable
+              ? "bg-white/5 border border-white/10 group-hover:border-orange-300/40"
+              : "bg-transparent border border-transparent"
+          }
+        `}
                             >
                               <input
                                 name={f.key}
@@ -362,10 +383,10 @@ export default function Perfil() {
                                 onChange={handleChange}
                                 disabled={!isFieldEditable}
                                 className="
-                  w-full bg-transparent outline-none
-                  text-sm sm:text-lg lg:text-sm xl:text-lg text-center lg:text-left
-                  text-zinc-100
-                "
+            w-full bg-transparent outline-none
+            text-sm sm:text-lg lg:text-sm xl:text-lg text-center lg:text-left
+            text-zinc-100
+          "
                               />
                             </div>
                           </div>
@@ -387,34 +408,34 @@ export default function Perfil() {
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center_top,rgba(255,140,90,0.35),transparent_60%)]" />
           </MetalSurface>
           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 flex flex-col items-center z-[10]">
-            {/* 🌑 CONTACT SHADOW (entre cap e botão) */}
+            {/* CONTACT SHADOW */}
             <ContactShadow className="relative -bottom-1 lg:w-[18vw] w-[54vw] h-4 z-[90]" />
             {/* Edit/Save buttons estilizado como parte da lanterna */}
             <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 z-[10]">
               <div className="relative w-[48vw] sm:w-40 lg:w-48 h-10 rounded-b-2xl overflow-hidden">
-                {/* 1. BASE (mais escura que o cap) */}
+                {/* 1. BASE */}
                 <div className="absolute inset-0 bg-secundaryDark" />
 
-                {/* 2. SOMBRA SUPERIOR (oclusão do bottom cap) */}
+                {/* 2. SOMBRA SUPERIOR */}
                 <div className="absolute inset-0 bg-[linear-gradient(to_bottom,#00000090,#00000040_40%,transparent_80%)]" />
 
-                {/* 3. VOLUME leve (forma arredondada) */}
+                {/* 3. VOLUME leve */}
                 <div className="absolute inset-0 bg-[linear-gradient(to_top,#00000040,transparent_50%,#ffffff05)]" />
 
-                {/* 4. REFLEXO LATERAL (luz indireta ambiente) */}
+                {/* 4. REFLEXO LATERAL */}
                 <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.08),transparent_30%,transparent_70%,rgba(255,255,255,0.08))]" />
 
                 {/* 5. ESCURECIMENTO DAS BORDAS */}
                 <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.5),transparent_30%,transparent_70%,rgba(0,0,0,0.5))]" />
 
-                {/* CONTEÚDO */}
+                {/* BOTÕES */}
                 <div className="relative z-10 flex h-full">
                   {!isEditing ? (
                     <button
                       onClick={handleEdit}
                       className="flex-1 text-sm text-brand hover:bg-white/5 transition"
                     >
-                      Editar
+                      {t(lang, "Profile.actions.edit")}
                     </button>
                   ) : (
                     <>
@@ -422,7 +443,7 @@ export default function Perfil() {
                         onClick={handleSave}
                         className="flex-1 text-green-400 text-xs lg:text-sm hover:bg-white/5 transition"
                       >
-                        Salvar
+                        {t(lang, "Profile.actions.save")}
                       </button>
 
                       <div className="w-[1px] bg-white/10" />
@@ -431,7 +452,7 @@ export default function Perfil() {
                         onClick={handleCancel}
                         className="flex-1 text-brand text-xs lg:text-sm hover:bg-white/5 transition"
                       >
-                        Cancelar
+                        {t(lang, "Profile.actions.cancel")}
                       </button>
                     </>
                   )}
@@ -473,7 +494,7 @@ export default function Perfil() {
 
           <div className="absolute inset-0 flex items-center justify-center z-[20] px-2">
             <h2 className="text-xl sm:text-xl md:text-3xl lg:text-4xl font-orienta text-secundary text-center">
-              Informações da Conta
+              {t(lang, "Profile.accountInfo.title")}
             </h2>
           </div>
         </div>
@@ -550,7 +571,7 @@ export default function Perfil() {
               {/* CONTA */}
               <div className="flex flex-col gap-1">
                 <span className="text-secundary text-xl sm:text-lg md:text-2xl opacity-80">
-                  Número da Conta
+                  {t(lang, "Profile.accountInfo.accountNumber")}
                 </span>
                 <span className="text-base sm:text-lg md:text-xl font-medium text-zinc-100 break-all">
                   {contaInfo.conta}
@@ -560,7 +581,7 @@ export default function Perfil() {
               {/* GERENTE */}
               <div className="flex flex-col gap-1">
                 <span className="text-secundary text-xl sm:text-lg md:text-xl opacity-80">
-                  Gerente
+                  {t(lang, "Profile.accountInfo.manager")}
                 </span>
                 <span className="text-base sm:text-lg md:text-xl font-medium text-zinc-100">
                   {contaInfo.gerente}

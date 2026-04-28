@@ -103,6 +103,37 @@
       "negativeBalances": "Negative Balances"
     }
   },
+  "Profile": {
+    "actions": {
+      "back": "Back",
+      "edit": "Edit",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "accountInfo": {
+      "title": "Account Information",
+      "accountNumber": "Account Number",
+      "manager": "Manager"
+    },
+    "navigation": {
+      "toAddress": "Address",
+      "toData": "Profile"
+    },
+    "fields": {
+      "name": "Full Name",
+      "cpf": "CPF",
+      "email": "Email",
+      "phone": "Phone",
+      "salary": "Salary",
+      "limit": "Limit",
+      "zipCode": "ZIP Code",
+      "street": "Street",
+      "number": "Number",
+      "district": "District",
+      "city": "City",
+      "state": "State"
+    }
+  },
   "LoginPage": {
     "titleLogin": "Login",
     "titleRegister": "Sign Up",

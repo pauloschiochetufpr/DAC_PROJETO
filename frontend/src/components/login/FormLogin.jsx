@@ -10,10 +10,12 @@ import { Eye, EyeClosed } from "lucide-react";
 // i18n
 import { useLanguage } from "../../hooks/useLanguage";
 import { t } from "../../lib/i18n";
+import { useBanco } from "../../hooks/useBanco";
 
 export default function FormLogin() {
   // I18N
   const { lang } = useLanguage();
+  const { salvarUsuarioAutenticado } = useBanco();
   const [form, setForm] = useState({
     email: "",
     senha: "",
@@ -45,6 +47,15 @@ export default function FormLogin() {
       const response = await API.login(form.email, form.senha);
       if (response.data?.access_token) {
         localStorage.setItem("access_token", response.data.access_token);
+      }
+      if (response.data?.tipo || response.data?.usuario) {
+        salvarUsuarioAutenticado({
+          tipo: response.data?.tipo ?? response.data?.usuario?.tipo ?? null,
+          nome: response.data?.usuario?.nome ?? null,
+          cpf: response.data?.usuario?.cpf ?? null,
+          email: response.data?.usuario?.email ?? form.email,
+          deviceId: response.data?.deviceId ?? null,
+        });
       }
       navigate("/");
     } catch (err) {

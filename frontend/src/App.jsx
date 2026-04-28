@@ -16,18 +16,34 @@ import GerenciarGerentes from "./pages/GerenciarGerentes";
 //mock
 import { useBanco } from "./hooks/useBanco";
 
+function normalizarTipoUsuario(tipo) {
+  if (tipo === 1 || tipo === "1" || tipo === "ADMIN" || tipo === "ADMINISTRADOR") {
+    return "ADMINISTRADOR";
+  }
+
+  if (tipo === 2 || tipo === "2" || tipo === "GERENTE") {
+    return "GERENTE";
+  }
+
+  if (tipo === 3 || tipo === "3" || tipo === "CLIENTE") {
+    return "CLIENTE";
+  }
+
+  return null;
+}
+
 export default function App() {
   const { usuario } = useBanco();
-  const role = usuario?.tipo;
+  const role = normalizarTipoUsuario(usuario?.tipo);
   let HomeCorreto;
 
-  if (role === 1) {
+  if (role === "ADMINISTRADOR") {
     // Roteamento para Administrador
     HomeCorreto = <HomeAdmin />;
-  } else if (role === 2) {
+  } else if (role === "GERENTE") {
     // Roteamento para Gerente
     HomeCorreto = <HomeGerente />;
-  } else if (role === 3) {
+  } else if (role === "CLIENTE") {
     // Roteamento para Cliente
     HomeCorreto = <HomeCliente />;
   }

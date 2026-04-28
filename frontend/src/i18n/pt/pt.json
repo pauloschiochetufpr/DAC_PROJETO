@@ -103,6 +103,38 @@
       "negativeBalances": "Saldos Negativos"
     }
   },
+  "Profile": {
+    "actions": {
+      "back": "Voltar",
+      "edit": "Editar",
+      "save": "Salvar",
+      "cancel": "Cancelar"
+    },
+    "accountInfo": {
+      "title": "Informações da Conta",
+      "accountNumber": "Número da Conta",
+      "manager": "Gerente"
+    },
+    "navigation": {
+      "toAddress": "Endereço",
+      "toData": "Dados"
+    },
+    "fields": {
+      "name": "Nome",
+      "cpf": "CPF",
+      "email": "E-mail",
+      "phone": "Telefone",
+      "salary": "Salário",
+      "limit": "Limite",
+      "zipCode": "CEP",
+      "street": "Logradouro",
+      "number": "Número",
+      "district": "Bairro",
+      "city": "Cidade",
+      "state": "Estado"
+    }
+  },
+
   "LoginPage": {
     "titleLogin": "Login",
     "titleRegister": "Cadastro",
