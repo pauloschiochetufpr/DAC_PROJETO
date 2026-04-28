@@ -17,6 +17,13 @@
     "manage_managers": "Gerenciar gerentes",
     "more_features_coming": "Mais funcionalidades em breve [...]"
   },
+  "HomeClient": {
+    "accountNumber": "Número da conta",
+    "actions": {
+      "transactions": "TRANSAÇÕES",
+      "statement": "EXTRATO"
+    }
+  },
   "GraficoSaldos": {
     "title": "Distribuição dos Saldos",
     "positive": "Positivos",
@@ -38,6 +45,18 @@
       "manager": "Gerente",
       "balance": "Saldo | Salário",
       "credit": "Crédito"
+    }
+  },
+  "MiniStatement": {
+    "title": "EXTRATO",
+    "empty": "Nenhuma transação nos últimos 30 dias",
+    "actions": {
+      "loadMore": "Carregar mais"
+    },
+    "types": {
+      "saque": "Saque",
+      "deposito": "Depósito",
+      "transferencia": "Transferência"
     }
   },
   "ExtratoGeral": {

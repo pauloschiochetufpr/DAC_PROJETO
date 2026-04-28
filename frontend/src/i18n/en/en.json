@@ -17,6 +17,13 @@
     "manage_managers": "Manage Managers",
     "more_features_coming": "More features coming soon [...]"
   },
+  "HomeClient": {
+    "accountNumber": "Account Number",
+    "actions": {
+      "transactions": "Transactions",
+      "statement": "Statement"
+    }
+  },
   "GraficoSaldos": {
     "title": "Balance Distribution",
     "positive": "Positive",
@@ -38,6 +45,18 @@
       "manager": "Manager",
       "balance": "Balance | Salary",
       "credit": "Credit"
+    }
+  },
+  "MiniStatement": {
+    "title": "Statement",
+    "empty": "No transactions in the last 30 days",
+    "actions": {
+      "loadMore": "Load more"
+    },
+    "types": {
+      "saque": "Withdrawal",
+      "deposito": "Deposit",
+      "transferencia": "Transfer"
     }
   },
   "ExtratoGeral": {

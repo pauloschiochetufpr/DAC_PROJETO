@@ -13,6 +13,10 @@ import {
   HandCoins,
 } from "lucide-react";
 
+// i18n
+import { useLanguage } from "../../hooks/useLanguage";
+import { t } from "../../lib/i18n";
+
 // Formatadores
 const currencyFormatter = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -48,6 +52,7 @@ const getIconeTipo = (tipo) => {
 };
 
 export default function Extrato({ showInfo }) {
+  const { lang } = useLanguage();
   // Mock renderizado
   const { movimentacoes, conta } = useBanco();
 

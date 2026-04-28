@@ -17,7 +17,12 @@ import GerenciarGerentes from "./pages/GerenciarGerentes";
 import { useBanco } from "./hooks/useBanco";
 
 function normalizarTipoUsuario(tipo) {
-  if (tipo === 1 || tipo === "1" || tipo === "ADMIN" || tipo === "ADMINISTRADOR") {
+  if (
+    tipo === 1 ||
+    tipo === "1" ||
+    tipo === "ADMIN" ||
+    tipo === "ADMINISTRADOR"
+  ) {
     return "ADMINISTRADOR";
   }
 
@@ -47,7 +52,7 @@ export default function App() {
     // Roteamento para Cliente
     HomeCorreto = <HomeCliente />;
   }
-  
+
   return (
     <MainLayout>
       <Routes>
@@ -62,7 +67,7 @@ export default function App() {
         <Route path="/extrato" element={<ExtratoGeral />} />
 
         <Route path="/login" element={<Login />} />
-        
+
         {/* Guard global para rotas inexistentes */}
         <Route path="*" element={<NotFound />} />
       </Routes>

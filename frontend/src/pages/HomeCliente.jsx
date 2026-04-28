@@ -6,6 +6,10 @@ import SecundaryBorder from "../assets/icons/SecundaryBorder.svg";
 // Lucide icon's
 import { Eye, EyeClosed } from "lucide-react";
 
+// i18n
+import { useLanguage } from "../hooks/useLanguage";
+import { t } from "../lib/i18n";
+
 // Libs
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -22,6 +26,7 @@ import Extrato from "../components/listas/Extrato";
 import MiniExtratoMob from "../components/listas/MiniExtratoMob";
 
 export default function HomeCliente() {
+  const { lang } = useLanguage();
   // Mock renderizado
   const { conta, saldo } = useBanco();
 
@@ -100,7 +105,7 @@ export default function HomeCliente() {
                           "
               >
                 <div className="bg-black/50 shadow-inner shadow-black rounded-lg px-4 py-2 select-none text-nowrap font-orienta">
-                  Número da conta: {conta}
+                  {t(lang, "HomeClient.accountNumber")}: {conta}
                 </div>
               </h1>
             </div>
@@ -200,7 +205,9 @@ export default function HomeCliente() {
                     <div className="absolute left-0 top-0 w-full h-full bg-gradient-to-t from-transparent to-black/40 z-[12]"></div>
                     <WaveSimpleRedReverse className="w-full h-full" />
                   </div>
-                  <span className="relative z-10 ">TRANSAÇÕES</span>
+                  <span className="relative z-10 ">
+                    {t(lang, "HomeClient.actions.transactions")}
+                  </span>
                 </Link>
                 <Link
                   className="text-2xl xl:text-4xl font-orienta flex items-center justify-center
@@ -227,7 +234,9 @@ export default function HomeCliente() {
                     <div className="absolute left-0 top-0 w-full h-full bg-gradient-to-t from-transparent to-black/40 z-[12]"></div>
                     <WaveSimpleRedReverse className="w-full h-full" />
                   </div>
-                  <span className="relative z-10 ">EXTRATO</span>
+                  <span className="relative z-10 ">
+                    {t(lang, "HomeClient.actions.statement")}
+                  </span>
                 </Link>
               </div>
             </div>
