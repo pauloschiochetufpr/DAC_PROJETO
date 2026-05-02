@@ -11,8 +11,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -48,21 +50,21 @@ public class GerenteService {
 
     public DadoGerente consultarPorCpf(String cpf) {
         Gerente gerente = gerenteRepository.findById(cpf)
-                .orElseThrow(() -> new RuntimeException("Gerente não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Gerente não encontrado"));
         return toDTO(gerente);
     }
 
     @Transactional
     public DadoGerente atualizar(String cpf, GerenteAtt dto) {
         Gerente gerente = gerenteRepository.findById(cpf)
-                .orElseThrow(() -> new RuntimeException("Gerente não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Gerente não encontrado"));
 
         if (dto.getNome() != null) {
             gerente.setNome(dto.getNome());
         }
         if (dto.getEmail() != null) {
             if (gerenteRepository.existsByEmailAndCpfNot(dto.getEmail(), cpf)) {
-                throw new RuntimeException("Email já cadastrado por outro gerente");
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Email já cadastrado por outro gerente");
             }
             gerente.setEmail(dto.getEmail());
         }
@@ -91,10 +93,10 @@ public class GerenteService {
     @Transactional
     public DadoGerente cadastrar(GerenteInsercao dto) {
         if (gerenteRepository.existsById(dto.getCpf())) {
-            throw new RuntimeException("CPF já cadastrado");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "CPF já cadastrado");
         }
         if (gerenteRepository.existsByEmail(dto.getEmail())) {
-            throw new RuntimeException("Email já cadastrado");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email já cadastrado");
         }
 
         Gerente gerente = new Gerente();
@@ -108,7 +110,7 @@ public class GerenteService {
         } else if ("administrador".equalsIgnoreCase(dto.getTipo())) {
             gerente.setTipo(TipoGerente.ADMINISTRADOR);
         } else {
-            throw new RuntimeException("Tipo inválido: use 'gerente' ou 'administrador'");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tipo inválido: use 'gerente' ou 'administrador'");
         }
 
         gerenteRepository.save(gerente);
@@ -141,11 +143,11 @@ public class GerenteService {
     @Transactional
     public DadoGerente remover(String cpf) {
         Gerente gerente = gerenteRepository.findById(cpf)
-                .orElseThrow(() -> new RuntimeException("Gerente não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Gerente não encontrado"));
 
         long totalGerentes = gerenteRepository.countByTipo(TipoGerente.GERENTE);
         if (totalGerentes <= 1 && gerente.getTipo() == TipoGerente.GERENTE) {
-            throw new RuntimeException("Não é permitido remover o último gerente do banco");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Não é permitido remover o último gerente do banco");
         }
 
         if (gerente.getTipo() == TipoGerente.GERENTE) {
@@ -221,10 +223,10 @@ public class GerenteService {
         String gerenteDestinoCpf = contagem.entrySet().stream()
                 .min(Map.Entry.comparingByValue())
                 .map(Map.Entry::getKey)
-                .orElseThrow(() -> new RuntimeException("Nenhum gerente disponível para redistribuição"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Nenhum gerente disponível para redistribuição"));
 
         Gerente gerenteDestino = gerenteRepository.findById(gerenteDestinoCpf)
-                .orElseThrow(() -> new RuntimeException("Gerente destino não encontrado: " + gerenteDestinoCpf));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Gerente destino não encontrado: " + gerenteDestinoCpf));
 
         String body = String.format(
                 "{\"gerenteOrigemCpf\":\"%s\",\"gerenteDestinoCpf\":\"%s\",\"gerenteDestinoNome\":\"%s\",\"quantidade\":-1}",

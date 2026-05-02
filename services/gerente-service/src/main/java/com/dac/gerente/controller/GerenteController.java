@@ -19,60 +19,34 @@ public class GerenteController {
     private GerenteService gerenteService;
 
     @GetMapping
-    public ResponseEntity<?> listar(
+    public ResponseEntity<List<DadoGerente>> listar(
             @RequestParam(value = "filtro", required = false) String filtro) {
-        try {
-            List<DadoGerente> gerentes = gerenteService.listarTodos();
-            return ResponseEntity.ok(gerentes);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        List<DadoGerente> gerentes = gerenteService.listarTodos();
+        return ResponseEntity.ok(gerentes);
     }
 
     @PostMapping
-    public ResponseEntity<?> cadastrar(@RequestBody GerenteInsercao request) {
-        try {
-            DadoGerente response = gerenteService.cadastrar(request);
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<DadoGerente> cadastrar(@RequestBody GerenteInsercao request) {
+        DadoGerente response = gerenteService.cadastrar(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping("/{cpf}")
-    public ResponseEntity<?> consultar(@PathVariable String cpf) {
-        try {
-            DadoGerente response = gerenteService.consultarPorCpf(cpf);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
+    public ResponseEntity<DadoGerente> consultar(@PathVariable String cpf) {
+        DadoGerente response = gerenteService.consultarPorCpf(cpf);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{cpf}")
-    public ResponseEntity<?> atualizar(@PathVariable String cpf,
-                                       @RequestBody GerenteAtt request) {
-        try {
-            DadoGerente response = gerenteService.atualizar(cpf, request);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            if (e.getMessage().contains("não encontrado")) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-            }
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<DadoGerente> atualizar(@PathVariable String cpf,
+                                                  @RequestBody GerenteAtt request) {
+        DadoGerente response = gerenteService.atualizar(cpf, request);
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{cpf}")
-    public ResponseEntity<?> remover(@PathVariable String cpf) {
-        try {
-            DadoGerente response = gerenteService.remover(cpf);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            if (e.getMessage().contains("não encontrado")) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-            }
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<DadoGerente> remover(@PathVariable String cpf) {
+        DadoGerente response = gerenteService.remover(cpf);
+        return ResponseEntity.ok(response);
     }
 }
