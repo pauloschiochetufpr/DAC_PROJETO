@@ -2,7 +2,12 @@ import React from "react";
 import { useState, useEffect } from "react";
 import { MessageCircleMore } from "lucide-react";
 
+//i18n
+import { t } from "../../lib/i18n";
+import { useLanguage } from "../../hooks/useLanguage";
+
 export default function Credito() {
+  const { lang } = useLanguage();
   const [percentual, setPercentual] = useState(40); // valor numérico (40%->70%)
 
   useEffect(() => {
@@ -101,8 +106,7 @@ export default function Credito() {
           {/* parte direita superior */}
           <div className="flex-1 h-full p-4 pt-8 justify-start items-center flex flex-col gap-8 relative">
             <div className="font-inter text-lg text-center max-w-[14rem] sm:text-3xl sm:max-w-[30rem] xl:max-w-[14rem] xl:text-lg">
-              Entre em contato com seu gerente para saber quais são suas opções
-              de empréstimo!
+              {t(lang, "Credit.message")}
             </div>
             <button
               className="bg-secundaryDark hover:bg-secundary text-white/95 p-6 xl:p-5  rounded-full absolute
@@ -199,7 +203,7 @@ export default function Credito() {
               className="font-istok-web font-black text-xl xl:text-xl md:text-2xl w-full text-center text-white
                             mt-2"
             >
-              SCORE DE CRÉDITO
+              {t(lang, "Credit.scoreTitle")}
             </div>
           </div>
         </div>

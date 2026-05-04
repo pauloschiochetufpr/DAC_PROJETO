@@ -146,7 +146,7 @@ export default function Extrato({ showInfo }) {
                         <h1>{item.destino}</h1>
                       </div>
                       <div className="flex flex-row flex-1 font-istok-web">
-                        <h1>{item.tipo}</h1>
+                        <h1>{t(lang, `Types.${item.tipo}`) || item.tipo}</h1>
                       </div>
                     </div>
                   </div>

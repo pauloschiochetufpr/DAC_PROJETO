@@ -357,7 +357,7 @@ export default function ExtratoGeral() {
                                 : "border-secundary/40 text-contrast/80 hover:border-secundary/70 hover:text-contrast"
                             }`}
               >
-                {t(lang, `ExtratoGeral.tipo.${tipo}`)}
+                {t(lang, `Types.${tipo}`)}
               </button>
             ))}
           </div>
@@ -469,8 +469,7 @@ export default function ExtratoGeral() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-sm font-inter font-medium text-contrast">
-                              {t(lang, `ExtratoGeral.tipo.${mov.tipo}`) ??
-                                mov.tipo}
+                              {t(lang, `Types.${mov.tipo}`) ?? mov.tipo}
                             </span>
                             {mov.tipo === "transferencia" && (
                               <span className="text-xs text-contrast/60 select-text">

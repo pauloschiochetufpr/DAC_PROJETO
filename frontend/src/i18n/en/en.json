@@ -13,6 +13,12 @@
     "copyright": "(FAKE COMPANY) MasterBank. All rights reserved",
     "Know-or-networks": "Check out our social medias!"
   },
+  "Types": {
+    "todos": "All",
+    "saque": "Withdrawal",
+    "deposito": "Deposit",
+    "transferencia": "Transfer"
+  },
   "HomeAdmin": {
     "manage_managers": "Manage Managers",
     "more_features_coming": "More features coming soon [...]"
@@ -47,16 +53,11 @@
       "credit": "Credit"
     }
   },
-  "MiniStatement": {
+  "Statement": {
     "title": "Statement",
     "empty": "No transactions in the last 30 days",
     "actions": {
       "loadMore": "Load more"
-    },
-    "types": {
-      "saque": "Withdrawal",
-      "deposito": "Deposit",
-      "transferencia": "Transfer"
     }
   },
   "ExtratoGeral": {
@@ -74,12 +75,6 @@
     "date_to": "To",
     "date_invalid": "Start date cannot be after end date.",
     "type_label": "Operation Type",
-    "tipo": {
-      "todos": "All",
-      "deposito": "Deposit",
-      "saque": "Withdrawal",
-      "transferencia": "Transfer"
-    },
     "loading": "Loading statement...",
     "date_fix_prompt": "Fix the period to view the statement.",
     "empty_period": "No data for the selected period.",
@@ -93,6 +88,10 @@
       "generic": "Error loading statement. Try again.",
       "connection": "Connection failed. Check your internet."
     }
+  },
+  "Credit": {
+    "message": "Contact your account manager to learn about your loan options!",
+    "scoreTitle": "CREDIT SCORE"
   },
   "GerenteForm": {
     "title_edit": "Edit Manager",
@@ -121,6 +120,18 @@
       "positiveBalances": "Positive Balances",
       "negativeBalances": "Negative Balances"
     }
+  },
+  "Operations": {
+    "operation": "Operation",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "close": "Close",
+    "Error": "Error",
+    "invalid_account": "Destination account does not exist.",
+    "success": "Operation completed successfully.",
+    "account": "Account",
+    "destination_account": "Destination Account",
+    "value": "Value"
   },
   "Profile": {
     "actions": {

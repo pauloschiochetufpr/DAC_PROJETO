@@ -5,7 +5,12 @@ import ScrollOperation from "./ScrollOperation";
 
 import { useBanco } from "../../hooks/useBanco";
 
-export default function ScrollBox({ title, isOpen, onToggle }) {
+//i18n
+import { t } from "../../lib/i18n";
+import { useLanguage } from "../../hooks/useLanguage";
+
+export default function ScrollBox({ title, flowType, isOpen, onToggle }) {
+  const { lang } = useLanguage();
   const lidRef = useRef(null);
   const boxRef = useRef(null);
   const scrollRef = useRef(null);
@@ -30,7 +35,7 @@ export default function ScrollBox({ title, isOpen, onToggle }) {
     Transferência: ["conta", "valor", "confirmar", "resultado"],
   };
 
-  const currentFlow = flow[title] || [];
+  const currentFlow = flow[flowType] || [];
   const visibleSteps = currentFlow.slice(0, step);
 
   function parseValor(valorFormatado) {
@@ -44,7 +49,7 @@ export default function ScrollBox({ title, isOpen, onToggle }) {
     );
   }
 
-  // 💰 FORMATADOR
+  // FORMATADOR
   const formatCurrency = (value) => {
     const number = Number(value) / 100;
 
@@ -221,7 +226,7 @@ export default function ScrollBox({ title, isOpen, onToggle }) {
                   className="text-secundaryDark font-semibold hover:text-secundary transition-colors select-none"
                   onClick={onToggle}
                 >
-                  Cancelar
+                  {t(lang, "Operations.cancel")}
                 </button>
               </div>
 
@@ -236,7 +241,7 @@ export default function ScrollBox({ title, isOpen, onToggle }) {
                   {visibleSteps.includes("conta") && (
                     <div className="flex flex-col">
                       <label className="text-xs text-secundaryDark select-none">
-                        Conta Destino
+                        {t(lang, "Operations.destination_account")}
                       </label>
                       <input
                         type="text"
@@ -254,7 +259,7 @@ export default function ScrollBox({ title, isOpen, onToggle }) {
                   {visibleSteps.includes("valor") && (
                     <div className="flex flex-col">
                       <label className="text-xs text-secundaryDark select-none">
-                        Valor
+                        {t(lang, "Operations.value")}
                       </label>
                       <input
                         type="text"
@@ -278,17 +283,17 @@ export default function ScrollBox({ title, isOpen, onToggle }) {
                         if (!valorNumerico || valorNumerico <= 0) return;
 
                         let tipoOperacao;
-                        if (title === "Depósito") tipoOperacao = "deposito";
-                        if (title === "Saque") tipoOperacao = "saque";
-                        if (title === "Transferência")
+                        if (flowType === "Depósito") tipoOperacao = "deposito";
+                        if (flowType === "Saque") tipoOperacao = "saque";
+                        if (flowType === "Transferência")
                           tipoOperacao = "transferencia";
 
-                        // 🔴 VALIDAÇÃO DE CONTA (transferência)
+                        // VALIDAÇÃO DE CONTA (transferência)
                         if (tipoOperacao === "transferencia") {
                           if (!contasValidas.includes(form.conta)) {
                             setResultado({
                               status: "error",
-                              message: "Conta destino não existe.",
+                              message: t(lang, "Operations.invalid_account"),
                             });
                             setStep(step + 1);
                             return;
@@ -310,7 +315,7 @@ export default function ScrollBox({ title, isOpen, onToggle }) {
                         } else {
                           setResultado({
                             status: "success",
-                            message: "Operação realizada com sucesso.",
+                            message: t(lang, "Operations.success"),
                             detalhes: {
                               valor: form.valor,
                               conta: form.conta,
@@ -321,7 +326,7 @@ export default function ScrollBox({ title, isOpen, onToggle }) {
                         setStep(step + 1);
                       }}
                     >
-                      Confirmar
+                      {t(lang, "Operations.confirm")}
                     </button>
                   )}
 
@@ -336,18 +341,28 @@ export default function ScrollBox({ title, isOpen, onToggle }) {
                     >
                       {resultado.status === "error" ? (
                         <>
-                          <p className="font-semibold">Erro</p>
+                          <p className="font-semibold">
+                            {t(lang, "Operations.Error")}
+                          </p>
                           <p>{resultado.message}</p>
                         </>
                       ) : (
                         <>
-                          <p>Operação: {title}</p>
+                          <p>
+                            {t(lang, "Operations.operation")}: {title}
+                          </p>
 
-                          {title === "Transferência" && (
-                            <p>Conta: {resultado.detalhes?.conta}</p>
+                          {flowType === "Transferência" && (
+                            <p>
+                              {t(lang, "Operations.account")}:{" "}
+                              {resultado.detalhes?.conta}
+                            </p>
                           )}
 
-                          <p>Valor: {resultado.detalhes?.valor}</p>
+                          <p>
+                            {t(lang, "Operations.value")}:{" "}
+                            {resultado.detalhes?.valor}
+                          </p>
                         </>
                       )}
                     </div>
@@ -362,7 +377,7 @@ export default function ScrollBox({ title, isOpen, onToggle }) {
                     className="text-secundaryDark text-sm font-semibold hover:text-secundary transition-colors select-none"
                     onClick={onToggle}
                   >
-                    Fechar
+                    {t(lang, "Operations.close")}
                   </button>
                 </div>
               )}

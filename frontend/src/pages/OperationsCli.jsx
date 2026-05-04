@@ -3,7 +3,12 @@ import ScrollBox from "../components/Operations/ScrollBox";
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 
+//i18n
+import { t } from "../lib/i18n";
+import { useLanguage } from "../hooks/useLanguage";
+
 export default function OperationsCli() {
+  const { lang } = useLanguage();
   const [openBox, setOpenBox] = useState(null);
   const [isAnimating, setIsAnimating] = useState(false);
 
@@ -34,26 +39,29 @@ export default function OperationsCli() {
           group-hover:-translate-x-1
         "
             />
-            <span>Voltar</span>
+            <span>{t(lang, "Profile.actions.back")}</span>
           </button>
         </Link>
       </div>
       <ScrollBox
-        title="Saque"
+        title={t(lang, "Types.saque")}
+        flowType="Saque"
         isOpen={openBox === "saque"}
         onToggle={() => handleToggle("saque")}
         setIsAnimating={setIsAnimating}
       />
 
       <ScrollBox
-        title="Depósito"
+        title={t(lang, "Types.deposito")}
+        flowType="Depósito"
         isOpen={openBox === "deposito"}
         onToggle={() => handleToggle("deposito")}
         setIsAnimating={setIsAnimating}
       />
 
       <ScrollBox
-        title="Transferência"
+        title={t(lang, "Types.transferencia")}
+        flowType="Transferência"
         isOpen={openBox === "transferencia"}
         onToggle={() => handleToggle("transferencia")}
         setIsAnimating={setIsAnimating}

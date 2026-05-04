@@ -96,7 +96,7 @@ export default function MiniExtratoMob({ showInfo }) {
           className="font-orienta font-semibold text-3xl z-[20] px-4 py-2 bg-black/60 rounded-md
                 shadow-inner shadow-black/80"
         >
-          {t(lang, "MiniStatement.title")}
+          {t(lang, "Statement.title")}
         </div>
       </div>
 
@@ -108,7 +108,7 @@ export default function MiniExtratoMob({ showInfo }) {
           rounded-md shadow-black/50 shadow-inner my-5 mx-10"
           >
             <NotepadTextDashed size={60} className="mx-auto mb-4" />
-            {t(lang, "MiniStatement.empty")}
+            {t(lang, "Statement.empty")}
           </div>
         ) : (
           itens.map((item) => {
@@ -135,7 +135,7 @@ export default function MiniExtratoMob({ showInfo }) {
                       <h1>{item.destino}</h1>
                     </div>
                     <div className="flex flex-row flex-1 font-istok-web text-zinc-500">
-                      <h1>{t(lang, `MiniStatement.types.${item.tipo}`)}</h1>
+                      <h1>{t(lang, `Types.${item.tipo}`)}</h1>
                     </div>
                   </div>
                 </div>
@@ -174,7 +174,7 @@ export default function MiniExtratoMob({ showInfo }) {
             text-xs font-semibold text-secundary active:text-white 
             active:bg-secundary transition-colors duration-75"
           >
-            {t(lang, "MiniStatement.actions.loadMore")}
+            {t(lang, "Statement.actions.loadMore")}
           </button>
         )}
       </div>

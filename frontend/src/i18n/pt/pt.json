@@ -13,6 +13,12 @@
     "copyright": "(FAKE COMPANY) MasterBank. Todos os direitos reservados",
     "Know-or-networks": "conheça nossas redes!"
   },
+  "Types": {
+    "todos": "Todos",
+    "saque": "Saque",
+    "deposito": "Depósito",
+    "transferencia": "Transferência"
+  },
   "HomeAdmin": {
     "manage_managers": "Gerenciar gerentes",
     "more_features_coming": "Mais funcionalidades em breve [...]"
@@ -47,16 +53,11 @@
       "credit": "Crédito"
     }
   },
-  "MiniStatement": {
+  "Statement": {
     "title": "EXTRATO",
     "empty": "Nenhuma transação nos últimos 30 dias",
     "actions": {
       "loadMore": "Carregar mais"
-    },
-    "types": {
-      "saque": "Saque",
-      "deposito": "Depósito",
-      "transferencia": "Transferência"
     }
   },
   "ExtratoGeral": {
@@ -74,12 +75,6 @@
     "date_to": "Até",
     "date_invalid": "A data inicial não pode ser posterior à data final.",
     "type_label": "Tipo de operação",
-    "tipo": {
-      "todos": "Todos",
-      "deposito": "Depósito",
-      "saque": "Saque",
-      "transferencia": "Transferência"
-    },
     "loading": "Carregando extrato...",
     "date_fix_prompt": "Corrija o período para visualizar o extrato.",
     "empty_period": "Nenhum dado para o período selecionado.",
@@ -93,6 +88,10 @@
       "generic": "Erro ao consultar extrato. Tente novamente.",
       "connection": "Falha de conexão. Verifique sua internet."
     }
+  },
+  "Credit": {
+    "message": "Entre em contato com seu gerente para saber quais são suas opções de empréstimo!",
+    "scoreTitle": "SCORE DE CRÉDITO"
   },
   "GerenteForm": {
     "title_edit": "Editar Gerente",
@@ -153,7 +152,18 @@
       "state": "Estado"
     }
   },
-
+  "Operations": {
+    "operation": "Operação",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "close": "Fechar",
+    "Error": "Erro",
+    "invalid_account": "Conta destino não existe.",
+    "success": "Operação realizada com sucesso.",
+    "account": "Conta",
+    "destination_account": "Conta Destino",
+    "value": "Valor"
+  },
   "LoginPage": {
     "titleLogin": "Login",
     "titleRegister": "Cadastro",
