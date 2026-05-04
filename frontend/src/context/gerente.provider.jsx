@@ -7,7 +7,13 @@ import {
 } from "../mocks/gerenteMockData";
 import { toBrasiliaIso } from "../lib/dataUtils";
 
+// i18n
+import { t } from "../lib/i18n";
+import { useLanguage } from "../hooks/useLanguage";
+
 export function GerenteProvider({ children }) {
+  const { lang } = useLanguage();
+
   const [pendentes, setPendentes] = useState(clientesPendentesInicial);
   const [clientes, setClientes] = useState(clientesAprovadosInicial);
 
@@ -48,7 +54,10 @@ export function GerenteProvider({ children }) {
 
           resolve({ status: 200, data: resultado });
         } catch {
-          resolve({ status: 500, message: "Erro interno do mock." });
+          resolve({
+            status: 500,
+            message: t(lang, "ClientesGerenteLista.messages.internalError"),
+          });
         }
       }),
     [pendentes, clientes],
@@ -65,12 +74,18 @@ export function GerenteProvider({ children }) {
         try {
           const encontrado = clientes.find((c) => c.cpf === cpf);
           if (!encontrado) {
-            resolve({ status: 404, message: "Cliente não encontrado." });
+            resolve({
+              status: 404,
+              message: t(lang, "ClientesGerenteLista.messages.not_found"),
+            });
           } else {
             resolve({ status: 200, data: encontrado });
           }
         } catch {
-          resolve({ status: 500, message: "Erro interno do mock." });
+          resolve({
+            status: 500,
+            message: t(lang, "ClientesGerenteLista.messages.internalError"),
+          });
         }
       }),
     [clientes],
@@ -86,7 +101,10 @@ export function GerenteProvider({ children }) {
           );
 
           if (idx === -1) {
-            resolve({ status: 404, message: "Cliente não encontrado." });
+            resolve({
+              status: 404,
+              message: t(lang, "ClientesGerenteLista.messages.not_found"),
+            });
             return prev;
           }
 
@@ -117,7 +135,11 @@ export function GerenteProvider({ children }) {
 
           resolve({
             status: 200,
-            message: `Cliente aprovado! Conta ${conta} criada. Senha "${senha}" enviada para ${cliente.email}.`,
+            message: t(lang, "ClientesGerenteLista.messages.approved", {
+              account: conta,
+              password: senha,
+              email: cliente.email,
+            }),
             data: { conta, senha, limite, email: cliente.email },
           });
 
@@ -144,14 +166,20 @@ export function GerenteProvider({ children }) {
           );
 
           if (idx === -1) {
-            resolve({ status: 404, message: "Cliente não encontrado." });
+            resolve({
+              status: 404,
+              message: t(lang, "ClientesGerenteLista.messages.not_found"),
+            });
             return prev;
           }
 
           const cliente = prev[idx];
           resolve({
             status: 200,
-            message: `Cliente rejeitado. E-mail enviado para ${cliente.email} com o motivo.`,
+            message: t(lang, "ClientesGerenteLista.messages.rejected", {
+              email: cliente.email,
+              reason: motivo,
+            }),
           });
 
           const updated = [...prev];

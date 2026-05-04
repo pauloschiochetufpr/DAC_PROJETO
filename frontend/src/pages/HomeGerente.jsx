@@ -7,10 +7,15 @@ import BotaoPergaminho from "../components/UI/BotaoPergaminho";
 // Lucide
 import { UserRoundSearch } from "lucide-react";
 
+//i18n
+import { useLanguage } from "../hooks/useLanguage";
+import { t } from "../lib/i18n";
+
 // ID do gerente logado (simulação simples)
 import { GERENTE_ID } from "../mocks/gerenteMockData";
 
 export default function HomeGerente() {
+  const { lang } = useLanguage();
   return (
     <div
       className="relative flex flex-col items-center w-full min-h-screen
@@ -57,7 +62,7 @@ export default function HomeGerente() {
         <div className="w-full h-fit justify-center flex flex-row xl:mt-14">
           <div className="h-[12rem] w-[60%] md:w-[10rem]">
             <BotaoPergaminho
-              text={"Consulta especializada"}
+              text={t(lang, "HomeManager.especialized_consultation")}
               icon={UserRoundSearch}
               ref={"/consulta_especializada"}
             />

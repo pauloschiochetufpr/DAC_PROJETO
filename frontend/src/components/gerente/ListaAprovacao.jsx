@@ -9,6 +9,10 @@ import CardAprovacao from "./CardAprovacao";
 // SVG's
 import WaveSimpleRed from "../WaveSimpleRed";
 
+//i18n
+import { useLanguage } from "../../hooks/useLanguage";
+import { t } from "../../lib/i18n";
+
 // Lucide
 import { Bug, TicketX } from "lucide-react";
 
@@ -16,6 +20,7 @@ export default function ListaAprovacao({ idGerente }) {
   const { getClientesFiltrados, aprovarCliente, rejeitarCliente } =
     useGerente();
 
+  const { lang } = useLanguage();
   // Estado local dos clientes pendentes
   const [pendentes, setPendentes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -98,7 +103,7 @@ export default function ListaAprovacao({ idGerente }) {
                       select-none text-center z-[19] px-5 py-2 pb-3 bg-black/50 rounded-md
                       shadow-inner shadow-black"
           >
-            Aprovação de Clientes
+            {t(lang, "ClientesGerenteLista.title")}
           </div>
         </div>
       </div>
@@ -130,7 +135,7 @@ export default function ListaAprovacao({ idGerente }) {
         pb-8 md:pt-40 flex flex-col items-center justify-center gap-2 w-full select-none"
         >
           <TicketX size={65} className="inline-block" />
-          Nenhum autocadastro pendente
+          {t(lang, "ClientesGerenteLista.no_pending")}
         </p>
       )}
 

@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { Check, X } from "lucide-react";
 
+// i18n
+import { useLanguage } from "../../hooks/useLanguage";
+import { t } from "../../lib/i18n";
+
 export default function CardAprovacao({
   cliente,
   fmtBRL,
@@ -11,6 +15,8 @@ export default function CardAprovacao({
   const [rejeitando, setRejeitando] = useState(false);
   const [motivo, setMotivo] = useState("");
   const [processando, setProcessando] = useState(false);
+
+  const { lang } = useLanguage();
 
   // Handlers
   const handleAprovar = async () => {
@@ -87,7 +93,9 @@ export default function CardAprovacao({
                          ${processando || rejeitando ? "" : "hover:bg-green-600/70"}`}
           >
             <Check size={16} />
-            <span className="hidden 2xl:inline">Aprovar</span>
+            <span className="hidden 2xl:inline">
+              {t(lang, "ClientesGerenteLista.actions.approve")}
+            </span>
           </button>
 
           {/* Botão Recusar */}
@@ -102,7 +110,9 @@ export default function CardAprovacao({
                          ${processando || rejeitando ? "" : "hover:bg-red-600/40"}`}
           >
             <X size={16} />
-            <span className="hidden 2xl:inline">Recusar</span>
+            <span className="hidden 2xl:inline">
+              {t(lang, "ClientesGerenteLista.actions.reject")}
+            </span>
           </button>
         </div>
         {/* Linha expandida */}
@@ -115,7 +125,7 @@ export default function CardAprovacao({
               type="text"
               value={motivo}
               onChange={(e) => setMotivo(e.target.value)}
-              placeholder="Informe o motivo da rejeição"
+              placeholder={t(lang, "ClientesGerenteLista.rejection_reason")}
               autoFocus
               className="w-full px-3 py-2 rounded-lg bg-brandDark/80 border border-secundaryDark/40
                            text-contrast placeholder-contrastDark font-inter text-sm
@@ -133,7 +143,7 @@ export default function CardAprovacao({
                            disabled:opacity-40 disabled:cursor-not-allowed
                            ${!motivo.trim() ? "" : "hover:bg-red-600/80"}`}
               >
-                Confirmar
+                {t(lang, "ClientesGerenteLista.actions.confirm")}
               </button>
 
               {/* Cancelar */}
@@ -143,7 +153,7 @@ export default function CardAprovacao({
                            bg-neutral-700/60 text-neutral-200 border border-neutral-500/30
                            hover:bg-neutral-600/60 transition-colors"
               >
-                Cancelar
+                {t(lang, "ClientesGerenteLista.actions.cancel")}
               </button>
             </div>
           </tr>

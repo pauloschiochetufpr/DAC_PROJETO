@@ -3,6 +3,10 @@ import { useState, useEffect, useMemo } from "react";
 // Mock's
 import { useGerente } from "../../hooks/useGerente";
 
+//i18n
+import { useLanguage } from "../../hooks/useLanguage";
+import { t } from "../../lib/i18n";
+
 // Lucide
 import {
   Search,
@@ -18,6 +22,7 @@ import {
 import WaveSimpleRed from "../WaveSimpleRed";
 
 export default function ListaClientes({ idGerente }) {
+  const { lang } = useLanguage();
   const { getClientesFiltrados } = useGerente();
 
   // States
@@ -97,7 +102,7 @@ export default function ListaClientes({ idGerente }) {
                             select-none text-center z-[19] px-5 py-2 pb-3 bg-black/50 rounded-md
                             shadow-inner shadow-black"
           >
-            Meus clientes
+            {t(lang, "GerenteListaClientes.title")}
           </div>
         </div>
       </div>
@@ -112,7 +117,7 @@ export default function ListaClientes({ idGerente }) {
           type="text"
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
-          placeholder="Pesquisar por CPF ou Nome"
+          placeholder={t(lang, "GerenteListaClientes.search_placeholder")}
           className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-brandDark/80 border border-secundaryDark/40
                      text-contrast placeholder-contrastDark font-inter text-sm
                      focus:outline-none focus:border-secundary/60 transition-colors"
@@ -141,14 +146,16 @@ export default function ListaClientes({ idGerente }) {
       {!loading && !erro && clientesFiltrados.length === 0 && (
         <p className="text-contrastDark font-inter text-center">
           {busca.trim() ? (
-            <div className="py-8">Nenhum cliente corresponde à pesquisa </div>
+            <div className="py-8">
+              {t(lang, "GerenteListaClientes.no_results")}
+            </div>
           ) : (
             <div
               className="text-red-400 font-inter text-center text-base md:text-xl
               pb-8 md:pt-40  flex flex-col items-center justify-center gap-2 w-full select-none"
             >
               <BookUser size={65} className="inline-block mr-2" />
-              Nenhum cliente cadastrado
+              {t(lang, "GerenteListaClientes.no_clients")}
             </div>
           )}
         </p>
@@ -168,18 +175,20 @@ export default function ListaClientes({ idGerente }) {
                 <thead className="sticky top-0 z-10">
                   <tr className="bg-brandDark/90 border-b border-secundaryDark/40">
                     <th className=" py-3 text-secundary font-semibold">CPF</th>
-                    <th className=" py-3 text-secundary font-semibold">Nome</th>
+                    <th className=" py-3 text-secundary font-semibold">
+                      {t(lang, "GerenteListaClientes.table.name")}
+                    </th>
                     <th className=" py-3 text-secundary font-semibold hidden md:table-cell">
-                      Cidade
+                      {t(lang, "GerenteListaClientes.table.city")}
                     </th>
                     <th className=" py-3 text-secundary font-semibold hidden md:table-cell">
                       UF
                     </th>
                     <th className=" py-3 text-secundary font-semibold hidden sm:table-cell text-right">
-                      Saldo
+                      {t(lang, "GerenteListaClientes.table.balance")}
                     </th>
                     <th className=" py-3 text-secundary font-semibold hidden sm:table-cell text-right">
-                      Limite
+                      {t(lang, "GerenteListaClientes.table.limit")}
                     </th>
                     <th className="py-3"></th>
                   </tr>

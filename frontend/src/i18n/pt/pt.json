@@ -23,6 +23,9 @@
     "manage_managers": "Gerenciar gerentes",
     "more_features_coming": "Mais funcionalidades em breve [...]"
   },
+  "HomeManager": {
+    "especialized_consultation": "Consulta especializada"
+  },
   "HomeClient": {
     "accountNumber": "Número da conta",
     "actions": {
@@ -36,6 +39,36 @@
     "negative": "Negativos",
     "neutral": "Neutros",
     "center_label": "clientes"
+  },
+  "ClientesGerenteLista": {
+    "title": "Aprovação de Clientes",
+    "no_pending": "Nenhum autocadastro pendente",
+    "rejection_reason": "Informe o motivo da rejeição",
+    "actions": {
+      "approve": "Aprovar",
+      "reject": "Rejeitar",
+      "cancel": "Cancelar",
+      "confirm": "Confirmar"
+    },
+    "messages": {
+      "approved": "Cliente aprovado! Conta {{account}} criada. Senha \"{{password}}\" enviada para {{email}}.",
+      "rejected": "Cliente rejeitado. E-mail enviado para {{email}} com o motivo.",
+      "notFound": "Cliente não encontrado.",
+      "internalError": "Erro interno do sistema."
+    }
+  },
+  "GerenteListaClientes": {
+    "title": "Meus clientes",
+    "search_placeholder": "Pesquisar por CPF ou nome",
+    "no_results": "Nenhum cliente corresponde à pesquisa",
+    "no_clients": "Nenhum cliente cadastrado",
+    "table": {
+      "cpf": "CPF",
+      "name": "Nome",
+      "city": "Cidade",
+      "balance": "Saldo",
+      "limit": "Limite"
+    }
   },
   "ClientesAdminLista": {
     "title": "Relatório de Clientes",

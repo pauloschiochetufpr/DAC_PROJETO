@@ -23,6 +23,9 @@
     "manage_managers": "Manage Managers",
     "more_features_coming": "More features coming soon [...]"
   },
+  "HomeManager": {
+    "especialized_consultation": "Specialized Consultation"
+  },
   "HomeClient": {
     "accountNumber": "Account Number",
     "actions": {
@@ -36,6 +39,35 @@
     "negative": "Negative",
     "neutral": "Neutral",
     "center_label": "clients"
+  },
+  "ClientesGerenteLista": {
+    "title": "Client Approval",
+    "no_pending": "No pending self-registrations",
+    "rejection_reason": "Provide the reason for rejection",
+    "actions": {
+      "approve": "Approve",
+      "reject": "Reject",
+      "cancel": "Cancel",
+      "confirm": "Confirm"
+    },
+    "messages": {
+      "approved": "Client approved! Account {{account}} created. Password \"{{password}}\" sent to {{email}}.",
+      "rejected": "Client rejected. An email was sent to {{email}} with the reason.",
+      "notFound": "Client not found.",
+      "internalError": "Internal server error."
+    }
+  },
+  "GerenteListaClientes": {
+    "title": "My Clients",
+    "search_placeholder": "Search by CPF or name",
+    "no_results": "No clients match the search criteria",
+    "no_clients": "No clients registered",
+    "table": {
+      "name": "Name",
+      "city": "City",
+      "balance": "Balance",
+      "limit": "Limit"
+    }
   },
   "ClientesAdminLista": {
     "title": "Client Report",
