@@ -89,12 +89,11 @@ public class AuthService {
         usuarioDTO.setNome(usuario.getNome());
         usuarioDTO.setCpf(usuario.getCpf());
         usuarioDTO.setEmail(usuario.getEmail());
-        usuarioDTO.setTipo(usuario.getTipo());
 
         LoginResponseDTO response = new LoginResponseDTO();
         response.setAccess_token(token);
         response.setToken_tipo("bearer");
-        response.setTipo(usuario.getTipo().toUpperCase());
+        response.setTipo(usuario.getTipo());
         response.setUsuario(usuarioDTO);
 
         return new LoginResult(response, session.getRefreshId());

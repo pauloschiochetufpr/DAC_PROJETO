@@ -96,6 +96,6 @@ export const API = {
   logout: () => axiosPublic.post("/auth/logout"),
 
   //  CLIENTE (protegido)
-  /** GET /cliente/:cpf */
-  buscarClientePorCpf: (cpf) => axiosAuth.get(`/cliente/${cpf}`),
+  /** GET /clientes/:cpf */
+  buscarClientePorCpf: (cpf) => axiosAuth.get(`/clientes/${cpf}`),
 };
