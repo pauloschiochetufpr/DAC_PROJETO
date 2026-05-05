@@ -1,10 +1,12 @@
 const express = require("express");
 const { createProxyMiddleware } = require("http-proxy-middleware");
 const cors = require("cors");
+const loggerMiddleware = require("./middlewares/logger");
 
 const app = express();
 
 app.use(cors());
+app.use(loggerMiddleware);
 
 
 const SERVICE_TARGETS = {
