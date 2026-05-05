@@ -10,6 +10,7 @@ import com.dac.auth.entity.Usuario;
 import com.dac.auth.repository.UsuarioRepository;
 // Spring
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -26,10 +27,13 @@ public class AuthService {
     @Autowired
     private RefreshTokenService refreshTokenService;
 
-    // LoginResult | encapsula a resposta pública e o refreshId; o controller usa o refreshId só para setar o cookie
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    // encapsula a resposta pública e o refreshId.  controller usa o refreshId só para setar o cookie
     public record LoginResult(LoginResponseDTO response, String refreshId) {}
 
-    // login | valida credenciais, registra dispositivo, emite JWE e cria sessão de refresh
+    //valida credenciais, registra dispositivo, emite JWE e cria sessão de refresh
     public LoginResult login(LoginRequestDTO request, String ip) {
         Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(request.getEmail());
         if (usuarioOpt.isEmpty()) {
@@ -37,7 +41,22 @@ public class AuthService {
         }
 
         Usuario usuario = usuarioOpt.get();
-        if (!usuario.getSenhaHash().equals(request.getPassword())) {
+        String senhaPersistida = usuario.getSenhaHash();
+        String senhaInformada = request.getPassword();
+        boolean senhaValida = false;
+
+        if (senhaPersistida != null && senhaInformada != null) {
+            if (passwordEncoder.matches(senhaInformada, senhaPersistida)) {
+                senhaValida = true;
+            } else if (senhaPersistida.equals(senhaInformada)) {
+                // Migra senha legado em texto puro para bcrypt no primeiro login válido.
+                usuario.setSenhaHash(passwordEncoder.encode(senhaInformada));
+                usuarioRepository.save(usuario);
+                senhaValida = true;
+            }
+        }
+
+        if (!senhaValida) {
             throw new RuntimeException("Senha inválida");
         }
 

@@ -9,6 +9,7 @@ import com.dac.auth.repository.UsuarioRepository;
 // Spring AMQP / RabbitMQ
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -19,6 +20,20 @@ public class AuthConsumer {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    private String hashIfNeeded(String senha) {
+        if (senha == null || senha.isBlank()) return senha;
+
+        // Evita hash duplo quando a senha já vier em formato bcrypt.
+        if (senha.matches("^\\$2[aby]\\$.{56}$")) {
+            return senha;
+        }
+
+        return passwordEncoder.encode(senha);
+    }
 
     // criarUsuario | recebe mensagem do gerente-service ou saga-service e persiste novo usuário
     @RabbitListener(queues = RabbitMQConfig.FILA_AUTH_CRIAR)
@@ -41,7 +56,7 @@ public class AuthConsumer {
         usuario.setCpf(cpf);
         usuario.setNome(nome);
         usuario.setEmail(email);
-        usuario.setSenhaHash(senha); // TODO: aplicar hash bcrypt antes de persistir
+        usuario.setSenhaHash(hashIfNeeded(senha));
         usuario.setTipo(tipo);
 
         usuarioRepository.save(usuario);
@@ -65,7 +80,7 @@ public class AuthConsumer {
 
         if (msg.containsKey("nome"))  usuario.setNome(msg.get("nome"));
         if (msg.containsKey("email")) usuario.setEmail(msg.get("email"));
-        if (msg.containsKey("senha")) usuario.setSenhaHash(msg.get("senha")); // TODO: aplicar hash bcrypt
+        if (msg.containsKey("senha")) usuario.setSenhaHash(hashIfNeeded(msg.get("senha")));
 
         usuarioRepository.save(usuario);
         System.out.println("Auth: usuario " + cpf + " atualizado.");
