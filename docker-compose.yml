@@ -166,6 +166,8 @@ services:
     depends_on:
       saga-service:
         condition: service_healthy
+    environment:
+      JWT_SECRET: 'co\saed<>:??/|\hfIWU|Ef324h$@$*&(14lk\\d[-0]?;d.adp224(^c`{)}}))/\@!#'
     ports:
       - "3000:3000"
     healthcheck:
