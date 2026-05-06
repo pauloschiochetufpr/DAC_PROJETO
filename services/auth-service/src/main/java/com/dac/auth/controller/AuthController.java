@@ -47,7 +47,8 @@ public class AuthController {
     public ResponseEntity<LoginResponseDTO> login(
             @RequestBody LoginRequestDTO request,
             HttpServletRequest httpRequest,
-            HttpServletResponse httpResponse) {
+            HttpServletResponse httpResponse) 
+    {
 
         // gateway injeta X-Forwarded-For via xfwd:true; fallback para remoteAddr em dev local
         String ip = httpRequest.getHeader("X-Forwarded-For");
