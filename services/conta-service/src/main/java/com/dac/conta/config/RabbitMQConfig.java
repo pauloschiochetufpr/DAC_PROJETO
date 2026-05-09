@@ -12,9 +12,10 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitMQConfig {
 
-    public static final String FILA_RESET          = "saga.reset";
+    public static final String FILA_RESET               = "saga.reset";
     public static final String FILA_CONTA_ATUALIZADA    = "conta.atualizada";
     public static final String FILA_MOVIMENTACAO_CRIADA = "conta.movimentacao.criada";
+    public static final String FILA_LIMITE              = "conta.limite";
 
     @Bean
     public Queue filaReset() {
@@ -29,6 +30,11 @@ public class RabbitMQConfig {
     @Bean
     public Queue filaMovimentacaoCriada() {
         return new Queue(FILA_MOVIMENTACAO_CRIADA, true);
+    }
+
+    @Bean
+    public Queue filaLimite() {
+        return new Queue(FILA_LIMITE, true);
     }
 
     @Bean

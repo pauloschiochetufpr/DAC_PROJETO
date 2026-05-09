@@ -3,7 +3,10 @@ package com.dac.conta.service;
 import com.dac.conta.config.RabbitMQConfig;
 import com.dac.conta.dto.evento.ContaAtualizadaEvento;
 import com.dac.conta.dto.evento.MovimentacaoCriadaEvento;
+import com.dac.conta.dto.request.AtualizarLimiteRequestDTO;
+import com.dac.conta.dto.request.CriarContaRequestDTO;
 import com.dac.conta.dto.request.DepositoRequestDTO;
+import com.dac.conta.dto.request.RedistribuirRequestDTO;
 import com.dac.conta.dto.request.SaqueRequestDTO;
 import com.dac.conta.dto.request.TransferenciaRequestDTO;
 import com.dac.conta.dto.response.ContaResponseDTO;
@@ -13,6 +16,7 @@ import com.dac.conta.dto.response.OperacaoResponseDTO;
 import com.dac.conta.dto.response.SaldoResponseDTO;
 import com.dac.conta.dto.response.TransferenciaResponseDTO;
 import com.dac.conta.entity.ContaCUD;
+import com.dac.conta.entity.ContaR;
 import com.dac.conta.entity.MovimentacaoCUD;
 import com.dac.conta.entity.MovimentacaoR;
 import com.dac.conta.entity.TipoMovimentacao;
@@ -28,8 +32,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 @Service
@@ -50,7 +58,9 @@ public class ContaService {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
+    // -------------------------
     // GET /contas/{numero}/saldo
+    // -------------------------
     public SaldoResponseDTO consultarSaldo(String numero) {
         return contaRRepository.findById(numero)
             .map(conta -> {
@@ -63,7 +73,9 @@ public class ContaService {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Conta não encontrada"));
     }
 
+    // -------------------------
     // POST /contas/{numero}/depositar
+    // -------------------------
     @Transactional
     public OperacaoResponseDTO depositar(String numero, DepositoRequestDTO request) {
         ContaCUD conta = buscarContaCUD(numero);
@@ -84,7 +96,9 @@ public class ContaService {
         return montarOperacaoResponse(numero, mov.getData(), conta.getSaldo());
     }
 
+    // -------------------------
     // POST /contas/{numero}/sacar
+    // -------------------------
     @Transactional
     public OperacaoResponseDTO sacar(String numero, SaqueRequestDTO request) {
         ContaCUD conta = buscarContaCUD(numero);
@@ -108,7 +122,9 @@ public class ContaService {
         return montarOperacaoResponse(numero, mov.getData(), conta.getSaldo());
     }
 
+    // -------------------------
     // POST /contas/{numero}/transferir
+    // -------------------------
     @Transactional
     public TransferenciaResponseDTO transferir(String numero, TransferenciaRequestDTO request) {
         if (numero.equals(request.getDestino())) {
@@ -147,12 +163,23 @@ public class ContaService {
         return dto;
     }
 
-    // GET /contas/{numero}/extrato
-    public ExtratoResponseDTO consultarExtrato(String numero) {
+    // -------------------------
+    // GET /contas/{numero}/extrato?inicio=...&fim=...
+    // -------------------------
+    public ExtratoResponseDTO consultarExtrato(String numero,
+                                               LocalDateTime inicio,
+                                               LocalDateTime fim) {
         return contaRRepository.findById(numero)
             .map(conta -> {
-                List<MovimentacaoR> movs = movimentacaoRRepository
-                    .findByContaOrigemOrContaDestinoOrderByDataHoraDesc(numero, numero);
+                List<MovimentacaoR> movs;
+                if (inicio != null && fim != null) {
+                    movs = movimentacaoRRepository
+                        .findByContaOrigemOrContaDestinoAndDataHoraBetweenOrderByDataHoraDesc(
+                            numero, numero, inicio, fim);
+                } else {
+                    movs = movimentacaoRRepository
+                        .findByContaOrigemOrContaDestinoOrderByDataHoraDesc(numero, numero);
+                }
 
                 List<ItemExtratoResponseDTO> itens = movs.stream().map(m -> {
                     ItemExtratoResponseDTO item = new ItemExtratoResponseDTO();
@@ -173,22 +200,147 @@ public class ContaService {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Conta não encontrada"));
     }
 
+    // -------------------------
+    // GET /contas/por-cliente/{cpf}
+    // -------------------------
     public ContaResponseDTO consultarContaPorCliente(String clienteCpf) {
         return contaRRepository.findByClienteCpf(clienteCpf)
-        .map(conta -> {
-            ContaResponseDTO dto = new ContaResponseDTO();
-            dto.setCliente(conta.getClienteCpf());
-            dto.setNumero(conta.getNumero());
-            dto.setSaldo(conta.getSaldo() != null ? conta.getSaldo().doubleValue() : 0.0);
-            dto.setLimite(conta.getLimite() != null ? conta.getLimite().doubleValue() : 0.0);
-            dto.setGerente(conta.getGerenteCpf());
-            dto.setCriacao(conta.getDataCriacao() != null
-            ? conta.getDataCriacao().atStartOfDay() : null);
-            return dto;
-        })
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-            "Conta não encontrada para cliente: " + clienteCpf));
+            .map(conta -> {
+                ContaResponseDTO dto = new ContaResponseDTO();
+                dto.setCliente(conta.getClienteCpf());
+                dto.setNumero(conta.getNumero());
+                dto.setSaldo(conta.getSaldo() != null ? conta.getSaldo().doubleValue() : 0.0);
+                dto.setLimite(conta.getLimite() != null ? conta.getLimite().doubleValue() : 0.0);
+                dto.setGerente(conta.getGerenteCpf());
+                dto.setCriacao(conta.getDataCriacao() != null
+                    ? conta.getDataCriacao().atStartOfDay() : null);
+                return dto;
+            })
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                "Conta não encontrada para cliente: " + clienteCpf));
     }
+
+    // -------------------------
+    // GET /contas/contagem-por-gerente
+    // Usado pelo gerente-service para R17/R18
+    // -------------------------
+    public Map<String, Long> contagemPorGerente() {
+        List<Object[]> rows = contaCUDRepository.contarContasPorGerente();
+        Map<String, Long> resultado = new HashMap<>();
+        for (Object[] row : rows) {
+            resultado.put((String) row[0], (Long) row[1]);
+        }
+        return resultado;
+    }
+
+    // -------------------------
+    // GET /contas/saldo-positivo-por-gerente
+    // Usado pelo gerente-service para R17 (desempate)
+    // -------------------------
+    public Map<String, Double> saldoPositivoPorGerente() {
+        List<Object[]> rows = contaCUDRepository.somarSaldosPositivosPorGerente();
+        Map<String, Double> resultado = new HashMap<>();
+        for (Object[] row : rows) {
+            resultado.put((String) row[0], ((Number) row[1]).doubleValue());
+        }
+        return resultado;
+    }
+
+    // -------------------------
+    // POST /contas/redistribuir
+    // Usado pelo gerente-service para R17/R18
+    // quantidade=1: transfere 1 conta do origem para destino
+    // quantidade=-1: transfere TODAS as contas do origem para destino
+    // -------------------------
+    @Transactional
+    public void redistribuir(RedistribuirRequestDTO request) {
+        List<ContaCUD> contas = contaCUDRepository
+            .findByGerenteCpfOrdenado(request.getGerenteOrigemCpf());
+
+        if (contas.isEmpty()) return;
+
+        List<ContaCUD> paraTransferir = request.getQuantidade() == -1
+            ? contas
+            : contas.subList(0, Math.min(1, contas.size()));
+
+        for (ContaCUD conta : paraTransferir) {
+            conta.setGerenteCpf(request.getGerenteDestinoCpf());
+            conta.setGerenteNome(request.getGerenteDestinoNome());
+            contaCUDRepository.save(conta);
+            publicarEventoConta(conta);
+        }
+
+        System.out.println("Redistribuídas " + paraTransferir.size() + " contas de "
+            + request.getGerenteOrigemCpf() + " para " + request.getGerenteDestinoCpf());
+    }
+
+    // -------------------------
+    // POST /contas/criar
+    // Chamado pelo saga-service quando cliente é aprovado (R10)
+    // -------------------------
+    @Transactional
+    public ContaResponseDTO criarConta(CriarContaRequestDTO request) {
+        // Verifica se cliente já tem conta
+        contaCUDRepository.findByClienteCpf(request.getClienteCpf()).ifPresent(c -> {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "Cliente já possui uma conta");
+        });
+
+        // Gera número de conta aleatório de 4 dígitos único
+        String numero = gerarNumeroConta();
+
+        ContaCUD conta = new ContaCUD();
+        conta.setNumero(numero);
+        conta.setClienteCpf(request.getClienteCpf());
+        conta.setClienteNome(request.getClienteNome());
+        conta.setGerenteCpf(request.getGerenteCpf());
+        conta.setGerenteNome(request.getGerenteNome());
+        conta.setSaldo(0.0);
+        conta.setLimite(request.getLimite() != null ? request.getLimite() : 0.0);
+        conta.setCriacao(LocalDateTime.now());
+        contaCUDRepository.save(conta);
+
+        // Sincroniza banco R via evento
+        publicarEventoConta(conta);
+
+        ContaResponseDTO dto = new ContaResponseDTO();
+        dto.setNumero(numero);
+        dto.setCliente(request.getClienteCpf());
+        dto.setSaldo(0.0);
+        dto.setLimite(conta.getLimite());
+        dto.setGerente(request.getGerenteCpf());
+        dto.setCriacao(LocalDateTime.now());
+        return dto;
+    }
+
+    // -------------------------
+    // PUT /contas/limite
+    // Chamado quando cliente altera salário (R4)
+    // -------------------------
+    @Transactional
+    public void atualizarLimite(AtualizarLimiteRequestDTO request) {
+        ContaCUD conta = contaCUDRepository.findByClienteCpf(request.getClienteCpf())
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                "Conta não encontrada para cliente: " + request.getClienteCpf()));
+
+        double novoLimite = 0.0;
+        if (request.getNovoSalario() != null && request.getNovoSalario() >= 2000) {
+            novoLimite = request.getNovoSalario() / 2;
+        }
+
+        // Se novo limite for menor que o saldo negativo atual, ajusta para o saldo negativo
+        if (conta.getSaldo() < 0 && novoLimite < Math.abs(conta.getSaldo())) {
+            novoLimite = Math.abs(conta.getSaldo());
+        }
+
+        conta.setLimite(novoLimite);
+        contaCUDRepository.save(conta);
+        publicarEventoConta(conta);
+
+        System.out.println("Limite atualizado para cliente " + request.getClienteCpf()
+            + ": R$ " + novoLimite);
+    }
+
     // -------------------------
     // Helpers privados
     // -------------------------
@@ -245,5 +397,20 @@ public class ContaService {
         evento.setValor(BigDecimal.valueOf(mov.getValor()));
         evento.setDataHora(mov.getData());
         rabbitTemplate.convertAndSend(RabbitMQConfig.FILA_MOVIMENTACAO_CRIADA, evento);
+    }
+
+    private String gerarNumeroConta() {
+        Random random = new Random();
+        String numero;
+        int tentativas = 0;
+        do {
+            numero = String.format("%04d", random.nextInt(10000));
+            tentativas++;
+            if (tentativas > 100) {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Não foi possível gerar número de conta único");
+            }
+        } while (contaCUDRepository.existsById(numero));
+        return numero;
     }
 }
