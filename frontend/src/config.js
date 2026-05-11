@@ -98,4 +98,57 @@ export const API = {
   //  CLIENTE (protegido)
   /** GET /clientes/:cpf */
   buscarClientePorCpf: (cpf) => axiosAuth.get(`/clientes/${cpf}`),
+
+  /** GET /clientes */
+  listarClientes: () => axiosAuth.get("/clientes"),
+
+  /** GET /clientes requestParams */
+  listarClientesComParametro: (params) =>
+    axiosAuth.get("/clientes", { params }),
+
+  /** PUT /clientes/:cpf/aprovar */
+  aprovarCliente: (cpf) => axiosAuth.put(`/clientes/${cpf}/aprovar`),
+
+  /** PUT /clientes/:cpf/rejeitar */
+  rejeitarCliente: (cpf) => axiosAuth.put(`/clientes/${cpf}/rejeitar`),
+
+  //  GERENTE (protegido)
+  /** GET /gerentes */
+  listarGerentes: () => axiosAuth.get("/gerentes"),
+
+  /** GET /gerentes/:cpf */
+  buscarGerentePorCpf: (cpf) => axiosAuth.get(`/gerentes/${cpf}`),
+
+  /** PUT /gerentes/:cpf */
+  atualizarGerente: (cpf, data) => axiosAuth.put(`/gerentes/${cpf}`, data),
+
+  /** DELETE /gerentes/:cpf */
+  excluirGerente: (cpf) => axiosAuth.delete(`/gerentes/${cpf}`),
+
+  // CONTA do CLIENTE (protegido)
+  /** GET /:numero/saldo */
+  consultarSaldo: (numero) => axiosAuth.get(`/${numero}/saldo`),
+
+  /** POST /:numero/depositar RequestBody */
+  depositar: (numero, valor) =>
+    axiosAuth.post(`/${numero}/depositar`, { valor }),
+
+  /** POST /:numero/sacar RequestBody */
+  sacar: (numero, valor) => axiosAuth.post(`/${numero}/sacar`, { valor }),
+
+  /** POST /:numero/transferir RequestBody */
+  transferir: (numero, valor, destino) =>
+    axiosAuth.post(`/${numero}/transferir`, { valor, destino }),
+
+  /** // GET /:numero/extrato */
+  consultarExtrato: (numero, dataInicio, dataFim) => {
+    const params = {};
+    if (dataInicio) params.dataInicio = dataInicio;
+    if (dataFim) params.dataFim = dataFim;
+    return axiosAuth.get(`/${numero}/extrato`, { params });
+  },
+
+  // CONTA (protegido)
+  /** GET /por-cliente/:cpf */
+  contaPorCliente: (cpf) => axiosAuth.get(`/por-cliente/${cpf}`),
 };
