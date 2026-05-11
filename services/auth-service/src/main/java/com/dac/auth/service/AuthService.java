@@ -6,6 +6,9 @@ import com.dac.auth.dto.response.LoginResponseDTO;
 // entidades
 import com.dac.auth.entity.Session;
 import com.dac.auth.entity.Usuario;
+// exceções
+import com.dac.auth.exception.AuthenticationException;
+import com.dac.auth.exception.BadRequestException;
 // repositórios
 import com.dac.auth.repository.UsuarioRepository;
 // Spring
@@ -37,7 +40,7 @@ public class AuthService {
     public LoginResult login(LoginRequestDTO request, String ip) {
         Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(request.getEmail());
         if (usuarioOpt.isEmpty()) {
-            throw new RuntimeException("Usuário não encontrado");
+            throw new AuthenticationException("Usuário/Senha incorretos");
         }
 
         Usuario usuario = usuarioOpt.get();
@@ -57,11 +60,11 @@ public class AuthService {
         }
 
         if (!senhaValida) {
-            throw new RuntimeException("Senha inválida");
+            throw new AuthenticationException("Usuário/Senha incorretos");
         }
 
         if (request.getDeviceId() == null || request.getDeviceId().isBlank()) {
-            throw new RuntimeException("deviceId é obrigatório");
+            throw new BadRequestException("deviceId é obrigatório");
         }
         String deviceId = request.getDeviceId();
 
