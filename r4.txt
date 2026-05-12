@@ -1,1 +1,0 @@
-{"cpf":"11122233344","nome":"Gerente Teste","email":"ger.teste@bantads.com.br","telefone":"41999990000","tipo":"GERENTE"}

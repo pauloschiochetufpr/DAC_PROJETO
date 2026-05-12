@@ -1,1 +1,0 @@
-{"cpf":"98574307084","nome":"Geniéve","email":"ger1@bantads.com.br","telefone":null,"tipo":"GERENTE"}
