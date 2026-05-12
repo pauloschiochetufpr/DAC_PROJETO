@@ -1,4 +1,4 @@
-﻿package com.dac.auth.controller;
+package com.dac.auth.controller;
 
 // DTOs
 import com.dac.auth.dto.request.LoginRequestDTO;

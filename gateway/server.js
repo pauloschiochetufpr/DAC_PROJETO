@@ -43,10 +43,8 @@ function createServiceProxy(target, serviceName, extraOpts = {}) {
     target,
     changeOrigin: true,
     xfwd: true,
-    parseReqBody: false,
     proxyTimeout: 10000,
     timeout: 10000,
-    logLevel: "warn",
     ...extraOpts,
     onError: (err, req, res) => {
       console.error(`Erro no proxy para ${serviceName}:`, err.message);
@@ -64,7 +62,7 @@ const OPEN_ROUTES = [
   { method: "POST", path: /^\/auth\/refresh$/ },
   { method: "POST", path: /^\/clientes$/ },
   { method: "GET", path: /^\/health$/ },
-  { method: "GET", path: /^\/reboot$/ },
+  { method: "POST", path: /^\/reboot$/ },
 ];
 
 // Rotas internas — bloqueadas externamente
@@ -73,26 +71,38 @@ const BLOCKED_ROUTES = [{ method: "POST", path: /^\/auth\/validate$/ }];
 // Regras de acesso por role — primeiro match vence
 // Rotas autenticadas sem regra são acessíveis por qualquer usuário logado
 const ROLE_RULES = [
-  {
-    method: "GET",
-    path: /^\/gerentes(\/.*)?$/,
-    roles: ["gerente", "administrador"],
-  },
-  { method: "POST", path: /^\/gerentes$/, roles: ["administrador"] },
-  { method: "PUT", path: /^\/gerentes\/.+/, roles: ["administrador"] },
-  { method: "DELETE", path: /^\/gerentes\/.+/, roles: ["administrador"] },
+  // Clientes
   { method: "GET", path: /^\/clientes$/, roles: ["gerente", "administrador"] },
   {
-    method: "POST",
-    path: /^\/clientes\/[^/]+\/aprovar$/,
-    roles: ["gerente", "administrador"],
+    method: "GET",
+    path: /^\/clientes\/[^/]+$/,
+    roles: ["cliente", "gerente", "administrador"],
   },
   {
-    method: "POST",
-    path: /^\/clientes\/[^/]+\/rejeitar$/,
-    roles: ["gerente", "administrador"],
+    method: "PUT",
+    path: /^\/clientes\/[^/]+$/,
+    roles: ["cliente", "gerente", "administrador"],
   },
-  { method: "POST", path: /^\/reboot$/, roles: ["administrador"] },
+  { method: "POST", path: /^\/clientes\/[^/]+\/aprovar$/, roles: ["gerente"] },
+  { method: "POST", path: /^\/clientes\/[^/]+\/rejeitar$/, roles: ["gerente"] },
+
+  // Contas
+  {
+    method: "GET",
+    path: /^\/contas\/[^/]+\/saldo$/,
+    roles: ["cliente", "gerente", "administrador"],
+  },
+  { method: "POST", path: /^\/contas\/[^/]+\/depositar$/, roles: ["cliente"] },
+  { method: "POST", path: /^\/contas\/[^/]+\/sacar$/, roles: ["cliente"] },
+  { method: "POST", path: /^\/contas\/[^/]+\/transferir$/, roles: ["cliente"] },
+  { method: "GET", path: /^\/contas\/[^/]+\/extrato$/, roles: ["cliente"] },
+
+  // Gerentes
+  { method: "GET", path: /^\/gerentes$/, roles: ["administrador"] },
+  { method: "POST", path: /^\/gerentes$/, roles: ["administrador"] },
+  { method: "GET", path: /^\/gerentes\/[^/]+$/, roles: ["administrador"] },
+  { method: "DELETE", path: /^\/gerentes\/[^/]+$/, roles: ["administrador"] },
+  { method: "PUT", path: /^\/gerentes\/[^/]+$/, roles: ["administrador"] },
 ];
 
 // authenticate | valida token JWT e aplica controle de acesso antes de encaminhar
@@ -106,7 +116,13 @@ async function authenticate(req, res, next) {
 
   // Rotas abertas passam diretamente
   if (OPEN_ROUTES.some((r) => r.method === method && r.path.test(path))) {
+    delete req.headers["x-forwarded-for"];
     return next();
+  }
+
+  // Rota não mapeada em nenhuma regra conhecida
+  if (!ROLE_RULES.some((r) => r.method === method && r.path.test(path))) {
+    return res.status(404).json({ error: "Rota não encontrada" });
   }
 
   // Exige Bearer token
@@ -139,6 +155,9 @@ async function authenticate(req, res, next) {
   req.headers["x-user-role"] = role;
   req.headers["x-user-email"] = payload.email;
 
+  // Remove X-Forwarded-For do cliente para que xfwd:true injete apenas o IP real do socket
+  delete req.headers["x-forwarded-for"];
+
   next();
 }
 
@@ -146,17 +165,37 @@ app.use(cors());
 app.use(authenticate);
 
 // Proxies para os microsserviços via rede interna do docker-compose
-app.use("/auth", createServiceProxy(SERVICE_TARGETS.auth, "auth-service"));
+// pathRewrite recoloca o prefixo que o Express strip ao montar com app.use("/prefix")
+app.use(
+  "/auth",
+  createServiceProxy(SERVICE_TARGETS.auth, "auth-service", {
+    pathRewrite: { "^": "/auth" },
+  }),
+);
 app.use(
   "/clientes",
-  createServiceProxy(SERVICE_TARGETS.cliente, "cliente-service"),
+  createServiceProxy(SERVICE_TARGETS.cliente, "cliente-service", {
+    pathRewrite: { "^": "/clientes" },
+  }),
 );
-app.use("/contas", createServiceProxy(SERVICE_TARGETS.conta, "conta-service"));
+app.use(
+  "/contas",
+  createServiceProxy(SERVICE_TARGETS.conta, "conta-service", {
+    pathRewrite: { "^": "/contas" },
+  }),
+);
 app.use(
   "/gerentes",
-  createServiceProxy(SERVICE_TARGETS.gerente, "gerente-service"),
+  createServiceProxy(SERVICE_TARGETS.gerente, "gerente-service", {
+    pathRewrite: { "^": "/gerentes" },
+  }),
 );
-app.use("/saga", createServiceProxy(SERVICE_TARGETS.saga, "saga-service"));
+app.use(
+  "/saga",
+  createServiceProxy(SERVICE_TARGETS.saga, "saga-service", {
+    pathRewrite: { "^": "/saga" },
+  }),
+);
 
 app.use(express.json());
 
@@ -171,12 +210,6 @@ app.post(
     logLevel: "warn",
   }),
 );
-
-app.get("/reboot", (req, res) => {
-  res.status(405).json({
-    error: "Use POST /reboot para executar o reset orquestrado",
-  });
-});
 
 // Health endpoint
 app.get("/health", (req, res) => {

@@ -1,4 +1,4 @@
-﻿package com.dac.auth.service;
+package com.dac.auth.service;
 
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.DirectDecrypter;

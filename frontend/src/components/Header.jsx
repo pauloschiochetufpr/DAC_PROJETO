@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 
 // SVG's
-import Logo from "../assets/logo/logoEscura.svg";
+import Logo from "../assets/logo/LogoEscura.svg";
 
 // i18n
 import { useLanguage } from "../hooks/useLanguage";
