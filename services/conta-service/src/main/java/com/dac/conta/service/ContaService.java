@@ -280,6 +280,18 @@ public class ContaService {
     // -------------------------
     @Transactional
     public ContaResponseDTO criarConta(CriarContaRequestDTO request) {
+        if (request == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Dados da conta obrigatorios");
+        }
+        if (request.getClienteCpf() == null || request.getClienteCpf().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "clienteCpf obrigatorio");
+        }
+        if (request.getGerenteCpf() == null || request.getGerenteCpf().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "gerenteCpf obrigatorio");
+        }
+        if (request.getLimite() != null && request.getLimite() < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "limite invalido");
+        }
         // Verifica se cliente já tem conta
         contaCUDRepository.findByClienteCpf(request.getClienteCpf()).ifPresent(c -> {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
@@ -291,10 +303,10 @@ public class ContaService {
 
         ContaCUD conta = new ContaCUD();
         conta.setNumero(numero);
-        conta.setClienteCpf(request.getClienteCpf());
-        conta.setClienteNome(request.getClienteNome());
-        conta.setGerenteCpf(request.getGerenteCpf());
-        conta.setGerenteNome(request.getGerenteNome());
+        conta.setClienteCpf(request.getClienteCpf().trim());
+        conta.setClienteNome(request.getClienteNome() != null ? request.getClienteNome().trim() : null);
+        conta.setGerenteCpf(request.getGerenteCpf().trim());
+        conta.setGerenteNome(request.getGerenteNome() != null ? request.getGerenteNome().trim() : null);
         conta.setSaldo(0.0);
         conta.setLimite(request.getLimite() != null ? request.getLimite() : 0.0);
         conta.setCriacao(LocalDateTime.now());
@@ -305,11 +317,11 @@ public class ContaService {
 
         ContaResponseDTO dto = new ContaResponseDTO();
         dto.setNumero(numero);
-        dto.setCliente(request.getClienteCpf());
+        dto.setCliente(conta.getClienteCpf());
         dto.setSaldo(0.0);
         dto.setLimite(conta.getLimite());
-        dto.setGerente(request.getGerenteCpf());
-        dto.setCriacao(LocalDateTime.now());
+        dto.setGerente(conta.getGerenteCpf());
+        dto.setCriacao(conta.getCriacao());
         return dto;
     }
 
@@ -382,6 +394,7 @@ public class ContaService {
         evento.setGerenteNome(conta.getGerenteNome());
         evento.setSaldo(BigDecimal.valueOf(conta.getSaldo()));
         evento.setLimite(BigDecimal.valueOf(conta.getLimite()));
+        evento.setStatus("aprovado");
         rabbitTemplate.convertAndSend(RabbitMQConfig.FILA_CONTA_ATUALIZADA, evento);
     }
 

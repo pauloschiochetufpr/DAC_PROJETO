@@ -2,9 +2,7 @@ const express = require("express");
 const { createProxyMiddleware } = require("http-proxy-middleware");
 const cors = require("cors");
 // jose
-const { jwtDecrypt } = require("jose");
-// node built-in
-const { createHash } = require("crypto");
+const { jwtVerify } = require("jose");
 
 const app = express();
 
@@ -19,21 +17,19 @@ if (!JWT_SECRET) {
 
 // Targets dos microsserviços na rede interna do docker-compose
 const SERVICE_TARGETS = {
-  auth: "http://auth-service:8080",
+  auth: "http://auth-service:8080/auth",
   cliente: "http://cliente-service:8080",
   conta: "http://conta-service:8080",
   gerente: "http://gerente-service:8080",
   saga: "http://saga-service:8080",
 };
 
-// deriveKey | deriva chave AES-256 (32 bytes) via SHA-256, espelhando JwtService.java
-function deriveKey() {
-  return createHash("sha256").update(JWT_SECRET, "utf8").digest();
-}
-
-// validateJwe | decifra e valida o JWE; lança ERR_JWT_EXPIRED se expirado
-async function validateJwe(token) {
-  const { payload } = await jwtDecrypt(token, deriveKey());
+// validateJwt | valida JWT assinado HS256
+async function validateJwt(token) {
+  const key = new TextEncoder().encode(JWT_SECRET);
+  const { payload } = await jwtVerify(token, key, {
+    algorithms: ["HS256"],
+  });
   return payload;
 }
 
@@ -119,9 +115,9 @@ async function authenticate(req, res, next) {
 
   let payload;
   try {
-    payload = await validateJwe(token);
+    payload = await validateJwt(token);
   } catch (err) {
-    if (err.code === "ERR_JWT_EXPIRED") {
+    if (err.code === "ERR_JWT_EXPIRED" || err.name === "JWTExpired") {
       return res.status(401).json({ error: "Token expirado" });
     }
     return res.status(401).json({ error: "Token inválido" });
@@ -154,7 +150,12 @@ app.use(
 app.use("/contas", createServiceProxy(SERVICE_TARGETS.conta, "conta-service"));
 app.use(
   "/gerentes",
-  createServiceProxy(SERVICE_TARGETS.gerente, "gerente-service"),
+  createServiceProxy(SERVICE_TARGETS.gerente, "gerente-service", {
+    pathRewrite: {
+      "^/$": "/gerentes",
+      "^/(.+)$": "/gerentes/$1",
+    },
+  }),
 );
 app.use("/saga", createServiceProxy(SERVICE_TARGETS.saga, "saga-service"));
 
@@ -176,7 +177,6 @@ app.get("/reboot", (req, res) => {
   res.status(405).json({
     error: "Use POST /reboot para executar o reset orquestrado",
   });
-  s;
 });
 
 // Health endpoint

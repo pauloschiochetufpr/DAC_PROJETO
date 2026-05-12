@@ -18,5 +18,5 @@ management:
         include: health
 
 jwt:
-  secret: co\saed<>:??/|\hfIWU|Ef324h$@$*&(14lk\\d[-0]?;d.adp224(^c`{)}}))/\@!#
+  secret: ${JWT_SECRET:DAC_DEV_SECRET_2026_32_CHARS_MINIMUM_KEY}
   expiration: 600000 # 600000ms = 10 minutos

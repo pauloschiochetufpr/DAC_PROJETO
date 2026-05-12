@@ -105,9 +105,11 @@ public class GerenteService {
         gerente.setEmail(dto.getEmail());
         gerente.setTelefone(dto.getTelefone());
 
-        if ("gerente".equalsIgnoreCase(dto.getTipo())) {
+        String tipoNormalizado = dto.getTipo() == null ? "" : dto.getTipo().trim().toLowerCase();
+        if (tipoNormalizado.isEmpty() || "gerente".equals(tipoNormalizado)) {
             gerente.setTipo(TipoGerente.GERENTE);
-        } else if ("administrador".equalsIgnoreCase(dto.getTipo())) {
+            tipoNormalizado = "gerente";
+        } else if ("administrador".equals(tipoNormalizado)) {
             gerente.setTipo(TipoGerente.ADMINISTRADOR);
         } else {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tipo inválido: use 'gerente' ou 'administrador'");
@@ -129,7 +131,7 @@ public class GerenteService {
         authEvent.put("nome", dto.getNome());
         authEvent.put("email", dto.getEmail());
         authEvent.put("senha", dto.getSenha());
-        authEvent.put("tipo", dto.getTipo().toLowerCase());
+        authEvent.put("tipo", tipoNormalizado);
 
         try {
             rabbitTemplate.convertAndSend("auth.exchange", "auth.criar", authEvent);

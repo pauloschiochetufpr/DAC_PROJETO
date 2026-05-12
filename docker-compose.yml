@@ -60,6 +60,8 @@ services:
     build: ./services/auth-service
     container_name: auth-service
     restart: unless-stopped
+    environment:
+      JWT_SECRET: "DAC_DEV_SECRET_2026_32_CHARS_MINIMUM_KEY"
     depends_on:
       mongo:
         condition: service_healthy
@@ -167,7 +169,7 @@ services:
       saga-service:
         condition: service_healthy
     environment:
-      JWT_SECRET: 'co\saed<>:??/|\hfIWU|Ef324h$@$*&(14lk\\d[-0]?;d.adp224(^c`{)}}))/\@!#'
+      JWT_SECRET: "DAC_DEV_SECRET_2026_32_CHARS_MINIMUM_KEY"
     ports:
       - "3000:3000"
     healthcheck:
