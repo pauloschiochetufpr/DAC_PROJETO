@@ -222,7 +222,6 @@ public class ContaService {
 
     // -------------------------
     // GET /contas/contagem-por-gerente
-    // Usado pelo gerente-service para R17/R18
     // -------------------------
     public Map<String, Long> contagemPorGerente() {
         List<Object[]> rows = contaCUDRepository.contarContasPorGerente();
@@ -235,7 +234,6 @@ public class ContaService {
 
     // -------------------------
     // GET /contas/saldo-positivo-por-gerente
-    // Usado pelo gerente-service para R17 (desempate)
     // -------------------------
     public Map<String, Double> saldoPositivoPorGerente() {
         List<Object[]> rows = contaCUDRepository.somarSaldosPositivosPorGerente();
@@ -248,9 +246,6 @@ public class ContaService {
 
     // -------------------------
     // POST /contas/redistribuir
-    // Usado pelo gerente-service para R17/R18
-    // quantidade=1: transfere 1 conta do origem para destino
-    // quantidade=-1: transfere TODAS as contas do origem para destino
     // -------------------------
     @Transactional
     public void redistribuir(RedistribuirRequestDTO request) {
@@ -276,43 +271,35 @@ public class ContaService {
 
     // -------------------------
     // POST /contas/criar
-    // Chamado pelo saga-service quando cliente é aprovado (R10)
     // -------------------------
     @Transactional
     public ContaResponseDTO criarConta(CriarContaRequestDTO request) {
-        if (request == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Dados da conta obrigatorios");
-        }
-        if (request.getClienteCpf() == null || request.getClienteCpf().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "clienteCpf obrigatorio");
-        }
-        if (request.getGerenteCpf() == null || request.getGerenteCpf().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "gerenteCpf obrigatorio");
-        }
-        if (request.getLimite() != null && request.getLimite() < 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "limite invalido");
-        }
-        // Verifica se cliente já tem conta
-        contaCUDRepository.findByClienteCpf(request.getClienteCpf()).ifPresent(c -> {
+        validarCriacaoContaRequest(request);
+
+        String clienteCpf = normalizarDocumento(request.getClienteCpf());
+        String gerenteCpf = normalizarDocumento(request.getGerenteCpf());
+        String clienteNome = normalizarTexto(request.getClienteNome());
+        String gerenteNome = normalizarTexto(request.getGerenteNome());
+        Double limite = request.getLimite() != null ? request.getLimite() : 0.0;
+
+        contaCUDRepository.findByClienteCpf(clienteCpf).ifPresent(c -> {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                 "Cliente já possui uma conta");
         });
 
-        // Gera número de conta aleatório de 4 dígitos único
         String numero = gerarNumeroConta();
 
         ContaCUD conta = new ContaCUD();
         conta.setNumero(numero);
-        conta.setClienteCpf(request.getClienteCpf().trim());
-        conta.setClienteNome(request.getClienteNome() != null ? request.getClienteNome().trim() : null);
-        conta.setGerenteCpf(request.getGerenteCpf().trim());
-        conta.setGerenteNome(request.getGerenteNome() != null ? request.getGerenteNome().trim() : null);
+        conta.setClienteCpf(clienteCpf);
+        conta.setClienteNome(clienteNome);
+        conta.setGerenteCpf(gerenteCpf);
+        conta.setGerenteNome(gerenteNome);
         conta.setSaldo(0.0);
-        conta.setLimite(request.getLimite() != null ? request.getLimite() : 0.0);
+        conta.setLimite(limite);
         conta.setCriacao(LocalDateTime.now());
         contaCUDRepository.save(conta);
 
-        // Sincroniza banco R via evento
         publicarEventoConta(conta);
 
         ContaResponseDTO dto = new ContaResponseDTO();
@@ -327,7 +314,6 @@ public class ContaService {
 
     // -------------------------
     // PUT /contas/limite
-    // Chamado quando cliente altera salário (R4)
     // -------------------------
     @Transactional
     public void atualizarLimite(AtualizarLimiteRequestDTO request) {
@@ -340,7 +326,6 @@ public class ContaService {
             novoLimite = request.getNovoSalario() / 2;
         }
 
-        // Se novo limite for menor que o saldo negativo atual, ajusta para o saldo negativo
         if (conta.getSaldo() < 0 && novoLimite < Math.abs(conta.getSaldo())) {
             novoLimite = Math.abs(conta.getSaldo());
         }
@@ -353,9 +338,38 @@ public class ContaService {
             + ": R$ " + novoLimite);
     }
 
-    // -------------------------
-    // Helpers privados
-    // -------------------------
+    private void validarCriacaoContaRequest(CriarContaRequestDTO request) {
+        if (request == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Dados da conta obrigatorios");
+        }
+        if (request.getClienteCpf() == null || request.getClienteCpf().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "clienteCpf obrigatorio");
+        }
+        if (request.getGerenteCpf() == null || request.getGerenteCpf().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "gerenteCpf obrigatorio");
+        }
+
+        String clienteCpf = normalizarDocumento(request.getClienteCpf());
+        String gerenteCpf = normalizarDocumento(request.getGerenteCpf());
+
+        if (clienteCpf.length() != 11) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "clienteCpf invalido");
+        }
+        if (gerenteCpf.length() != 11) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "gerenteCpf invalido");
+        }
+        if (request.getLimite() != null && request.getLimite() < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "limite invalido");
+        }
+    }
+
+    private String normalizarDocumento(String valor) {
+        return valor == null ? null : valor.replaceAll("\\D", "");
+    }
+
+    private String normalizarTexto(String valor) {
+        return valor == null ? null : valor.trim();
+    }
 
     private ContaCUD buscarContaCUD(String numero) {
         return contaCUDRepository.findById(numero)
@@ -364,8 +378,8 @@ public class ContaService {
     }
 
     private MovimentacaoCUD criarMovimentacao(TipoMovimentacao tipo,
-                                               String origem, String destino,
-                                               Double valor) {
+                                              String origem, String destino,
+                                              Double valor) {
         MovimentacaoCUD mov = new MovimentacaoCUD();
         mov.setTipo(tipo);
         mov.setOrigem(origem);
@@ -376,8 +390,8 @@ public class ContaService {
     }
 
     private OperacaoResponseDTO montarOperacaoResponse(String numero,
-                                                        LocalDateTime data,
-                                                        Double saldo) {
+                                                       LocalDateTime data,
+                                                       Double saldo) {
         OperacaoResponseDTO dto = new OperacaoResponseDTO();
         dto.setConta(numero);
         dto.setData(data);
@@ -399,8 +413,8 @@ public class ContaService {
     }
 
     private void publicarEventoMovimentacao(MovimentacaoCUD mov,
-                                             String clienteOrigemCpf,
-                                             String clienteDestinoCpf) {
+                                            String clienteOrigemCpf,
+                                            String clienteDestinoCpf) {
         MovimentacaoCriadaEvento evento = new MovimentacaoCriadaEvento();
         evento.setTipo(mov.getTipo().name());
         evento.setContaOrigem(mov.getOrigem());
