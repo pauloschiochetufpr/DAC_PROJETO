@@ -7,6 +7,16 @@ Este README descreve os passos para compilar os serviços com Maven, gerenciar o
 - Docker e Docker Compose instalados
 - Maven instalado (para compilar serviços Java)
 
+---
+
+Script para inicialização completa funcional. Rode na raiz do projeto:
+
+```bash
+wsl bash ./start.sh
+```
+
+---
+
 ## 1) Compilar com Maven
 
 Para compilar um serviço Spring Boot (ex.: `auth-service`):
