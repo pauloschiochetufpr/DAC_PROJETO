@@ -34,7 +34,7 @@ public class ClienteService {
 
     // -------------------------
     // R1 — Autocadastro
-    // Publica para auth-service criar o usuário
+    // Registra apenas solicitação pendente; usuário/senha são criados na aprovação.
     // -------------------------
     @Transactional
     public void autocadastro(AutocadastroRequestDTO dto) {
@@ -64,19 +64,6 @@ public class ClienteService {
 
         repository.save(c);
 
-        // Publica para auth-service criar usuário pendente
-        try {
-            Map<String, String> authEvento = new HashMap<>();
-            authEvento.put("acao", "criar");
-            authEvento.put("cpf", cpf);
-            authEvento.put("email", normalizarEmail(dto.getEmail()));
-            authEvento.put("senha", "tads"); // senha padrão inicial
-            authEvento.put("tipo", "cliente");
-            rabbitTemplate.convertAndSend(RabbitMQConfig.FILA_AUTH_CRIAR, authEvento);
-        } catch (Exception e) {
-            System.err.println("cliente-service: aviso - não foi possível publicar evento auth.criar: "
-                + e.getMessage());
-        }
     }
 
     // -------------------------
@@ -212,7 +199,11 @@ public class ClienteService {
             sagaEvento.put("nome", c.getNome());
             sagaEvento.put("email", c.getEmail());
             sagaEvento.put("limite", limite);
-            rabbitTemplate.convertAndSend(RabbitMQConfig.FILA_SAGA_APROVAR, sagaEvento);
+            rabbitTemplate.convertAndSend(
+                RabbitMQConfig.SAGA_EXCHANGE,
+                RabbitMQConfig.FILA_SAGA_APROVAR,
+                sagaEvento
+            );
         } catch (Exception e) {
             System.err.println("cliente-service: aviso - não foi possível publicar evento saga.aprovar_cliente: "
                 + e.getMessage());
