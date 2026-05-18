@@ -20,12 +20,12 @@ public class ClienteController {
     @Autowired
     private ClienteService service;
 
-    @PostMapping("/clientes")
-    public ResponseEntity<?> autocadastro(@RequestBody AutocadastroRequestDTO dto) {
-        service.autocadastro(dto);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body("Solicitação de cadastro enviada. Aguarde a aprovação do gerente.");
-    }
+        @PostMapping("/clientes")
+        public ResponseEntity<?> autocadastro(@RequestBody AutocadastroRequestDTO dto) {
+            service.autocadastro(dto);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body("Solicitação de cadastro enviada. Aguarde a aprovação do gerente.");
+        }
 
     @GetMapping("/clientes")
     public ResponseEntity<?> listar(

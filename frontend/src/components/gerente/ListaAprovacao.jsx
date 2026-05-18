@@ -1,8 +1,3 @@
-import { useState, useEffect } from "react";
-
-// Mock's
-import { useGerente } from "../../hooks/useGerente";
-
 // Componentes
 import CardAprovacao from "./CardAprovacao";
 
@@ -16,61 +11,15 @@ import { t } from "../../lib/i18n";
 // Lucide
 import { Bug, TicketX } from "lucide-react";
 
-export default function ListaAprovacao({ idGerente }) {
-  const { getClientesFiltrados, aprovarCliente, rejeitarCliente } =
-    useGerente();
-
+export default function ListaAprovacao({
+  clientes,
+  loading,
+  erro,
+  feedback,
+  onAprovar,
+  onRejeitar,
+}) {
   const { lang } = useLanguage();
-  // Estado local dos clientes pendentes
-  const [pendentes, setPendentes] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [erro, setErro] = useState(null);
-
-  // Feedback de ação (aprovação/rejeição)
-  const [feedback, setFeedback] = useState(null);
-
-  // Busca inicial e re-busca ao mudar dependências
-  useEffect(() => {
-    let cancelado = false;
-
-    getClientesFiltrados("para_aprovar", idGerente).then((res) => {
-      if (cancelado) return;
-      if (res.status === 200) {
-        setPendentes(res.data);
-        setErro(null);
-      } else {
-        setErro(res.message || "Erro ao buscar pendentes.");
-      }
-      setLoading(false);
-    });
-
-    return () => {
-      cancelado = true;
-    };
-  }, [getClientesFiltrados, idGerente]);
-
-  // Handlers
-  const handleAprovar = async (cpf) => {
-    const res = await aprovarCliente(cpf);
-    if (res.status === 200) {
-      setFeedback({ tipo: "sucesso", msg: res.message });
-      setPendentes((prev) => prev.filter((c) => c.cpf !== cpf));
-    } else {
-      setFeedback({ tipo: "erro", msg: res.message });
-    }
-    setTimeout(() => setFeedback(null), 5000);
-  };
-
-  const handleRejeitar = async (cpf, motivo) => {
-    const res = await rejeitarCliente(cpf, motivo);
-    if (res.status === 200) {
-      setFeedback({ tipo: "sucesso", msg: res.message });
-      setPendentes((prev) => prev.filter((c) => c.cpf !== cpf));
-    } else {
-      setFeedback({ tipo: "erro", msg: res.message });
-    }
-    setTimeout(() => setFeedback(null), 5000);
-  };
 
   // Formatar de moeda
   const fmtBRL = (v) =>
@@ -108,6 +57,15 @@ export default function ListaAprovacao({ idGerente }) {
         </div>
       </div>
 
+      {loading && (
+        <p
+          className="font-inter text-center text-base md:text-xl
+         pb-8 md:pt-40  flex flex-col items-center justify-center gap-2 w-full"
+        >
+          Carregando...
+        </p>
+      )}
+
       {/* Feedback de ação */}
       {feedback && (
         <div
@@ -129,7 +87,7 @@ export default function ListaAprovacao({ idGerente }) {
         </p>
       )}
 
-      {!loading && !erro && pendentes.length === 0 && (
+      {!loading && !erro && clientes?.length === 0 && (
         <p
           className="text-contrast font-inter text-center text-base md:text-xl
         pb-8 md:pt-40 flex flex-col items-center justify-center gap-2 w-full select-none"
@@ -140,7 +98,7 @@ export default function ListaAprovacao({ idGerente }) {
       )}
 
       {/* Tabela de pendentes */}
-      {!loading && !erro && pendentes.length > 0 && (
+      {!loading && !erro && clientes?.length > 0 && (
         <div className="h-full w-full pb-3 px-3">
           <div
             className="overflow-hidden h-full w-full rounded-xl border border-secundaryDark/60
@@ -149,13 +107,13 @@ export default function ListaAprovacao({ idGerente }) {
           >
             {/* Corpo */}
             <div className="overflow-x-hidden overflow-y-scroll py-3 h-full flex flex-col gap-2 px-2">
-              {pendentes.map((cliente) => (
+              {clientes.map((cliente) => (
                 <CardAprovacao
                   key={cliente.cpf}
                   cliente={cliente}
                   fmtBRL={fmtBRL}
-                  onAprovar={handleAprovar}
-                  onRejeitar={handleRejeitar}
+                  onAprovar={onAprovar}
+                  onRejeitar={onRejeitar}
                 />
               ))}
             </div>

@@ -1,7 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
-
-// Mock's
-import { useGerente } from "../../hooks/useGerente";
+import { useState, useMemo } from "react";
 
 //i18n
 import { useLanguage } from "../../hooks/useLanguage";
@@ -21,39 +18,15 @@ import {
 // SVG's
 import WaveSimpleRed from "../WaveSimpleRed";
 
-export default function ListaClientes({ idGerente }) {
+export default function ListaClientes({ clientes, loading, erro }) {
   const { lang } = useLanguage();
   const { getClientesFiltrados } = useGerente();
 
   // States
-  const [clientes, setClientes] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [erro, setErro] = useState(null);
   const [busca, setBusca] = useState("");
 
   // CPF do cliente com detalhes expandidos (null = nenhum selecionado)
   const [expandido, setExpandido] = useState(null);
-
-  // Busca inicial e re-busca quando o mock muda (vai ficar bem diferernte na final)
-
-  useEffect(() => {
-    let cancelado = false;
-
-    getClientesFiltrados("meus_clientes", idGerente).then((res) => {
-      if (cancelado) return;
-      if (res.status === 200) {
-        setClientes(res.data);
-        setErro(null);
-      } else {
-        setErro(res.message || "Erro ao buscar clientes.");
-      }
-      setLoading(false);
-    });
-
-    return () => {
-      cancelado = true;
-    };
-  }, [getClientesFiltrados, idGerente]);
 
   // Busca por CPF ou Nome (Local apenas, a lista já está ai mesmo)
   const clientesFiltrados = useMemo(() => {
