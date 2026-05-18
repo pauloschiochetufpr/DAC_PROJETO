@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/gerentes")
@@ -35,6 +36,13 @@ public class GerenteController {
     public ResponseEntity<DadoGerente> consultar(@PathVariable String cpf) {
         DadoGerente response = gerenteService.consultarPorCpf(cpf);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{cpf}/clientes")
+    public ResponseEntity<List<Map<String, Object>>> listarClientesDoGerente(@PathVariable String cpf) {
+        gerenteService.consultarPorCpf(cpf);
+        List<Map<String, Object>> contas = gerenteService.buscarContasPorGerente(cpf);
+        return ResponseEntity.ok(contas);
     }
 
     @PutMapping("/{cpf}")

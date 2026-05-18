@@ -221,6 +221,24 @@ public class ContaService {
     }
 
     // -------------------------
+    // GET /contas/por-gerente/{cpf}
+    // -------------------------
+    public List<ContaResponseDTO> consultarContasPorGerente(String gerenteCpf) {
+        List<ContaR> contas = contaRRepository.findByGerenteCpf(gerenteCpf);
+        return contas.stream().map(conta -> {
+            ContaResponseDTO dto = new ContaResponseDTO();
+            dto.setCliente(conta.getClienteCpf());
+            dto.setNumero(conta.getNumero());
+            dto.setSaldo(conta.getSaldo() != null ? conta.getSaldo().doubleValue() : 0.0);
+            dto.setLimite(conta.getLimite() != null ? conta.getLimite().doubleValue() : 0.0);
+            dto.setGerente(conta.getGerenteCpf());
+            dto.setCriacao(conta.getDataCriacao() != null
+                ? conta.getDataCriacao().atStartOfDay() : null);
+            return dto;
+        }).collect(Collectors.toList());
+    }
+
+    // -------------------------
     // GET /contas/contagem-por-gerente
     // -------------------------
     public Map<String, Long> contagemPorGerente() {

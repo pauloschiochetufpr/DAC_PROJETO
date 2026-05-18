@@ -54,6 +54,16 @@ public class GerenteService {
         return toDTO(gerente);
     }
 
+    public List<Map<String, Object>> buscarContasPorGerente(String cpf) {
+        try {
+            String json = httpGet(contaUrl + "/contas/por-gerente/" + cpf);
+            return objectMapper.readValue(json, new TypeReference<List<Map<String, Object>>>() {});
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                "Erro ao buscar contas do gerente: " + e.getMessage());
+        }
+    }
+
     @Transactional
     public DadoGerente atualizar(String cpf, GerenteAtt dto) {
         Gerente gerente = gerenteRepository.findById(cpf)
