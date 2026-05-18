@@ -3,10 +3,10 @@ import axios from "axios";
 const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 
 //  Instância pública
-const axiosPublic = axios.create({ baseURL: BASE_URL });
+export const axiosPublic = axios.create({ baseURL: BASE_URL });
 
 //  Instância protegida
-const axiosAuth = axios.create({ baseURL: BASE_URL });
+export const axiosAuth = axios.create({ baseURL: BASE_URL });
 
 axiosAuth.interceptors.request.use(
   (config) => {
@@ -95,60 +95,31 @@ export const API = {
   /** POST /auth/logout */
   logout: () => axiosPublic.post("/auth/logout"),
 
-  //  CLIENTE (protegido)
-  /** GET /clientes/:cpf */
-  buscarClientePorCpf: (cpf) => axiosAuth.get(`/clientes/${cpf}`),
-
-  /** GET /clientes */
-  listarClientes: () => axiosAuth.get("/clientes"),
-
-  /** GET /clientes requestParams */
-  listarClientesComParametro: (params) =>
-    axiosAuth.get("/clientes", { params }),
-
-  /** PUT /clientes/:cpf/aprovar */
-  aprovarCliente: (cpf) => axiosAuth.put(`/clientes/${cpf}/aprovar`),
-
-  /** PUT /clientes/:cpf/rejeitar */
-  rejeitarCliente: (cpf) => axiosAuth.put(`/clientes/${cpf}/rejeitar`),
-
-  //  GERENTE (protegido)
-  /** GET /gerentes */
-  listarGerentes: () => axiosAuth.get("/gerentes"),
-
-  /** GET /gerentes/:cpf */
-  buscarGerentePorCpf: (cpf) => axiosAuth.get(`/gerentes/${cpf}`),
-
-  /** PUT /gerentes/:cpf */
-  atualizarGerente: (cpf, data) => axiosAuth.put(`/gerentes/${cpf}`, data),
-
-  /** DELETE /gerentes/:cpf */
-  excluirGerente: (cpf) => axiosAuth.delete(`/gerentes/${cpf}`),
-
   // CONTA do CLIENTE (protegido)
-  /** GET /:numero/saldo */
-  consultarSaldo: (numero) => axiosAuth.get(`/${numero}/saldo`),
+  /** GET /contas/:numero/saldo */
+  consultarSaldo: (numero) => axiosAuth.get(`/contas/${numero}/saldo`),
 
-  /** POST /:numero/depositar RequestBody */
+  /** POST /contas/:numero/depositar RequestBody */
   depositar: (numero, valor) =>
-    axiosAuth.post(`/${numero}/depositar`, { valor }),
+    axiosAuth.post(`/contas/${numero}/depositar`, { valor }),
 
-  /** POST /:numero/sacar RequestBody */
-  sacar: (numero, valor) => axiosAuth.post(`/${numero}/sacar`, { valor }),
+  /** POST /contas/:numero/sacar RequestBody */
+  sacar: (numero, valor) =>
+    axiosAuth.post(`/contas/${numero}/sacar`, { valor }),
 
-  /** POST /:numero/transferir RequestBody */
+  /** POST /contas/:numero/transferir RequestBody */
   transferir: (numero, valor, destino) =>
-    axiosAuth.post(`/${numero}/transferir`, { valor, destino }),
+    axiosAuth.post(`/contas/${numero}/transferir`, { valor, destino }),
 
-  /** // GET /:numero/extrato */
+  /** // GET /contas/:numero/extrato */
   consultarExtrato: (numero, dataInicio, dataFim) => {
     const params = {};
     if (dataInicio) params.dataInicio = dataInicio;
     if (dataFim) params.dataFim = dataFim;
-    return axiosAuth.get(`/${numero}/extrato`, { params });
+    return axiosAuth.get(`/contas/${numero}/extrato`, { params });
   },
 
   // CONTA (protegido)
-  /** GET /por-cliente/:cpf */
-  contaPorCliente: (cpf) => axiosAuth.get(`/por-cliente/${cpf}`),
+  /** GET /contas/por-cliente/:cpf */
+  contaPorCliente: (cpf) => axiosAuth.get(`/contas/por-cliente/${cpf}`),
 };
