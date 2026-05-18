@@ -20,7 +20,6 @@ import WaveSimpleRed from "../WaveSimpleRed";
 
 export default function ListaClientes({ clientes, loading, erro }) {
   const { lang } = useLanguage();
-  const { getClientesFiltrados } = useGerente();
 
   // States
   const [busca, setBusca] = useState("");

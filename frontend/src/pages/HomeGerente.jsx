@@ -6,6 +6,9 @@ import ListaClientes from "../components/gerente/ListaClientes";
 import Podium from "../components/listas/Podium";
 import BotaoPergaminho from "../components/UI/BotaoPergaminho";
 
+//mock
+import { Gerente_CPF } from "../mocks/gerenteMockData";
+
 // Lucide
 import { UserRoundSearch } from "lucide-react";
 
@@ -13,17 +16,15 @@ import { UserRoundSearch } from "lucide-react";
 import { useLanguage } from "../hooks/useLanguage";
 import { t } from "../lib/i18n";
 
-// ID do gerente logado (simulação simples)
-import { GERENTE_ID } from "../mocks/gerenteMockData";
-
 // Serviços
 import { ClienteService } from "../services/ClienteService";
+import { GerenteService } from "../services/GerenteService";
 
 export default function HomeGerente() {
   const { lang } = useLanguage();
 
   const [clientesPendentes, setClientesPendentes] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingPendentes, setLoadingPendentes] = useState(true);
   const [erroPendentes, setErroPendentes] = useState(null);
   const [meusClientes, setMeusClientes] = useState([]);
   const [loadingClientes, setLoadingClientes] = useState(true);
@@ -33,21 +34,29 @@ export default function HomeGerente() {
   useEffect(() => {
     async function carregarDados() {
       try {
+        setLoadingPendentes(true);
+        setLoadingClientes(true);
+
         const [pendentesResponse, meusClientesResponse] = await Promise.all([
           ClienteService.listarPendentes(),
 
-          ClienteService.listar(),
+          GerenteService.listarClientes(Gerente_CPF),
         ]);
 
         setClientesPendentes(pendentesResponse.data);
 
         setMeusClientes(meusClientesResponse.data);
+
+        setErroPendentes(null);
+        setErroClientes(null);
       } catch (err) {
         console.error(err);
 
         setErroPendentes("Erro ao carregar clientes pendentes");
+        setErroClientes("Erro ao carregar clientes");
       } finally {
-        setLoading(false);
+        setLoadingPendentes(false);
+        setLoadingClientes(false);
       }
     }
 
@@ -132,7 +141,7 @@ export default function HomeGerente() {
         >
           <ListaAprovacao
             clientes={clientesPendentes}
-            loading={loading}
+            loading={loadingPendentes}
             erro={erroPendentes}
             feedback={feedback}
             onAprovar={handleAprovar}
@@ -146,7 +155,11 @@ export default function HomeGerente() {
                       rounded-2xl border border-secundary/70 shadow-dourado-sutil
                       "
         >
-          <ListaClientes idGerente={GERENTE_ID} />
+          <ListaClientes
+            clientes={meusClientes}
+            loading={loadingClientes}
+            erro={erroClientes}
+          />
         </div>
       </div>
       {/* Container secundário | Botões de navegação + pódio */}
