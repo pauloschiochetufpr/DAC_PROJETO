@@ -15,19 +15,20 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@RequestMapping("/clientes")
 public class ClienteController {
 
     @Autowired
     private ClienteService service;
 
-        @PostMapping("/clientes")
-        public ResponseEntity<?> autocadastro(@RequestBody AutocadastroRequestDTO dto) {
-            service.autocadastro(dto);
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body("Solicitação de cadastro enviada. Aguarde a aprovação do gerente.");
-        }
+    @PostMapping
+    public ResponseEntity<?> autocadastro(@RequestBody AutocadastroRequestDTO dto) {
+        service.autocadastro(dto);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body("Solicitação de cadastro enviada. Aguarde a aprovação do gerente.");
+    }
 
-    @GetMapping("/clientes")
+    @GetMapping
     public ResponseEntity<?> listar(
             @RequestParam(value = "filtro", required = false) String filtro) {
 
@@ -50,25 +51,25 @@ public class ClienteController {
         return ResponseEntity.ok(todos);
     }
 
-    @GetMapping("/clientes/{cpf}")
+    @GetMapping("/{cpf}")
     public ResponseEntity<DadosClienteResponseDTO> consultar(@PathVariable String cpf) {
         return ResponseEntity.ok(service.consultarPorCpf(cpf));
     }
 
-    @PutMapping("/clientes/{cpf}")
+    @PutMapping("/{cpf}")
     public ResponseEntity<DadosClienteResponseDTO> atualizarPerfil(
             @PathVariable String cpf,
             @RequestBody PerfilRequestDTO dto) {
         return ResponseEntity.ok(service.atualizarPerfil(cpf, dto));
     }
 
-    @PostMapping("/clientes/{cpf}/aprovar")
+    @PostMapping("/{cpf}/aprovar")
     public ResponseEntity<?> aprovar(@PathVariable String cpf) {
         service.aprovarCliente(cpf);
         return ResponseEntity.ok("Cliente aprovado com sucesso.");
     }
 
-    @PostMapping("/clientes/{cpf}/rejeitar")
+    @PostMapping("/{cpf}/rejeitar")
     public ResponseEntity<?> rejeitar(
             @PathVariable String cpf,
             @RequestBody RejeitarClienteRequestDTO dto) {
