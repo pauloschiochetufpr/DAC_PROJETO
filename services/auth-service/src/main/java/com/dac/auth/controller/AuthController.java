@@ -3,6 +3,7 @@ package com.dac.auth.controller;
 // DTOs
 import com.dac.auth.dto.request.LoginRequestDTO;
 import com.dac.auth.dto.request.RefreshRequestDTO;
+import com.dac.auth.dto.response.ErrorResponseDTO;
 import com.dac.auth.dto.response.LoginResponseDTO;
 import com.dac.auth.dto.response.LogoutResponseDTO;
 import com.dac.auth.dto.response.RefreshResponseDTO;
@@ -18,7 +19,6 @@ import com.dac.auth.service.RefreshTokenService;
 // nimbus-jose-jwt
 import com.nimbusds.jwt.JWTClaimsSet;
 // jakarta
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 // Spring
@@ -44,23 +44,32 @@ public class AuthController {
 
     // login | autentica credenciais, emite access token JWE e seta cookie HttpOnly de refresh
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseDTO> login(
+    public ResponseEntity<?> login(
             @RequestBody LoginRequestDTO request,
             HttpServletRequest httpRequest,
             HttpServletResponse httpResponse) 
     {
 
+        if (request.getEmail() == null || request.getEmail().isBlank() ||
+            request.getPassword() == null || request.getPassword().isBlank() ||
+            request.getDeviceId() == null || request.getDeviceId().isBlank() ||
+            request.getDeviceName() == null || request.getDeviceName().isBlank()) 
+        {
+            return ResponseEntity.badRequest().body(new ErrorResponseDTO(400, "Campos obrigatórios ausentes ou em branco"));
+        }
+        
         // gateway injeta X-Forwarded-For via xfwd:true; fallback para remoteAddr em dev local
         String ip = httpRequest.getHeader("X-Forwarded-For");
-        if (ip == null || ip.isBlank()) ip = httpRequest.getRemoteAddr();
+        if (ip == null || ip.isBlank())
+            ip = httpRequest.getRemoteAddr();
+
 
         AuthService.LoginResult result = authService.login(request, ip);
 
-        Cookie refreshCookie = new Cookie("refreshToken", result.refreshId());
-        refreshCookie.setHttpOnly(true);
-        refreshCookie.setPath("/auth/refresh");
-        refreshCookie.setMaxAge(12 * 60 * 60); // 12 horas
-        httpResponse.addCookie(refreshCookie);
+        // SameSite=Lax via header manual | API Cookie do Jakarta não expõe setSameSite()
+        httpResponse.addHeader("Set-Cookie",
+            String.format("refreshToken=%s; Path=/auth/refresh; HttpOnly; Max-Age=%d; SameSite=Lax",
+                result.refreshId(), 12 * 60 * 60));
 
         return ResponseEntity.ok(result.response());
     }
@@ -95,11 +104,10 @@ public class AuthController {
                 usuario.getTipo()
             );
 
-            Cookie refreshCookie = new Cookie("refreshToken", newSession.getRefreshId());
-            refreshCookie.setHttpOnly(true);
-            refreshCookie.setPath("/auth/refresh");
-            refreshCookie.setMaxAge(12 * 60 * 60); // 12 horas
-            httpResponse.addCookie(refreshCookie);
+            // SameSite=Lax via header manual — API Cookie do Jakarta não expõe setSameSite()
+            httpResponse.addHeader("Set-Cookie",
+                String.format("refreshToken=%s; Path=/auth/refresh; HttpOnly; Max-Age=%d; SameSite=Lax",
+                    newSession.getRefreshId(), 12 * 60 * 60));
 
             RefreshResponseDTO response = new RefreshResponseDTO();
             response.setAccess_token(newToken);
@@ -130,11 +138,8 @@ public class AuthController {
         }
 
         // sobrescreve o cookie com maxAge=0 para forçar expiração no browser
-        Cookie refreshCookie = new Cookie("refreshToken", "");
-        refreshCookie.setHttpOnly(true);
-        refreshCookie.setPath("/auth/refresh");
-        refreshCookie.setMaxAge(0);
-        httpResponse.addCookie(refreshCookie);
+        httpResponse.addHeader("Set-Cookie",
+            "refreshToken=; Path=/auth/refresh; HttpOnly; Max-Age=0; SameSite=Lax");
 
         LogoutResponseDTO logoutResponse = new LogoutResponseDTO();
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
