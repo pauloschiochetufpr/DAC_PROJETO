@@ -5,7 +5,7 @@ spring:
     name: auth-service
   data:
     mongodb:
-      uri: mongodb://localhost:27017/auth_db
+      uri: mongodb://mongo:27017/auth_db
   rabbitmq:
     host: rabbitmq
     port: 5672
@@ -18,5 +18,5 @@ management:
         include: health
 
 jwt:
-  secret: ${JWT_SECRET:DAC_DEV_SECRET_2026_32_CHARS_MINIMUM_KEY}
+  secret: 'lç\\|fo,.,jwief:>23(*&{+{=§}})'
   expiration: 600000 # 600000ms = 10 minutos

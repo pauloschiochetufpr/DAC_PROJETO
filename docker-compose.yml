@@ -61,7 +61,7 @@ services:
     container_name: auth-service
     restart: unless-stopped
     environment:
-      JWT_SECRET: "DAC_DEV_SECRET_2026_32_CHARS_MINIMUM_KEY"
+      JWT_SECRET: "lç\\|fo,.,jwief:>23(*&{+{=§}})"
     depends_on:
       mongo:
         condition: service_healthy
@@ -169,7 +169,8 @@ services:
       saga-service:
         condition: service_healthy
     environment:
-      JWT_SECRET: "DAC_DEV_SECRET_2026_32_CHARS_MINIMUM_KEY"
+      JWT_SECRET: "lç\\|fo,.,jwief:>23(*&{+{=§}})"
+      CORS_ORIGIN: "http://localhost:8080"
     ports:
       - "3000:3000"
     healthcheck:

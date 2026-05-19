@@ -17,7 +17,7 @@ if (!JWT_SECRET) {
 
 // Targets dos microsserviços na rede interna do docker-compose
 const SERVICE_TARGETS = {
-  auth: "http://auth-service:8080/auth",
+  auth: "http://auth-service:8080",
   cliente: "http://cliente-service:8080",
   conta: "http://conta-service:8080",
   gerente: "http://gerente-service:8080",
@@ -157,7 +157,15 @@ async function authenticate(req, res, next) {
   next();
 }
 
-app.use(cors());
+// CORS_ORIGIN | origem permitida para credenciais (frontend em dev)
+const CORS_ORIGIN = process.env.CORS_ORIGIN || "http://localhost:5173";
+
+app.use(
+  cors({
+    origin: CORS_ORIGIN,
+    credentials: true,
+  }),
+);
 app.use(authenticate);
 
 // Proxies para os microsserviços via rede interna do docker-compose

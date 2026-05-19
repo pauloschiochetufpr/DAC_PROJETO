@@ -2,11 +2,11 @@ import axios from "axios";
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 
-//  Instância pública
-const axiosPublic = axios.create({ baseURL: BASE_URL });
+// Instância pública
+const axiosPublic = axios.create({ baseURL: BASE_URL, withCredentials: true });
 
-//  Instância protegida
-const axiosAuth = axios.create({ baseURL: BASE_URL });
+// Instância protegida
+const axiosAuth = axios.create({ baseURL: BASE_URL, withCredentials: true });
 
 axiosAuth.interceptors.request.use(
   (config) => {
