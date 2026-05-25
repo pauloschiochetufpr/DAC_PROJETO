@@ -6,9 +6,6 @@ import ListaClientes from "../components/gerente/ListaClientes";
 import Podium from "../components/listas/Podium";
 import BotaoPergaminho from "../components/UI/BotaoPergaminho";
 
-//mock
-import { Gerente_CPF } from "../mocks/gerenteMockData";
-
 // Lucide
 import { UserRoundSearch } from "lucide-react";
 
@@ -19,6 +16,9 @@ import { t } from "../lib/i18n";
 // Serviços
 import { ClienteService } from "../services/ClienteService";
 import { GerenteService } from "../services/GerenteService";
+
+// Utils
+import { getCpfUsuario } from "../utils/auth";
 
 export default function HomeGerente() {
   const { lang } = useLanguage();
@@ -31,6 +31,8 @@ export default function HomeGerente() {
   const [erroClientes, setErroClientes] = useState(null);
   const [feedback, setFeedback] = useState(null);
 
+  const cpfGerente = getCpfUsuario();
+
   useEffect(() => {
     async function carregarDados() {
       try {
@@ -40,7 +42,7 @@ export default function HomeGerente() {
         const [pendentesResponse, meusClientesResponse] = await Promise.all([
           ClienteService.listarPendentes(),
 
-          GerenteService.listarClientes(Gerente_CPF),
+          GerenteService.listarClientes(cpfGerente),
         ]);
 
         setClientesPendentes(pendentesResponse.data);

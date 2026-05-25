@@ -1,4 +1,4 @@
-import { axiosAuth } from "..config.js";
+import { axiosAuth } from "../config.js";
 
 export const GerenteService = {
   /** GET /gerentes */

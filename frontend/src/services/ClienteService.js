@@ -1,4 +1,4 @@
-import { axiosAuth } from "..config.js";
+import { axiosAuth } from "../config.js";
 
 export const ClienteService = {
   /** GET /clientes/:cpf */
