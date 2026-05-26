@@ -2,6 +2,7 @@ package com.dac.auth.service;
 
 // DTOs
 import com.dac.auth.dto.request.LoginRequestDTO;
+import com.dac.auth.dto.request.AtivarContaRequestDTO;
 import com.dac.auth.dto.response.LoginResponseDTO;
 // entidades
 import com.dac.auth.entity.Session;
@@ -15,11 +16,19 @@ import com.dac.auth.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
 public class AuthService {
+
+    private static final String STATUS_ATIVO = "ATIVO";
+    private static final String STATUS_PENDENTE_ATIVACAO = "PENDENTE_ATIVACAO";
 
     @Autowired
     private UsuarioRepository usuarioRepository;
@@ -44,6 +53,11 @@ public class AuthService {
         }
 
         Usuario usuario = usuarioOpt.get();
+
+        if (STATUS_PENDENTE_ATIVACAO.equalsIgnoreCase(usuario.getStatus())) {
+            throw new AuthenticationException("Conta pendente de ativacao");
+        }
+
         String senhaPersistida = usuario.getSenhaHash();
         String senhaInformada = request.getPassword();
         boolean senhaValida = false;
@@ -100,5 +114,49 @@ public class AuthService {
         response.setUsuario(usuarioDTO);
 
         return new LoginResult(response, session.getRefreshId());
+    }
+
+    public void ativarConta(AtivarContaRequestDTO request) {
+        if (request == null ||
+            request.getToken() == null || request.getToken().isBlank() ||
+            request.getSenha() == null || request.getSenha().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token e senha sao obrigatorios");
+        }
+
+        if (request.getSenha().length() < 6) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Senha deve ter ao menos 6 caracteres");
+        }
+
+        String tokenHash = sha256Hex(request.getToken().trim());
+        Usuario usuario = usuarioRepository.findByActivationTokenHash(tokenHash)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Token de ativacao invalido"));
+
+        if (!STATUS_PENDENTE_ATIVACAO.equalsIgnoreCase(usuario.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Conta nao esta pendente de ativacao");
+        }
+
+        if (usuario.getActivationExpiresAt() == null || usuario.getActivationExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token de ativacao expirado");
+        }
+
+        usuario.setSenhaHash(passwordEncoder.encode(request.getSenha()));
+        usuario.setStatus(STATUS_ATIVO);
+        usuario.setActivationUsedAt(LocalDateTime.now());
+        usuario.setActivationTokenHash(null);
+        usuario.setActivationExpiresAt(null);
+
+        usuarioRepository.save(usuario);
+    }
+
+    private String sha256Hex(String value) {
+        try {
+            byte[] hash = MessageDigest.getInstance("SHA-256")
+                .digest(value.getBytes(StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder(hash.length * 2);
+            for (byte b : hash) sb.append(String.format("%02x", b));
+            return sb.toString();
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao gerar hash do token", e);
+        }
     }
 }

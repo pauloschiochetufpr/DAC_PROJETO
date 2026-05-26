@@ -59,6 +59,7 @@ const OPEN_ROUTES = [
   { method: "POST", path: /^\/auth\/login$/ },
   { method: "POST", path: /^\/auth\/logout$/ },
   { method: "POST", path: /^\/auth\/refresh$/ },
+  { method: "POST", path: /^\/auth\/ativar-conta$/ },
   { method: "POST", path: /^\/login$/ },
   { method: "POST", path: /^\/logout$/ },
   { method: "POST", path: /^\/refresh$/ },
