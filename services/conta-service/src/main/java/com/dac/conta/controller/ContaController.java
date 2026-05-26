@@ -99,6 +99,11 @@ public class ContaController {
         return ResponseEntity.ok(contaService.saldoPositivoPorGerente());
     }
 
+    @GetMapping("/saldo-negativo-por-gerente")
+    public ResponseEntity<Map<String, Double>> saldoNegativoPorGerente() {
+        return ResponseEntity.ok(contaService.saldoNegativoPorGerente());
+    }
+
     @PostMapping("/redistribuir")
     public ResponseEntity<Void> redistribuir(@RequestBody RedistribuirRequestDTO request) {
         contaService.redistribuir(request);

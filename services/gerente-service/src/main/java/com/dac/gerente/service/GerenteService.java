@@ -44,6 +44,7 @@ public class GerenteService {
     public List<DadoGerente> listarTodos() {
         return gerenteRepository.findAllByOrderByNomeAsc()
                 .stream()
+                .filter(g -> g.getTipo() == TipoGerente.GERENTE)
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }

@@ -25,7 +25,7 @@ public class ClienteController {
     public ResponseEntity<?> autocadastro(@RequestBody AutocadastroRequestDTO dto) {
         service.autocadastro(dto);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body("Solicitação de cadastro enviada. Aguarde a aprovação do gerente.");
+                .body(java.util.Map.of("cpf", dto.getCpf(), "email", dto.getEmail()));
     }
 
     @GetMapping

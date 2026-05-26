@@ -88,10 +88,10 @@ public class ContaService {
         contaCUDRepository.save(conta);
 
         MovimentacaoCUD mov = criarMovimentacao(
-            TipoMovimentacao.DEPOSITO, null, numero, request.getValor());
+            TipoMovimentacao.DEPOSITO, numero, null, request.getValor());
 
         publicarEventoConta(conta);
-        publicarEventoMovimentacao(mov, null, conta.getClienteCpf());
+        publicarEventoMovimentacao(mov, conta.getClienteCpf(), null);
 
         return montarOperacaoResponse(numero, mov.getData(), conta.getSaldo());
     }
@@ -184,7 +184,7 @@ public class ContaService {
                 List<ItemExtratoResponseDTO> itens = movs.stream().map(m -> {
                     ItemExtratoResponseDTO item = new ItemExtratoResponseDTO();
                     item.setData(m.getDataHora());
-                    item.setTipo(m.getTipo());
+                    item.setTipo(mapearTipoMovimentacao(m.getTipo()));
                     item.setOrigem(m.getContaOrigem());
                     item.setDestino(m.getContaDestino());
                     item.setValor(m.getValor().doubleValue());
@@ -255,6 +255,18 @@ public class ContaService {
     // -------------------------
     public Map<String, Double> saldoPositivoPorGerente() {
         List<Object[]> rows = contaCUDRepository.somarSaldosPositivosPorGerente();
+        Map<String, Double> resultado = new HashMap<>();
+        for (Object[] row : rows) {
+            resultado.put((String) row[0], ((Number) row[1]).doubleValue());
+        }
+        return resultado;
+    }
+
+    // -------------------------
+    // GET /contas/saldo-negativo-por-gerente
+    // -------------------------
+    public Map<String, Double> saldoNegativoPorGerente() {
+        List<Object[]> rows = contaCUDRepository.somarSaldosNegativosPorGerente();
         Map<String, Double> resultado = new HashMap<>();
         for (Object[] row : rows) {
             resultado.put((String) row[0], ((Number) row[1]).doubleValue());
@@ -457,5 +469,16 @@ public class ContaService {
             }
         } while (contaCUDRepository.existsById(numero));
         return numero;
+    }
+
+    // Mapeia tipo de movimentação do enum para texto em português com acentos
+    private String mapearTipoMovimentacao(String tipo) {
+        if (tipo == null) return null;
+        return switch (tipo.toUpperCase()) {
+            case "DEPOSITO" -> "depósito";
+            case "SAQUE" -> "saque";
+            case "TRANSFERENCIA" -> "transferência";
+            default -> tipo.toLowerCase();
+        };
     }
 }

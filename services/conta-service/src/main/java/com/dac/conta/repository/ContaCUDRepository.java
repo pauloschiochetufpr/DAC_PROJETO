@@ -25,6 +25,11 @@ public interface ContaCUDRepository extends JpaRepository<ContaCUD, String> {
            "FROM ContaCUD c GROUP BY c.gerenteCpf")
     List<Object[]> somarSaldosPositivosPorGerente();
 
+    // Soma de saldos negativos por gerente: { cpfGerente -> somaNegativo }
+    @Query("SELECT c.gerenteCpf, COALESCE(SUM(CASE WHEN c.saldo < 0 THEN c.saldo ELSE 0 END), 0) " +
+           "FROM ContaCUD c GROUP BY c.gerenteCpf")
+    List<Object[]> somarSaldosNegativosPorGerente();
+
     // Conta com menor número de contas excluindo um gerente específico
     @Query("SELECT c.gerenteCpf FROM ContaCUD c WHERE c.gerenteCpf <> :excluir " +
            "GROUP BY c.gerenteCpf ORDER BY COUNT(c) ASC")

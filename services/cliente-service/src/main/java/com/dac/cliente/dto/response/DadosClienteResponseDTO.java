@@ -11,7 +11,7 @@ public class DadosClienteResponseDTO {
     private String estado;
     private Double salario;
     private String conta;
-    private String saldo;
+    private Double saldo;
     private Double limite;
     private String gerente;
     private String gerente_nome;
@@ -97,11 +97,13 @@ public class DadosClienteResponseDTO {
         this.conta = conta;
     }
 
-    public String getSaldo() {
+
+
+    public Double getSaldo() {
         return saldo;
     }
 
-    public void setSaldo(String saldo) {
+    public void setSaldo(Double saldo) {
         this.saldo = saldo;
     }
 
