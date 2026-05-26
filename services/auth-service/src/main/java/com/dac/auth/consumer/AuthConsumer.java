@@ -12,6 +12,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 
@@ -43,6 +46,9 @@ public class AuthConsumer {
         String email = msg.get("email");
         String senha = msg.get("senha");
         String tipo  = msg.get("tipo");
+        String status = msg.get("status");
+        String activationToken = msg.get("activationToken");
+        String activationExpiresAt = msg.get("activationExpiresAt");
 
         System.out.println("Auth: criando usuario para CPF " + cpf);
 
@@ -58,6 +64,24 @@ public class AuthConsumer {
         usuario.setEmail(email);
         usuario.setSenhaHash(hashIfNeeded(senha));
         usuario.setTipo(tipo);
+
+        if (status != null && !status.isBlank()) {
+            usuario.setStatus(status);
+        } else {
+            usuario.setStatus("ATIVO");
+        }
+
+        if (activationToken != null && !activationToken.isBlank()) {
+            usuario.setActivationTokenHash(sha256Hex(activationToken));
+        }
+
+        if (activationExpiresAt != null && !activationExpiresAt.isBlank()) {
+            try {
+                usuario.setActivationExpiresAt(LocalDateTime.parse(activationExpiresAt));
+            } catch (Exception ignored) {
+                // ignora data inválida para manter compatibilidade com payloads antigos
+            }
+        }
 
         usuarioRepository.save(usuario);
         System.out.println("Auth: usuario criado com sucesso para " + email);
@@ -101,5 +125,17 @@ public class AuthConsumer {
 
         usuarioRepository.delete(opt.get());
         System.out.println("Auth: usuario " + cpf + " removido.");
+    }
+
+    private String sha256Hex(String value) {
+        try {
+            byte[] hash = MessageDigest.getInstance("SHA-256")
+                .digest(value.getBytes(StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder(hash.length * 2);
+            for (byte b : hash) sb.append(String.format("%02x", b));
+            return sb.toString();
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao gerar hash do token", e);
+        }
     }
 }

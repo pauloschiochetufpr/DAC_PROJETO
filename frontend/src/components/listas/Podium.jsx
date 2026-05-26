@@ -1,6 +1,3 @@
-import { useState, useEffect } from "react";
-import { useGerente } from "../../hooks/useGerente";
-
 const PODIUM_VAZIO = [
   {
     id: "empty-2",
@@ -28,33 +25,18 @@ const PODIUM_VAZIO = [
   },
 ];
 
-export default function Podium() {
+export default function Podium({ clientes, erro }) {
   // Formatadores
-  const cpfMask = (cpf) =>
-    cpf.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
+  const cpfMask = (cpf) => {
+    if (!cpf || cpf.length !== 11) return cpf;
 
-  // Render da "chamada" do mock
-  const { getClientesFiltrados } = useGerente();
+    return cpf.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
+  };
 
-  //estados e listas
-  const [top3, setTop3] = useState([]);
-  const [erro, setErro] = useState(null);
-
-  //Chamada falsa
-  useEffect(() => {
-    getClientesFiltrados("melhores_clientes").then((res) => {
-      if (res.status === 200) {
-        setTop3(res.data);
-        setErro(null);
-      } else if (res.status === 401) {
-        setErro("O usuário não está logado");
-      } else if (res.status === 403) {
-        setErro("O usuário não tem permissão para efetuar esta operação");
-      } else {
-        setErro(res.message ?? "Erro ao buscar melhores clientes");
-      }
+  const fmtBRL = (valor) =>
+    Number(valor || 0).toLocaleString("pt-BR", {
+      minimumFractionDigits: 2,
     });
-  }, [getClientesFiltrados]);
 
   // Const's de style
   const heights = ["h-[10.5rem]", "h-[12.5rem]", "h-[8.5rem]"];
@@ -63,8 +45,15 @@ export default function Podium() {
 
   if (erro) return <p className="text-center text-red-500">{erro}</p>;
 
-  const vazio = top3.length < 3;
-  const dados = vazio ? PODIUM_VAZIO : [top3[1], top3[0], top3[2]];
+  const dadosBase = clientes.length > 0 ? [...clientes] : [...PODIUM_VAZIO];
+
+  while (dadosBase.length < 3) {
+    dadosBase.push(PODIUM_VAZIO[dadosBase.length]);
+  }
+
+  const ordenados = [...dadosBase].sort((a, b) => b.saldo - a.saldo);
+
+  const dados = [ordenados[1], ordenados[0], ordenados[2]];
 
   return (
     <div className="flex items-end justify-center gap-4 sm:scale-100 scale-[65%] select-none">
@@ -88,12 +77,7 @@ export default function Podium() {
               <p>
                 {cliente.cidade}/{cliente.estado}
               </p>
-              <p className="font-semibold">
-                R${" "}
-                {cliente.saldo.toLocaleString("pt-BR", {
-                  minimumFractionDigits: 2,
-                })}
-              </p>
+              <p className="font-semibold">R$ {fmtBRL(cliente.saldo)}</p>
             </div>
             <span className="pb-2 text-2xl font-bold select-none    ">
               {labels[i]}

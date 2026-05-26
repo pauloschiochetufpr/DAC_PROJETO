@@ -3,6 +3,7 @@ package com.dac.auth.controller;
 // DTOs
 import com.dac.auth.dto.request.LoginRequestDTO;
 import com.dac.auth.dto.request.RefreshRequestDTO;
+import com.dac.auth.dto.request.AtivarContaRequestDTO;
 import com.dac.auth.dto.response.ErrorResponseDTO;
 import com.dac.auth.dto.response.LoginResponseDTO;
 import com.dac.auth.dto.response.LogoutResponseDTO;
@@ -160,5 +161,11 @@ public class AuthController {
         }
 
         return ResponseEntity.ok(logoutResponse);
+    }
+
+    @PostMapping("/ativar-conta")
+    public ResponseEntity<?> ativarConta(@RequestBody AtivarContaRequestDTO request) {
+        authService.ativarConta(request);
+        return ResponseEntity.ok(java.util.Map.of("mensagem", "Conta ativada com sucesso."));
     }
 }

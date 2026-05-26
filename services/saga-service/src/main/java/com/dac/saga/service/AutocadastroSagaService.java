@@ -61,7 +61,7 @@ public class AutocadastroSagaService {
         String senhaTemporaria = gerarSenha();
         publicarUsuarioNoAuth(cpf, nome, email, senhaTemporaria);
 
-        System.out.println("Saga aprovação: conta criada e senha enviada para " + email);
+        System.out.println("Saga aprovação: conta criada e senha enviada para " + email + " - Senha: " + senhaTemporaria);
     }
 
     private Map<String, Object> selecionarGerenteComMenosClientes() {

@@ -3,10 +3,16 @@ import axios from "axios";
 const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 
 // Instância pública
-const axiosPublic = axios.create({ baseURL: BASE_URL, withCredentials: true });
+const axiosPublic = axios.create({
+  baseURL: BASE_URL,
+  withCredentials: true,
+});
 
 // Instância protegida
-const axiosAuth = axios.create({ baseURL: BASE_URL, withCredentials: true });
+const axiosAuth = axios.create({
+  baseURL: BASE_URL,
+  withCredentials: true,
+});
 
 axiosAuth.interceptors.request.use(
   (config) => {
@@ -118,6 +124,50 @@ export const API = {
     if (dataFim) params.dataFim = dataFim;
     return axiosAuth.get(`/contas/${numero}/extrato`, { params });
   },
+
+  // CLIENTE
+  /** GET /clientes/:cpf */
+  buscarPorCpf: (cpf) => axiosAuth.get(`/clientes/${cpf}`),
+
+  /** GET /clientes */
+  listar: () => axiosAuth.get("/clientes"),
+
+  /** GET /clientes requestParams */
+  listarComFiltro: (filtro) =>
+    axiosAuth.get("/clientes", {
+      params: { filtro },
+    }),
+
+  /** GET /clientes requestParams para_aprovar */
+  listarPendentes: () =>
+    API.listarClientesComParametro({
+      filtro: "para_aprovar",
+    }),
+
+  /** POST /clientes/:cpf/aprovar */
+  aprovar: (cpf) => axiosAuth.post(`/clientes/${cpf}/aprovar`),
+
+  /** POST /clientes/:cpf/rejeitar */
+  rejeitar: (cpf, motivo) =>
+    axiosAuth.post(`/clientes/${cpf}/rejeitar`, {
+      motivo,
+    }),
+
+  //GERENTE
+  /** GET /gerentes */
+  listar: () => axiosAuth.get("/gerentes"),
+
+  /** GET /gerentes/:cpf */
+  buscarPorCpf: (cpf) => axiosAuth.get(`/gerentes/${cpf}`),
+
+  /** PUT /gerentes/:cpf */
+  atualizar: (cpf, data) => axiosAuth.put(`/gerentes/${cpf}`, data),
+
+  /** DELETE /gerentes/:cpf */
+  excluir: (cpf) => axiosAuth.delete(`/gerentes/${cpf}`),
+
+  /** GET /gerentes/:cpf/clientes */
+  listarClientes: (cpf) => axiosAuth.get(`/gerentes/${cpf}/clientes`),
 
   // CONTA (protegido)
   /** GET /contas/por-cliente/:cpf */

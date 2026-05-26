@@ -67,6 +67,14 @@ public class AutocadastroRequestDTO {
         this.cep = cep;
     }
 
+    public String getCEP() {
+        return cep;
+    }
+
+    public void setCEP(String CEP) {
+        this.cep = CEP;
+    }
+
     public String getCidade() {
         return cidade;
     }

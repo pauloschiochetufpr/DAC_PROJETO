@@ -18,8 +18,13 @@ public class LoginResponseDTO {
     public String getToken_tipo() { return token_tipo; }
     public void setToken_tipo(String token_tipo) { this.token_tipo = token_tipo; }
 
+    public String getToken_type() { return token_tipo; }
+    public void setToken_type(String token_type) { this.token_tipo = token_type; }
+
     public String getTipo() { return tipo; }
-    public void setTipo(String tipo) { this.tipo = tipo; }
+    public void setTipo(String tipo) { 
+        this.tipo = tipo != null ? tipo.toUpperCase() : null; 
+    }
 
     public UsuarioDTO getUsuario() { return usuario; }
     public void setUsuario(UsuarioDTO usuario) { this.usuario = usuario; }
@@ -40,6 +45,6 @@ public class LoginResponseDTO {
         public void setEmail(String email) {
             this.email = email;
         }
-        
+
     }
 }

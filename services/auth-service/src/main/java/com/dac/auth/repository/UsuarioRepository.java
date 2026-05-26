@@ -14,4 +14,6 @@ public interface UsuarioRepository extends MongoRepository<Usuario, String> {
 
     // findByCpf | busca usuário pelo CPF para atualização ou remoção
     Optional<Usuario> findByCpf(String cpf);
+
+    Optional<Usuario> findByActivationTokenHash(String activationTokenHash);
 }

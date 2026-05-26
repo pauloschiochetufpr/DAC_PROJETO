@@ -6,9 +6,6 @@ import ListaClientes from "../components/gerente/ListaClientes";
 import Podium from "../components/listas/Podium";
 import BotaoPergaminho from "../components/UI/BotaoPergaminho";
 
-//mock
-import { Gerente_CPF } from "../mocks/gerenteMockData";
-
 // Lucide
 import { UserRoundSearch } from "lucide-react";
 
@@ -23,41 +20,73 @@ import { GerenteService } from "../services/GerenteService";
 export default function HomeGerente() {
   const { lang } = useLanguage();
 
+  // Clientes para aprovação
   const [clientesPendentes, setClientesPendentes] = useState([]);
   const [loadingPendentes, setLoadingPendentes] = useState(true);
   const [erroPendentes, setErroPendentes] = useState(null);
+
+  // Clientes do gerente
   const [meusClientes, setMeusClientes] = useState([]);
   const [loadingClientes, setLoadingClientes] = useState(true);
   const [erroClientes, setErroClientes] = useState(null);
+
+  // Melhores clientes
+  const [melhoresClientes, setMelhoresClientes] = useState([]);
+  const [erroMelhores, setErroMelhores] = useState(null);
+
   const [feedback, setFeedback] = useState(null);
 
   useEffect(() => {
     async function carregarDados() {
-      try {
-        setLoadingPendentes(true);
-        setLoadingClientes(true);
+      setLoadingPendentes(true);
+      setLoadingClientes(true);
 
-        const [pendentesResponse, meusClientesResponse] = await Promise.all([
-          ClienteService.listarPendentes(),
+      setErroPendentes(null);
+      setErroClientes(null);
+      setErroMelhores(null);
 
-          GerenteService.listarClientes(Gerente_CPF),
-        ]);
+      const [pendentesResult, clientesResult] = await Promise.allSettled([
+        ClienteService.listarPendentes(),
+        GerenteService.listarMeusClientes(),
+        ClienteService.listarComFiltro("melhores_clientes"),
+      ]);
 
-        setClientesPendentes(pendentesResponse.data);
+      // Pendentes
+      if (pendentesResult.status === "fulfilled") {
+        setClientesPendentes(pendentesResult.value);
+      } else {
+        console.error(pendentesResult.reason);
 
-        setMeusClientes(meusClientesResponse.data);
-
-        setErroPendentes(null);
-        setErroClientes(null);
-      } catch (err) {
-        console.error(err);
-
-        setErroPendentes("Erro ao carregar clientes pendentes");
-        setErroClientes("Erro ao carregar clientes");
-      } finally {
-        setLoadingPendentes(false);
-        setLoadingClientes(false);
+        setErroPendentes(
+          pendentesResult.reason.message ||
+            "Erro ao carregar clientes pendentes",
+        );
       }
+
+      // Clientes do gerente
+      if (clientesResult.status === "fulfilled") {
+        setMeusClientes(clientesResult.value);
+      } else {
+        console.error(clientesResult.reason);
+
+        setErroClientes(
+          clientesResult.reason.message || "Erro ao carregar clientes",
+        );
+      }
+
+      // Melhores clientes
+      if (melhoresResult.status === "fulfilled") {
+        setMelhoresClientes(melhoresResult.value);
+      } else {
+        console.error(melhoresResult.reason);
+
+        setErroMelhores(
+          melhoresResult.reason.message || "Erro ao carregar melhores clientes",
+        );
+      }
+
+      setLoadingPendentes(false);
+      setLoadingClientes(false);
     }
 
     carregarDados();
@@ -78,7 +107,7 @@ export default function HomeGerente() {
     } catch (err) {
       setFeedback({
         tipo: "erro",
-        msg: "Erro ao aprovar cliente",
+        msg: err.message,
       });
 
       return false;
@@ -95,12 +124,14 @@ export default function HomeGerente() {
         tipo: "sucesso",
         msg: "Cliente rejeitado",
       });
+
       return true;
     } catch (err) {
       setFeedback({
         tipo: "erro",
-        msg: "Erro ao rejeitar cliente",
+        msg: err.message,
       });
+
       return false;
     }
   }
@@ -166,7 +197,7 @@ export default function HomeGerente() {
       <div className="xl:flex-row flex-col gap-10 flex h-fit w-full mt-10 md:px-32 z-[200]">
         <div className="w-full h-fit justify-center items-center flex">
           <div className="w-screen xl:w-fit h-fit sm:py-16 xl:px-10 xl:py-8 bg-black/20 shadow-inner shadow-black/70 md:rounded-md">
-            <Podium />
+            <Podium clientes={melhoresClientes} erro={erroMelhores} />
           </div>
         </div>
         <div className="w-full h-fit justify-center flex flex-row xl:mt-14">
