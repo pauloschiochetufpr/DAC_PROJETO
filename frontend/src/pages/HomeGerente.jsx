@@ -20,13 +20,19 @@ import { GerenteService } from "../services/GerenteService";
 export default function HomeGerente() {
   const { lang } = useLanguage();
 
+  // Clientes para aprovação
   const [clientesPendentes, setClientesPendentes] = useState([]);
   const [loadingPendentes, setLoadingPendentes] = useState(true);
   const [erroPendentes, setErroPendentes] = useState(null);
 
+  // Clientes do gerente
   const [meusClientes, setMeusClientes] = useState([]);
   const [loadingClientes, setLoadingClientes] = useState(true);
   const [erroClientes, setErroClientes] = useState(null);
+
+  // Melhores clientes
+  const [melhoresClientes, setMelhoresClientes] = useState([]);
+  const [erroMelhores, setErroMelhores] = useState(null);
 
   const [feedback, setFeedback] = useState(null);
 
@@ -37,10 +43,12 @@ export default function HomeGerente() {
 
       setErroPendentes(null);
       setErroClientes(null);
+      setErroMelhores(null);
 
       const [pendentesResult, clientesResult] = await Promise.allSettled([
         ClienteService.listarPendentes(),
         GerenteService.listarMeusClientes(),
+        ClienteService.listarComFiltro("melhores_clientes"),
       ]);
 
       // Pendentes
@@ -63,6 +71,17 @@ export default function HomeGerente() {
 
         setErroClientes(
           clientesResult.reason.message || "Erro ao carregar clientes",
+        );
+      }
+
+      // Melhores clientes
+      if (melhoresResult.status === "fulfilled") {
+        setMelhoresClientes(melhoresResult.value);
+      } else {
+        console.error(melhoresResult.reason);
+
+        setErroMelhores(
+          melhoresResult.reason.message || "Erro ao carregar melhores clientes",
         );
       }
 
@@ -178,7 +197,7 @@ export default function HomeGerente() {
       <div className="xl:flex-row flex-col gap-10 flex h-fit w-full mt-10 md:px-32 z-[200]">
         <div className="w-full h-fit justify-center items-center flex">
           <div className="w-screen xl:w-fit h-fit sm:py-16 xl:px-10 xl:py-8 bg-black/20 shadow-inner shadow-black/70 md:rounded-md">
-            <Podium />
+            <Podium clientes={melhoresClientes} erro={erroMelhores} />
           </div>
         </div>
         <div className="w-full h-fit justify-center flex flex-row xl:mt-14">
