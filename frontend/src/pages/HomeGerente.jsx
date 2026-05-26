@@ -17,49 +17,57 @@ import { t } from "../lib/i18n";
 import { ClienteService } from "../services/ClienteService";
 import { GerenteService } from "../services/GerenteService";
 
-// Utils
-import { getCpfUsuario } from "../utils/auth";
-
 export default function HomeGerente() {
   const { lang } = useLanguage();
 
   const [clientesPendentes, setClientesPendentes] = useState([]);
   const [loadingPendentes, setLoadingPendentes] = useState(true);
   const [erroPendentes, setErroPendentes] = useState(null);
+
   const [meusClientes, setMeusClientes] = useState([]);
   const [loadingClientes, setLoadingClientes] = useState(true);
   const [erroClientes, setErroClientes] = useState(null);
-  const [feedback, setFeedback] = useState(null);
 
-  const cpfGerente = getCpfUsuario();
+  const [feedback, setFeedback] = useState(null);
 
   useEffect(() => {
     async function carregarDados() {
-      try {
-        setLoadingPendentes(true);
-        setLoadingClientes(true);
+      setLoadingPendentes(true);
+      setLoadingClientes(true);
 
-        const [pendentesResponse, meusClientesResponse] = await Promise.all([
-          ClienteService.listarPendentes(),
+      setErroPendentes(null);
+      setErroClientes(null);
 
-          GerenteService.listarClientes(cpfGerente),
-        ]);
+      const [pendentesResult, clientesResult] = await Promise.allSettled([
+        ClienteService.listarPendentes(),
+        GerenteService.listarMeusClientes(),
+      ]);
 
-        setClientesPendentes(pendentesResponse.data);
+      // Pendentes
+      if (pendentesResult.status === "fulfilled") {
+        setClientesPendentes(pendentesResult.value);
+      } else {
+        console.error(pendentesResult.reason);
 
-        setMeusClientes(meusClientesResponse.data);
-
-        setErroPendentes(null);
-        setErroClientes(null);
-      } catch (err) {
-        console.error(err);
-
-        setErroPendentes("Erro ao carregar clientes pendentes");
-        setErroClientes("Erro ao carregar clientes");
-      } finally {
-        setLoadingPendentes(false);
-        setLoadingClientes(false);
+        setErroPendentes(
+          pendentesResult.reason.message ||
+            "Erro ao carregar clientes pendentes",
+        );
       }
+
+      // Clientes do gerente
+      if (clientesResult.status === "fulfilled") {
+        setMeusClientes(clientesResult.value);
+      } else {
+        console.error(clientesResult.reason);
+
+        setErroClientes(
+          clientesResult.reason.message || "Erro ao carregar clientes",
+        );
+      }
+
+      setLoadingPendentes(false);
+      setLoadingClientes(false);
     }
 
     carregarDados();
@@ -80,7 +88,7 @@ export default function HomeGerente() {
     } catch (err) {
       setFeedback({
         tipo: "erro",
-        msg: "Erro ao aprovar cliente",
+        msg: err.message,
       });
 
       return false;
@@ -97,12 +105,14 @@ export default function HomeGerente() {
         tipo: "sucesso",
         msg: "Cliente rejeitado",
       });
+
       return true;
     } catch (err) {
       setFeedback({
         tipo: "erro",
-        msg: "Erro ao rejeitar cliente",
+        msg: err.message,
       });
+
       return false;
     }
   }

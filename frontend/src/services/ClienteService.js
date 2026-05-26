@@ -1,30 +1,66 @@
-import { axiosAuth } from "../config.js";
+import { API } from "../config.js";
+import { getHttpErrorMessage } from "../utils/httpError.js";
 
 export const ClienteService = {
-  /** GET /clientes/:cpf */
-  buscarPorCpf: (cpf) => axiosAuth.get(`/clientes/${cpf}`),
+  buscarPorCpf: async (cpf) => {
+    try {
+      const response = await API.buscarPorCpf(cpf);
 
-  /** GET /clientes */
-  listar: () => axiosAuth.get("/clientes"),
+      return response.data;
+    } catch (err) {
+      throw new Error(getHttpErrorMessage(err, "Erro ao buscar cliente"));
+    }
+  },
 
-  /** GET /clientes requestParams */
-  listarComFiltro: (filtro) =>
-    axiosAuth.get("/clientes", {
-      params: { filtro },
-    }),
+  listar: async () => {
+    try {
+      const response = await API.listar();
 
-  /** GET /clientes requestParams para_aprovar */
-  listarPendentes: () =>
-    API.listarClientesComParametro({
-      filtro: "para_aprovar",
-    }),
+      return response.data;
+    } catch (err) {
+      throw new Error(getHttpErrorMessage(err, "Erro ao listar clientes"));
+    }
+  },
 
-  /** POST /clientes/:cpf/aprovar */
-  aprovar: (cpf) => axiosAuth.post(`/clientes/${cpf}/aprovar`),
+  listarComFiltro: async (filtro) => {
+    try {
+      const response = await API.listarComFiltro(filtro);
 
-  /** POST /clientes/:cpf/rejeitar */
-  rejeitar: (cpf, motivo) =>
-    axiosAuth.post(`/clientes/${cpf}/rejeitar`, {
-      motivo,
-    }),
+      return response.data;
+    } catch (err) {
+      throw new Error(getHttpErrorMessage(err, "Erro ao filtrar clientes"));
+    }
+  },
+
+  listarPendentes: async () => {
+    try {
+      const response = await API.listarComFiltro("para_aprovar");
+
+      return response.data;
+    } catch (err) {
+      throw new Error(
+        getHttpErrorMessage(err, "Erro ao listar clientes pendentes"),
+      );
+    }
+  },
+
+  aprovar: async (cpf) => {
+    try {
+      const response = await API.aprovar(cpf);
+
+      return response.data;
+    } catch (err) {
+      throw new Error(getHttpErrorMessage(err, "Erro ao aprovar cliente"));
+    }
+  },
+
+  rejeitar: async (cpf, motivo) => {
+    try {
+      const response = await API.rejeitar(cpf, { motivo });
+
+      return response.data;
+    } catch (err) {
+      throw new Error(getHttpErrorMessage(err, "Erro ao rejeitar cliente"));
+    }
+  },
 };
