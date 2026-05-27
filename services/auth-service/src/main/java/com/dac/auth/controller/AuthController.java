@@ -66,9 +66,9 @@ public class AuthController {
 
         AuthService.LoginResult result = authService.login(request, ip);
 
-        // SameSite=Lax via header manual | API Cookie do Jakarta não expõe setSameSite()
+        // SameSite=Strict via header manual | API Cookie do Jakarta não expõe setSameSite()
         httpResponse.addHeader("Set-Cookie",
-            String.format("refreshToken=%s; Path=/auth/refresh; HttpOnly; Max-Age=%d; SameSite=Lax",
+            String.format("refreshToken=%s; Path=/; HttpOnly; Max-Age=%d; SameSite=Strict",
                 result.refreshId(), 12 * 60 * 60));
 
         return ResponseEntity.ok(result.response());
@@ -104,9 +104,9 @@ public class AuthController {
                 usuario.getTipo()
             );
 
-            // SameSite=Lax via header manual — API Cookie do Jakarta não expõe setSameSite()
+            // SameSite=Strict via header manual — API Cookie do Jakarta não expõe setSameSite()
             httpResponse.addHeader("Set-Cookie",
-                String.format("refreshToken=%s; Path=/auth/refresh; HttpOnly; Max-Age=%d; SameSite=Lax",
+                String.format("refreshToken=%s; Path=/; HttpOnly; Max-Age=%d; SameSite=Strict",
                     newSession.getRefreshId(), 12 * 60 * 60));
 
             RefreshResponseDTO response = new RefreshResponseDTO();
@@ -139,7 +139,7 @@ public class AuthController {
 
         // sobrescreve o cookie com maxAge=0 para forçar expiração no browser
         httpResponse.addHeader("Set-Cookie",
-            "refreshToken=; Path=/auth/refresh; HttpOnly; Max-Age=0; SameSite=Lax");
+            "refreshToken=; Path=/; HttpOnly; Max-Age=0; SameSite=Strict");
 
         LogoutResponseDTO logoutResponse = new LogoutResponseDTO();
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
