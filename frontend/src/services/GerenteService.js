@@ -5,7 +5,7 @@ import { getCpfUsuario } from "../utils/auth";
 export const GerenteService = {
   listar: async () => {
     try {
-      const response = await API.listar();
+      const response = await API.listarGerentes();
 
       return response.data;
     } catch (err) {
@@ -15,7 +15,7 @@ export const GerenteService = {
 
   buscarPorCpf: async (cpf) => {
     try {
-      const response = await API.buscarPorCpf(cpf);
+      const response = await API.buscarGerentePorCpf(cpf);
 
       return response.data;
     } catch (err) {
@@ -45,7 +45,7 @@ export const GerenteService = {
 
   listarClientes: async (cpf) => {
     try {
-      const response = await API.listarClientes(cpf);
+      const response = await API.listarClientesGerente(cpf);
 
       return response.data;
     } catch (err) {
@@ -63,7 +63,7 @@ export const GerenteService = {
         throw new Error("Usuário não autenticado");
       }
 
-      const response = await API.listarClientes(cpf);
+      const response = await API.listarClientesGerente(cpf);
 
       return response.data;
     } catch (err) {

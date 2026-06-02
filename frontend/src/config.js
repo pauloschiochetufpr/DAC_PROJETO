@@ -127,10 +127,10 @@ export const API = {
 
   // CLIENTE
   /** GET /clientes/:cpf */
-  buscarPorCpf: (cpf) => axiosAuth.get(`/clientes/${cpf}`),
+  buscarClientePorCpf: (cpf) => axiosAuth.get(`/clientes/${cpf}`),
 
   /** GET /clientes */
-  listar: () => axiosAuth.get("/clientes"),
+  listarClientes: () => axiosAuth.get("/clientes"),
 
   /** GET /clientes requestParams */
   listarComFiltro: (filtro) =>
@@ -155,10 +155,10 @@ export const API = {
 
   //GERENTE
   /** GET /gerentes */
-  listar: () => axiosAuth.get("/gerentes"),
+  listarGerentes: () => axiosAuth.get("/gerentes"),
 
   /** GET /gerentes/:cpf */
-  buscarPorCpf: (cpf) => axiosAuth.get(`/gerentes/${cpf}`),
+  buscarGerentePorCpf: (cpf) => axiosAuth.get(`/gerentes/${cpf}`),
 
   /** PUT /gerentes/:cpf */
   atualizar: (cpf, data) => axiosAuth.put(`/gerentes/${cpf}`, data),
@@ -167,7 +167,7 @@ export const API = {
   excluir: (cpf) => axiosAuth.delete(`/gerentes/${cpf}`),
 
   /** GET /gerentes/:cpf/clientes */
-  listarClientes: (cpf) => axiosAuth.get(`/gerentes/${cpf}/clientes`),
+  listarClientesGerente: (cpf) => axiosAuth.get(`/gerentes/${cpf}/clientes`),
 
   // CONTA (protegido)
   /** GET /contas/por-cliente/:cpf */

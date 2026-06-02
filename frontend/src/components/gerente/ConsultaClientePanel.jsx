@@ -1,8 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 
-// Mock's
-import { useGerente } from "../../hooks/useGerente";
-
 // SVG's
 import WaveSimpleRedReverse from "../WaveSimpleRedReverse";
 
@@ -15,12 +12,17 @@ import {
   UserRoundSearch,
 } from "lucide-react";
 
-// Componente principal
-export default function ConsultaClientePanel() {
-  const { getClientePorCpf, clientes } = useGerente();
+// services
+import { ClienteService } from "../../services/ClienteService";
 
+// Componente principal
+export default function ConsultaClientePanel({
+  clientes,
+  loadingClientes,
+  erroClientes,
+}) {
   // States
-  const [cpfInput, setCpfInput] = useState("");
+  const [busca, setBusca] = useState("");
   const [mostrarPopup, setMostrarPopup] = useState(false);
   const [loading, setLoading] = useState(false);
   const [cliente, setCliente] = useState(null);
@@ -31,10 +33,16 @@ export default function ConsultaClientePanel() {
 
   // Autocomplete
   const sugestoes = useMemo(() => {
-    const termo = cpfInput.trim().toLowerCase();
+    const termo = busca.trim().toLowerCase();
+
     if (!termo) return [];
-    return clientes.filter((c) => c.cpf.includes(termo)).slice(0, 6);
-  }, [cpfInput, clientes]);
+
+    return clientes
+      .filter(
+        (c) => c.cpf.includes(termo) || c.nome.toLowerCase().includes(termo),
+      )
+      .slice(0, 6);
+  }, [busca, clientes]);
 
   // Fecha popup ao clicar fora do input
   useEffect(() => {
@@ -51,7 +59,8 @@ export default function ConsultaClientePanel() {
 
   // Executa a consulta com o CPF informado (ou o digitado no input)
   const pesquisar = async (cpfOverride) => {
-    const term = (cpfOverride ?? cpfInput).trim();
+    const term = (cpfOverride ?? busca).trim();
+
     if (!term) return;
 
     setMostrarPopup(false);
@@ -59,19 +68,20 @@ export default function ConsultaClientePanel() {
     setCliente(null);
     setErro(null);
 
-    const res = await getClientePorCpf(term);
-    setLoading(false);
+    try {
+      const data = await ClienteService.buscarPorCpf(term);
 
-    if (res.status === 200) {
-      setCliente(res.data);
-    } else {
-      setErro(res.message || "Cliente não encontrado.");
+      setCliente(data);
+    } catch (err) {
+      setErro(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   // Clique em uma sugestão do popup
   const selecionarSugestao = (c) => {
-    setCpfInput(c.cpf);
+    setBusca(c.cpf);
     setMostrarPopup(false);
     pesquisar(c.cpf);
   };
@@ -127,9 +137,9 @@ export default function ConsultaClientePanel() {
           />
           <input
             type="text"
-            value={cpfInput}
+            value={busca}
             onChange={(e) => {
-              setCpfInput(e.target.value);
+              setBusca(e.target.value);
               setMostrarPopup(true);
             }}
             onKeyDown={(e) => e.key === "Enter" && pesquisar()}
@@ -218,6 +228,7 @@ export default function ConsultaClientePanel() {
               label="Salário"
               value={temDados ? fmtBRL(cliente.salario) : "—"}
             />
+            <Campo label="CEP" value={temDados ? cliente.cep : "—"} />
             <Campo label="Endereço" value={temDados ? cliente.endereco : "—"} />
             <Campo
               label="Cidade / UF"

@@ -1,7 +1,33 @@
+import { useState, useEffect } from "react";
+
 // Componentes
 import ConsultaClientePanel from "../components/gerente/ConsultaClientePanel";
 
+// Serviços
+import { ClienteService } from "../services/ClienteService";
+
 export default function ConsultaEspecializada() {
+  const [clientes, setClientes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState(null);
+
+  useEffect(() => {
+    async function carregarClientes() {
+      try {
+        const data = await ClienteService.listar();
+
+        setClientes(data);
+        setErro(null);
+      } catch (err) {
+        setErro(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    carregarClientes();
+  }, []);
+
   return (
     <div
       className="relative flex flex-col items-center w-full min-h-screen
@@ -22,7 +48,11 @@ export default function ConsultaEspecializada() {
                     "
       >
         <div className="h-full w-full px-2 md:px-4 sm:rounded-2xl overflow-hidden relative">
-          <ConsultaClientePanel />
+          <ConsultaClientePanel
+            clientes={clientes}
+            loading={loading}
+            erro={erro}
+          />
         </div>
       </div>
     </div>

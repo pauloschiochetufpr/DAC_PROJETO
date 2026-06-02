@@ -321,43 +321,6 @@ public class ClienteService {
         }
     }
 
-    // HTTP client helpers para buscar dados do conta-service
-
-    private Map<String, Object> buscarContaPorCliente(String cpf) {
-        try {
-            String json = httpGet(contaUrl + "/contas/por-cliente/" + cpf);
-            return objectMapper.readValue(json, new TypeReference<Map<String, Object>>() {});
-        } catch (Exception e) {
-            // Cliente pode não ter conta ainda
-            return null;
-        }
-    }
-
-    private String httpGet(String url) throws Exception {
-        HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create(url))
-            .GET()
-            .build();
-        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        if (response.statusCode() >= 400) {
-            throw new RuntimeException("HTTP " + response.statusCode() + ": " + response.body());
-        }
-        return response.body();
-    }
-
-    private String httpPut(String url, String jsonBody) throws Exception {
-        HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create(url))
-            .header("Content-Type", "application/json")
-            .PUT(HttpRequest.BodyPublishers.ofString(jsonBody))
-            .build();
-        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        if (response.statusCode() >= 400) {
-            throw new RuntimeException("HTTP " + response.statusCode() + ": " + response.body());
-        }
-        return response.body();
-    }
-
     // -------------------------
     // HTTP client helpers para buscar dados do conta-service
     // -------------------------

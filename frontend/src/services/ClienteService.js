@@ -4,7 +4,7 @@ import { getHttpErrorMessage } from "../utils/httpError.js";
 export const ClienteService = {
   buscarPorCpf: async (cpf) => {
     try {
-      const response = await API.buscarPorCpf(cpf);
+      const response = await API.buscarClientePorCpf(cpf);
 
       return response.data;
     } catch (err) {
@@ -14,7 +14,7 @@ export const ClienteService = {
 
   listar: async () => {
     try {
-      const response = await API.listar();
+      const response = await API.listarClientes();
 
       return response.data;
     } catch (err) {
