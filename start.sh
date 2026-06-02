@@ -90,6 +90,34 @@ mvn_bin() {
     fi
 }
 
+# fix_docker_creds | remove credsStore quebrado do docker config (credencial Windows inacessivel no WSL)
+fix_docker_creds() {
+    local config="$HOME/.docker/config.json"
+    [ -f "$config" ] || return 0
+    grep -q '"credsStore"' "$config" 2>/dev/null || return 0
+    if command -v python3 &>/dev/null; then
+        python3 - "$config" <<'EOF'
+import sys, json
+p = sys.argv[1]
+with open(p) as f: d = json.load(f)
+d.pop('credsStore', None)
+with open(p, 'w') as f: json.dump(d, f, indent=2)
+EOF
+    else
+        sed -i '/"credsStore"/d' "$config" 2>/dev/null || true
+    fi
+}
+
+# ensure_maven_image | baixa a imagem maven se nao existir localmente
+ensure_maven_image() {
+    local image="maven:3.9-eclipse-temurin-17"
+    if docker image inspect "$image" &>/dev/null; then
+        return 0
+    fi
+    echo -e "\n${YELLOW}Imagem $image nao encontrada. Baixando (pode demorar na primeira vez)...${RESET}"
+    docker pull "$image"
+}
+
 # strip_bom | remove BOM (UTF-8) de todos os arquivos .java de um servico
 strip_bom() {
     local path="$1"
@@ -112,6 +140,7 @@ compile_service() {
     else
         # maven:3.9-eclipse-temurin-17 ja tem mvn + JDK sem precisar instalar nada
         # volume masterbank-maven-cache reutiliza dependencias entre compilacoes
+        ensure_maven_image || return 1
         run_step "Compilando $name (mvn via Docker)" \
             docker run --rm \
                 -e JAVA_TOOL_OPTIONS="-Dfile.encoding=UTF-8" \
@@ -393,6 +422,9 @@ cleanup() {
 
 # captura Ctrl+C e SIGTERM para derrubar tudo ao sair
 trap cleanup SIGINT SIGTERM
+
+# corrige credential helper do Docker antes de qualquer operacao
+fix_docker_creds
 
 # exibe banner e apresenta menu de boot
 banner
