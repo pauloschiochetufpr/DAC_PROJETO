@@ -13,8 +13,11 @@ import ConsultaEspecializada from "./pages/ConsultaEspecializada";
 import ExtratoGeral from "./components/listas/ExtratoGeral";
 import GerenciarGerentes from "./pages/GerenciarGerentes";
 
-//mock
-import { useBanco } from "./hooks/useBanco";
+// useAuth
+import { useAuth } from "./hooks/useAuth";
+
+// useTokenGuard
+import { useTokenGuard } from "./hooks/useTokenGuard";
 
 function normalizarTipoUsuario(tipo) {
   if (
@@ -38,7 +41,8 @@ function normalizarTipoUsuario(tipo) {
 }
 
 export default function App() {
-  const { usuario } = useBanco();
+  useTokenGuard();
+  const { usuario } = useAuth();
   const role = normalizarTipoUsuario(usuario?.tipo);
   let HomeCorreto;
 
@@ -56,7 +60,7 @@ export default function App() {
   return (
     <MainLayout>
       <Routes>
-        <Route path="/" element={usuario ? HomeCorreto : <Login />} />
+        <Route path="/" element={HomeCorreto ?? null} />
         <Route
           path="/consulta_especializada"
           element={<ConsultaEspecializada />}

@@ -102,11 +102,11 @@ export default function Login() {
 
         {/* Left Side - Branding */}
         <div className="hidden lg:flex flex-col justify-center items-start w-1/2 p-16 text-white">
-          <div className="bg-black/30 p-6 rounded-3xl">
-            <h1 className="text-8xl font-long-cang text-secundary mb-6">
+          <div className="bg-black/50 px-12 py-12 gap-6 rounded-2xl select-none">
+            <h1 className="text-8xl font-long-cang text-secundary w-full text-center">
               {t(lang, "LoginPage.welcomeTitle")}
             </h1>
-            <p className="text-lg text-zinc-200 max-w-2xl">
+            <p className="text-lg text-zinc-200 max-w-2xl text-pretty">
               {t(lang, "LoginPage.welcomeDescription")}
             </p>
           </div>

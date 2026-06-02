@@ -1,19 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import { BancoContext } from "./banco.context";
 import { contaMockInicial, CONTA_CLIENTE } from "../mocks/extratoMockData";
-import { perfilMockInicial } from "../mocks/perfilMockData";
 import { toBrasiliaIso } from "../lib/dataUtils";
-
-const AUTH_USER_STORAGE_KEY = "auth_user";
-
-function readStoredAuthUser() {
-  try {
-    const stored = localStorage.getItem(AUTH_USER_STORAGE_KEY);
-    return stored ? JSON.parse(stored) : null;
-  } catch {
-    return null;
-  }
-}
 
 // Calcula delta de saldo (positivo = crédito, negativo = débito)
 const calcularDelta = (tipo, origem, valor) => {
@@ -31,9 +19,9 @@ export function BancoProvider({ children }) {
     contaMockInicial.movimentacoes,
   );
 
-  const [usuario, setUsuario] = useState(() => readStoredAuthUser());
-  const [client, setClient] = useState(perfilMockInicial.client);
-  const [contaInfo] = useState(perfilMockInicial.contaInfo);
+  // Dados financeiros e de perfil do cliente — preenchidos via API
+  const [client, setClient] = useState({});
+  const [contaInfo] = useState({});
 
   const atualizarPerfil = useCallback((novosDados) => {
     return new Promise((resolve) => {
@@ -54,17 +42,6 @@ export function BancoProvider({ children }) {
         message: "Perfil atualizado com sucesso.",
       });
     });
-  }, []);
-
-  const salvarUsuarioAutenticado = useCallback((dadosUsuario) => {
-    setUsuario(dadosUsuario);
-    localStorage.setItem(AUTH_USER_STORAGE_KEY, JSON.stringify(dadosUsuario));
-  }, []);
-
-  const limparUsuarioAutenticado = useCallback(() => {
-    setUsuario(null);
-    localStorage.removeItem(AUTH_USER_STORAGE_KEY);
-    localStorage.removeItem("access_token");
   }, []);
 
   // Ref para leitura síncrona do saldo dentro da Promise sem stale closure
@@ -110,9 +87,6 @@ export function BancoProvider({ children }) {
         client,
         contaInfo,
         atualizarPerfil,
-        usuario,
-        salvarUsuarioAutenticado,
-        limparUsuarioAutenticado,
       }}
     >
       {children}

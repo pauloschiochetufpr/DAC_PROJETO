@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useBanco } from "../hooks/useBanco";
+import { useAuth } from "../hooks/useAuth";
 import { MetalSurface } from "../components/MetalSurface";
 import WaveSimpleRed from "../components/WaveSimpleRed";
 import SecundaryBorder from "../assets/icons/SecundaryBorder.svg";
@@ -13,6 +14,7 @@ import { t } from "../lib/i18n";
 export default function Perfil() {
   const { lang } = useLanguage();
   const { client, contaInfo, atualizarPerfil, saldo } = useBanco();
+  const { usuario } = useAuth();
   if (!client || !contaInfo) {
     return <div>Carregando...</div>;
   }
@@ -43,12 +45,15 @@ export default function Perfil() {
     estado: "state",
   };
 
-  // mantém form sincronizado com o provider
+  // mantém form sincronizado mesclando dados de identidade do usuario com dados financeiros do client
   useEffect(() => {
-    if (client) {
-      setForm(client);
-    }
-  }, [client]);
+    setForm({
+      nome: usuario?.nome ?? "",
+      cpf: usuario?.cpf ?? "",
+      email: usuario?.email ?? "",
+      ...client,
+    });
+  }, [client, usuario]);
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -70,7 +75,12 @@ export default function Perfil() {
   }
 
   function handleEdit() {
-    setForm(client);
+    setForm({
+      nome: usuario?.nome ?? "",
+      cpf: usuario?.cpf ?? "",
+      email: usuario?.email ?? "",
+      ...client,
+    });
     setIsEditing(true);
   }
 
@@ -81,7 +91,12 @@ export default function Perfil() {
   }
 
   function handleCancel() {
-    setForm(client);
+    setForm({
+      nome: usuario?.nome ?? "",
+      cpf: usuario?.cpf ?? "",
+      email: usuario?.email ?? "",
+      ...client,
+    });
     setIsEditing(false);
   }
 
@@ -234,7 +249,9 @@ export default function Perfil() {
                                 value={
                                   isEditing
                                     ? (form?.[f.key] ?? "")
-                                    : (client?.[f.key] ?? "")
+                                    : (client?.[f.key] ??
+                                      usuario?.[f.key] ??
+                                      "")
                                 }
                                 onChange={handleChange}
                                 disabled={!isFieldEditable}
