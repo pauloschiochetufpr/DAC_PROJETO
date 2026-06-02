@@ -55,6 +55,63 @@ public class GerenteService {
         return toDTO(gerente);
     }
 
+    public List<Map<String, Object>> dashboardGerentes() {
+        List<DadoGerente> gerentes = listarTodos();
+
+        // Busca saldos positivos e negativos agrupados por gerente
+        Map<String, Double> saldoPos;
+        Map<String, Double> saldoNeg;
+        try {
+            String posJson = httpGet(contaUrl + "/contas/saldo-positivo-por-gerente");
+            saldoPos = objectMapper.readValue(posJson, new TypeReference<Map<String, Double>>() {});
+        } catch (Exception e) {
+            saldoPos = new HashMap<>();
+        }
+        try {
+            String negJson = httpGet(contaUrl + "/contas/saldo-negativo-por-gerente");
+            saldoNeg = objectMapper.readValue(negJson, new TypeReference<Map<String, Double>>() {});
+        } catch (Exception e) {
+            saldoNeg = new HashMap<>();
+        }
+
+        final Map<String, Double> finalSaldoPos = saldoPos;
+        final Map<String, Double> finalSaldoNeg = saldoNeg;
+
+        List<Map<String, Object>> dashboard = gerentes.stream().map(g -> {
+            Map<String, Object> item = new HashMap<>();
+
+            // "gerente" é um objeto aninhado com cpf, nome, email, tipo
+            Map<String, String> gerenteObj = new HashMap<>();
+            gerenteObj.put("cpf", g.getCpf());
+            gerenteObj.put("nome", g.getNome());
+            gerenteObj.put("email", g.getEmail());
+            gerenteObj.put("tipo", g.getTipo());
+            item.put("gerente", gerenteObj);
+
+            // Busca lista de clientes (contas) desse gerente
+            List<Map<String, Object>> clientes;
+            try {
+                String contasJson = httpGet(contaUrl + "/contas/por-gerente/" + g.getCpf());
+                clientes = objectMapper.readValue(contasJson, new TypeReference<List<Map<String, Object>>>() {});
+            } catch (Exception e) {
+                clientes = List.of();
+            }
+            item.put("clientes", clientes);
+
+            item.put("saldo_positivo", finalSaldoPos.getOrDefault(g.getCpf(), 0.0));
+            item.put("saldo_negativo", finalSaldoNeg.getOrDefault(g.getCpf(), 0.0));
+
+            return item;
+        }).collect(Collectors.toList());
+
+        // Ordena por saldo_positivo decrescente
+        dashboard.sort((a, b) -> Double.compare(
+                (Double) b.get("saldo_positivo"),
+                (Double) a.get("saldo_positivo")));
+
+        return dashboard;
+    }
+
     public List<Map<String, Object>> buscarContasPorGerente(String cpf) {
         try {
             String json = httpGet(contaUrl + "/contas/por-gerente/" + cpf);

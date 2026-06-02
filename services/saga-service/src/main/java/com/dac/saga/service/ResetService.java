@@ -27,11 +27,13 @@ public class ResetService {
     public void solicitarResetOrquestrado() {
         System.out.println("Saga: iniciando reset síncrono de todos os serviços...");
 
+        
         postReset(authUrl + "/reboot");
         postReset(clienteUrl + "/reboot");
         postReset(gerenteUrl + "/reboot");
         postReset(contaUrl + "/reboot");
 
+        
         System.out.println("Saga: reset de todos os serviços concluído!");
     }
 
@@ -42,6 +44,7 @@ public class ResetService {
                 .POST(HttpRequest.BodyPublishers.noBody())
                 .build();
 
+            
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             System.out.println("Saga reset: POST " + url + " -> Status " + response.statusCode());
             if (response.statusCode() >= 400) {

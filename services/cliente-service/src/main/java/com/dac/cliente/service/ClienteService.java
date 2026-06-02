@@ -43,6 +43,9 @@ public class ClienteService {
     @Value("${saga.services.conta:http://conta-service:8080}")
     private String contaUrl;
 
+    @Value("${saga.services.saga:http://saga-service:8080}")
+    private String sagaUrl;
+
     private final HttpClient httpClient = HttpClient.newHttpClient();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -98,6 +101,50 @@ public class ClienteService {
                 .stream()
                 .map(this::toClienteResponseDTO)
                 .collect(Collectors.toList());
+    }
+
+    // -------------------------
+    // R12 — Listar clientes do gerente (filtra por gerente CPF via conta-service)
+    // -------------------------
+    public List<ClienteResponseDTO> listarClientesDoGerente(String gerenteCpf) {
+        try {
+            String json = httpGet(contaUrl + "/contas/por-gerente/" + gerenteCpf);
+            List<Map<String, Object>> contas = objectMapper.readValue(json,
+                new com.fasterxml.jackson.core.type.TypeReference<List<Map<String, Object>>>() {});
+
+            return contas.stream()
+                .map(conta -> {
+                    String clienteCpf = stringVal(conta.get("cliente"));
+                    ClienteResponseDTO dto = repository.findById(clienteCpf)
+                        .map(this::toClienteResponseDTOSimples)
+                        .orElse(null);
+                    if (dto != null) {
+                        dto.setConta(stringVal(conta.get("numero")));
+                        dto.setSaldo(doubleVal(conta.get("saldo")));
+                        dto.setLimite(doubleVal(conta.get("limite")));
+                    }
+                    return dto;
+                })
+                .filter(java.util.Objects::nonNull)
+                .sorted(Comparator.comparing(ClienteResponseDTO::getNome, Comparator.nullsLast(Comparator.naturalOrder())))
+                .collect(Collectors.toList());
+        } catch (Exception e) {
+            // Fallback: retorna lista vazia se conta-service indisponível
+            return List.of();
+        }
+    }
+
+    // Mapper simples sem buscar conta (será preenchido pelo chamador)
+    private ClienteResponseDTO toClienteResponseDTOSimples(Cliente c) {
+        ClienteResponseDTO dto = new ClienteResponseDTO();
+        dto.setCpf(c.getCpf());
+        dto.setNome(c.getNome());
+        dto.setEmail(c.getEmail());
+        dto.setTelefone(c.getTelefone());
+        dto.setEndereco(c.getEndereco());
+        dto.setCidade(c.getCidade());
+        dto.setEstado(c.getEstado());
+        return dto;
     }
 
     // -------------------------
@@ -227,22 +274,19 @@ public class ClienteService {
             limite = c.getSalario() / 2;
         }
 
-        // Publica para saga-service orquestrar criação de conta + seleção de gerente
+        // Chama saga-service sincronamente para criar conta + selecionar gerente + criar auth
         try {
             Map<String, Object> sagaEvento = new HashMap<>();
-            sagaEvento.put("acao", "criar_conta");
             sagaEvento.put("cpf", cpf);
             sagaEvento.put("nome", c.getNome());
             sagaEvento.put("email", c.getEmail());
             sagaEvento.put("limite", limite);
-            rabbitTemplate.convertAndSend(
-                RabbitMQConfig.SAGA_EXCHANGE,
-                RabbitMQConfig.FILA_SAGA_APROVAR,
-                sagaEvento
-            );
+            httpPost(sagaUrl + "/saga/aprovar", objectMapper.writeValueAsString(sagaEvento));
         } catch (Exception e) {
-            System.err.println("cliente-service: aviso - não foi possível publicar evento saga.aprovar_cliente: "
+            System.err.println("cliente-service: erro na aprovação síncrona via saga: "
                 + e.getMessage());
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                "Falha ao criar conta para o cliente: " + e.getMessage());
         }
     }
 
@@ -306,6 +350,58 @@ public class ClienteService {
             .uri(URI.create(url))
             .header("Content-Type", "application/json")
             .PUT(HttpRequest.BodyPublishers.ofString(jsonBody))
+            .build();
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() >= 400) {
+            throw new RuntimeException("HTTP " + response.statusCode() + ": " + response.body());
+        }
+        return response.body();
+    }
+
+    // -------------------------
+    // HTTP client helpers para buscar dados do conta-service
+    // -------------------------
+
+    private Map<String, Object> buscarContaPorCliente(String cpf) {
+        try {
+            String json = httpGet(contaUrl + "/contas/por-cliente/" + cpf);
+            return objectMapper.readValue(json, new TypeReference<Map<String, Object>>() {});
+        } catch (Exception e) {
+            // Cliente pode não ter conta ainda (pendente, autocadastro recém-feito)
+            return null;
+        }
+    }
+
+    private String httpGet(String url) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create(url))
+            .GET()
+            .build();
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() >= 400) {
+            throw new RuntimeException("HTTP " + response.statusCode() + ": " + response.body());
+        }
+        return response.body();
+    }
+
+    private String httpPut(String url, String jsonBody) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create(url))
+            .header("Content-Type", "application/json")
+            .PUT(HttpRequest.BodyPublishers.ofString(jsonBody))
+            .build();
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() >= 400) {
+            throw new RuntimeException("HTTP " + response.statusCode() + ": " + response.body());
+        }
+        return response.body();
+    }
+
+    private String httpPost(String url, String jsonBody) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create(url))
+            .header("Content-Type", "application/json")
+            .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
             .build();
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() >= 400) {

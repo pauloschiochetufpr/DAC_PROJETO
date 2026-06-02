@@ -20,8 +20,11 @@ public class GerenteController {
     private GerenteService gerenteService;
 
     @GetMapping
-    public ResponseEntity<List<DadoGerente>> listar(
+    public ResponseEntity<?> listar(
             @RequestParam(value = "filtro", required = false) String filtro) {
+        if ("dashboard".equalsIgnoreCase(filtro)) {
+            return ResponseEntity.ok(gerenteService.dashboardGerentes());
+        }
         List<DadoGerente> gerentes = gerenteService.listarTodos();
         return ResponseEntity.ok(gerentes);
     }

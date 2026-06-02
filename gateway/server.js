@@ -16,6 +16,9 @@ if (!JWT_SECRET) {
   process.exit(1);
 }
 
+// Blacklist de tokens revogados (logout)
+const tokenBlacklist = new Set();
+
 // Targets dos microsserviços na rede interna do docker-compose
 const SERVICE_TARGETS = {
   auth: "http://auth-service:8080",
@@ -137,6 +140,11 @@ async function authenticate(req, res, next) {
 
   const token = authHeader.substring(7);
 
+  // Verifica se o token foi revogado (logout)
+  if (tokenBlacklist.has(token)) {
+    return res.status(401).json({ error: "Token revogado" });
+  }
+
   let payload;
   try {
     payload = await validateJwt(token);
@@ -197,6 +205,14 @@ app.use(
 );
 app.use(
   "/logout",
+  (req, res, next) => {
+    // Blacklista o token antes de encaminhar o logout ao auth-service
+    const authHeader = req.headers["authorization"];
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      tokenBlacklist.add(authHeader.substring(7));
+    }
+    next();
+  },
   createServiceProxy(SERVICE_TARGETS.auth, "auth-service", {
     pathRewrite: {
       "^.*$": "/auth/logout",

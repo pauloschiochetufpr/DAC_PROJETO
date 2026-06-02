@@ -84,7 +84,7 @@ public class ContaService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Valor deve ser positivo");
         }
 
-        conta.setSaldo(conta.getSaldo() + request.getValor());
+        conta.setSaldo(java.math.BigDecimal.valueOf(conta.getSaldo()).add(java.math.BigDecimal.valueOf(request.getValor())).doubleValue());
         contaCUDRepository.save(conta);
 
         MovimentacaoCUD mov = criarMovimentacao(
@@ -110,7 +110,7 @@ public class ContaService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Saldo insuficiente");
         }
 
-        conta.setSaldo(conta.getSaldo() - request.getValor());
+        conta.setSaldo(java.math.BigDecimal.valueOf(conta.getSaldo()).subtract(java.math.BigDecimal.valueOf(request.getValor())).doubleValue());
         contaCUDRepository.save(conta);
 
         MovimentacaoCUD mov = criarMovimentacao(
@@ -142,8 +142,8 @@ public class ContaService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Saldo insuficiente");
         }
 
-        origem.setSaldo(origem.getSaldo()   - request.getValor());
-        destino.setSaldo(destino.getSaldo() + request.getValor());
+        origem.setSaldo(java.math.BigDecimal.valueOf(origem.getSaldo()).subtract(java.math.BigDecimal.valueOf(request.getValor())).doubleValue());
+        destino.setSaldo(java.math.BigDecimal.valueOf(destino.getSaldo()).add(java.math.BigDecimal.valueOf(request.getValor())).doubleValue());
         contaCUDRepository.save(origem);
         contaCUDRepository.save(destino);
 

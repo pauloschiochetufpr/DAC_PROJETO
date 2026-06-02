@@ -30,7 +30,9 @@ public class ClienteController {
 
     @GetMapping
     public ResponseEntity<?> listar(
-            @RequestParam(value = "filtro", required = false) String filtro) {
+            @RequestParam(value = "filtro", required = false) String filtro,
+            @RequestHeader(value = "x-user-role", required = false) String userRole,
+            @RequestHeader(value = "x-user-cpf", required = false) String userCpf) {
 
         if ("para_aprovar".equalsIgnoreCase(filtro)) {
             List<ClienteParaAprovarResponseDTO> pendentes = service.listarParaAprovar();
@@ -38,6 +40,9 @@ public class ClienteController {
         }
 
         if ("adm_relatorio_clientes".equalsIgnoreCase(filtro)) {
+            if (userRole == null || !"administrador".equalsIgnoreCase(userRole)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acesso negado");
+            }
             List<DadosClienteResponseDTO> relatorio = service.listarParaRelatorio();
             return ResponseEntity.ok(relatorio);
         }
@@ -45,6 +50,11 @@ public class ClienteController {
         if ("melhores_clientes".equalsIgnoreCase(filtro)) {
             List<ClienteResponseDTO> melhores = service.listarMelhoresClientes();
             return ResponseEntity.ok(melhores);
+        }
+
+        if ("gerente".equalsIgnoreCase(userRole) && userCpf != null) {
+            List<ClienteResponseDTO> meusClientes = service.listarClientesDoGerente(userCpf);
+            return ResponseEntity.ok(meusClientes);
         }
 
         List<ClienteResponseDTO> todos = service.listarTodosAprovados();
