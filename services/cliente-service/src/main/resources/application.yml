@@ -30,3 +30,8 @@ management:
     web:
       exposure:
         include: health
+
+saga:
+  services:
+    conta: http://conta-service:8080
+    saga: http://saga-service:8080

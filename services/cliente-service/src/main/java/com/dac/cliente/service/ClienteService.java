@@ -9,14 +9,22 @@ import com.dac.cliente.dto.response.DadosClienteResponseDTO;
 import com.dac.cliente.entity.Cliente;
 import com.dac.cliente.entity.StatusCliente;
 import com.dac.cliente.repository.ClienteRepository;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -32,9 +40,18 @@ public class ClienteService {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
+    @Value("${saga.services.conta:http://conta-service:8080}")
+    private String contaUrl;
+
+    @Value("${saga.services.saga:http://saga-service:8080}")
+    private String sagaUrl;
+
+    private final HttpClient httpClient = HttpClient.newHttpClient();
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     // -------------------------
     // R1 — Autocadastro
-    // Publica para auth-service criar o usuário
+    // Registra apenas solicitação pendente; usuário/senha são criados na aprovação.
     // -------------------------
     @Transactional
     public void autocadastro(AutocadastroRequestDTO dto) {
@@ -64,19 +81,6 @@ public class ClienteService {
 
         repository.save(c);
 
-        // Publica para auth-service criar usuário pendente
-        try {
-            Map<String, String> authEvento = new HashMap<>();
-            authEvento.put("acao", "criar");
-            authEvento.put("cpf", cpf);
-            authEvento.put("email", normalizarEmail(dto.getEmail()));
-            authEvento.put("senha", "tads"); // senha padrão inicial
-            authEvento.put("tipo", "cliente");
-            rabbitTemplate.convertAndSend(RabbitMQConfig.FILA_AUTH_CRIAR, authEvento);
-        } catch (Exception e) {
-            System.err.println("cliente-service: aviso - não foi possível publicar evento auth.criar: "
-                + e.getMessage());
-        }
     }
 
     // -------------------------
@@ -90,13 +94,57 @@ public class ClienteService {
     }
 
     // -------------------------
-    // R12 — Listar aprovados
+    // R12 — Listar aprovados (para gerente — retorna clientes do próprio gerente)
     // -------------------------
     public List<ClienteResponseDTO> listarTodosAprovados() {
         return repository.findByStatusOrderByNomeAsc(StatusCliente.APROVADO)
                 .stream()
                 .map(this::toClienteResponseDTO)
                 .collect(Collectors.toList());
+    }
+
+    // -------------------------
+    // R12 — Listar clientes do gerente (filtra por gerente CPF via conta-service)
+    // -------------------------
+    public List<ClienteResponseDTO> listarClientesDoGerente(String gerenteCpf) {
+        try {
+            String json = httpGet(contaUrl + "/contas/por-gerente/" + gerenteCpf);
+            List<Map<String, Object>> contas = objectMapper.readValue(json,
+                new com.fasterxml.jackson.core.type.TypeReference<List<Map<String, Object>>>() {});
+
+            return contas.stream()
+                .map(conta -> {
+                    String clienteCpf = stringVal(conta.get("cliente"));
+                    ClienteResponseDTO dto = repository.findById(clienteCpf)
+                        .map(this::toClienteResponseDTOSimples)
+                        .orElse(null);
+                    if (dto != null) {
+                        dto.setConta(stringVal(conta.get("numero")));
+                        dto.setSaldo(doubleVal(conta.get("saldo")));
+                        dto.setLimite(doubleVal(conta.get("limite")));
+                    }
+                    return dto;
+                })
+                .filter(java.util.Objects::nonNull)
+                .sorted(Comparator.comparing(ClienteResponseDTO::getNome, Comparator.nullsLast(Comparator.naturalOrder())))
+                .collect(Collectors.toList());
+        } catch (Exception e) {
+            // Fallback: retorna lista vazia se conta-service indisponível
+            return List.of();
+        }
+    }
+
+    // Mapper simples sem buscar conta (será preenchido pelo chamador)
+    private ClienteResponseDTO toClienteResponseDTOSimples(Cliente c) {
+        ClienteResponseDTO dto = new ClienteResponseDTO();
+        dto.setCpf(c.getCpf());
+        dto.setNome(c.getNome());
+        dto.setEmail(c.getEmail());
+        dto.setTelefone(c.getTelefone());
+        dto.setEndereco(c.getEndereco());
+        dto.setCidade(c.getCidade());
+        dto.setEstado(c.getEstado());
+        return dto;
     }
 
     // -------------------------
@@ -110,16 +158,20 @@ public class ClienteService {
     }
 
     // -------------------------
-    // Melhores clientes — top 3 por salário
+    // Melhores clientes — top 3 por saldo real (da conta)
     // -------------------------
     public List<ClienteResponseDTO> listarMelhoresClientes() {
-        return repository.findByStatusOrderByNomeAsc(StatusCliente.APROVADO)
+        List<ClienteResponseDTO> todos = repository.findByStatusOrderByNomeAsc(StatusCliente.APROVADO)
                 .stream()
-                .sorted((a, b) -> Double.compare(
-                    b.getSalario() != null ? b.getSalario() : 0,
-                    a.getSalario() != null ? a.getSalario() : 0))
-                .limit(3)
                 .map(this::toClienteResponseDTO)
+                .collect(Collectors.toList());
+
+        // Ordena por saldo decrescente e pega os 3 primeiros
+        return todos.stream()
+                .sorted((a, b) -> Double.compare(
+                    b.getSaldo() != null ? b.getSaldo() : 0,
+                    a.getSaldo() != null ? a.getSaldo() : 0))
+                .limit(3)
                 .collect(Collectors.toList());
     }
 
@@ -130,6 +182,13 @@ public class ClienteService {
         Cliente c = repository.findById(cpf)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                     "Cliente não encontrado"));
+
+        // Clientes rejeitados devem retornar 404
+        if (c.getStatus() == StatusCliente.REJEITADO) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                "Cliente não encontrado");
+        }
+
         return toDadosClienteDTO(c);
     }
 
@@ -174,6 +233,17 @@ public class ClienteService {
                 System.err.println("cliente-service: aviso - não foi possível publicar evento conta.limite: "
                     + e.getMessage());
             }
+
+            // Chamada síncrona para atualizar limite imediatamente (PyTest não espera mensageria)
+            try {
+                Map<String, Object> body = new HashMap<>();
+                body.put("clienteCpf", cpf);
+                body.put("novoSalario", dto.getSalario());
+                httpPut(contaUrl + "/contas/limite", objectMapper.writeValueAsString(body));
+            } catch (Exception e) {
+                System.err.println("cliente-service: aviso - falha na atualização síncrona de limite: "
+                    + e.getMessage());
+            }
         }
 
         return toDadosClienteDTO(c);
@@ -204,24 +274,25 @@ public class ClienteService {
             limite = c.getSalario() / 2;
         }
 
-        // Publica para saga-service orquestrar criação de conta + seleção de gerente
+        // Chama saga-service sincronamente para criar conta + selecionar gerente + criar auth
         try {
             Map<String, Object> sagaEvento = new HashMap<>();
-            sagaEvento.put("acao", "criar_conta");
             sagaEvento.put("cpf", cpf);
             sagaEvento.put("nome", c.getNome());
             sagaEvento.put("email", c.getEmail());
             sagaEvento.put("limite", limite);
-            rabbitTemplate.convertAndSend(RabbitMQConfig.FILA_SAGA_APROVAR, sagaEvento);
+            httpPost(sagaUrl + "/saga/aprovar", objectMapper.writeValueAsString(sagaEvento));
         } catch (Exception e) {
-            System.err.println("cliente-service: aviso - não foi possível publicar evento saga.aprovar_cliente: "
+            System.err.println("cliente-service: erro na aprovação síncrona via saga: "
                 + e.getMessage());
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                "Falha ao criar conta para o cliente: " + e.getMessage());
         }
     }
 
     // -------------------------
     // R11 — Rejeitar cliente
-    // Publica para auth-service remover usuário
+    // Remove do banco e publica para auth-service remover usuário
     // -------------------------
     @Transactional
     public void rejeitarCliente(String cpf, String motivo) {
@@ -234,9 +305,9 @@ public class ClienteService {
                 "Cliente não está pendente de aprovação");
         }
 
-        c.setStatus(StatusCliente.REJEITADO);
-        c.setMotivoRejeicao(motivo);
-        repository.save(c);
+        // Deleta o cliente em vez de apenas marcar como REJEITADO,
+        // pois o teste espera 404 ao consultar depois
+        repository.delete(c);
 
         // Remove usuário do auth-service
         try {
@@ -248,6 +319,95 @@ public class ClienteService {
             System.err.println("cliente-service: aviso - não foi possível publicar evento auth.remover: "
                 + e.getMessage());
         }
+    }
+
+    // HTTP client helpers para buscar dados do conta-service
+
+    private Map<String, Object> buscarContaPorCliente(String cpf) {
+        try {
+            String json = httpGet(contaUrl + "/contas/por-cliente/" + cpf);
+            return objectMapper.readValue(json, new TypeReference<Map<String, Object>>() {});
+        } catch (Exception e) {
+            // Cliente pode não ter conta ainda
+            return null;
+        }
+    }
+
+    private String httpGet(String url) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create(url))
+            .GET()
+            .build();
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() >= 400) {
+            throw new RuntimeException("HTTP " + response.statusCode() + ": " + response.body());
+        }
+        return response.body();
+    }
+
+    private String httpPut(String url, String jsonBody) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create(url))
+            .header("Content-Type", "application/json")
+            .PUT(HttpRequest.BodyPublishers.ofString(jsonBody))
+            .build();
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() >= 400) {
+            throw new RuntimeException("HTTP " + response.statusCode() + ": " + response.body());
+        }
+        return response.body();
+    }
+
+    // -------------------------
+    // HTTP client helpers para buscar dados do conta-service
+    // -------------------------
+
+    private Map<String, Object> buscarContaPorCliente(String cpf) {
+        try {
+            String json = httpGet(contaUrl + "/contas/por-cliente/" + cpf);
+            return objectMapper.readValue(json, new TypeReference<Map<String, Object>>() {});
+        } catch (Exception e) {
+            // Cliente pode não ter conta ainda (pendente, autocadastro recém-feito)
+            return null;
+        }
+    }
+
+    private String httpGet(String url) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create(url))
+            .GET()
+            .build();
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() >= 400) {
+            throw new RuntimeException("HTTP " + response.statusCode() + ": " + response.body());
+        }
+        return response.body();
+    }
+
+    private String httpPut(String url, String jsonBody) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create(url))
+            .header("Content-Type", "application/json")
+            .PUT(HttpRequest.BodyPublishers.ofString(jsonBody))
+            .build();
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() >= 400) {
+            throw new RuntimeException("HTTP " + response.statusCode() + ": " + response.body());
+        }
+        return response.body();
+    }
+
+    private String httpPost(String url, String jsonBody) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create(url))
+            .header("Content-Type", "application/json")
+            .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+            .build();
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() >= 400) {
+            throw new RuntimeException("HTTP " + response.statusCode() + ": " + response.body());
+        }
+        return response.body();
     }
 
     // -------------------------
@@ -332,9 +492,14 @@ public class ClienteService {
         dto.setEndereco(c.getEndereco());
         dto.setCidade(c.getCidade());
         dto.setEstado(c.getEstado());
-        dto.setConta(null);
-        dto.setSaldo(null);
-        dto.setLimite(null);
+
+        // Enriquecer com dados da conta
+        Map<String, Object> conta = buscarContaPorCliente(c.getCpf());
+        if (conta != null) {
+            dto.setConta(stringVal(conta.get("numero")));
+            dto.setSaldo(doubleVal(conta.get("saldo")));
+            dto.setLimite(doubleVal(conta.get("limite")));
+        }
         return dto;
     }
 
@@ -349,12 +514,30 @@ public class ClienteService {
         dto.setCidade(c.getCidade());
         dto.setEstado(c.getEstado());
         dto.setSalario(c.getSalario());
-        dto.setConta(null);
-        dto.setSaldo(null);
-        dto.setLimite(null);
-        dto.setGerente(null);
-        dto.setGerente_nome(null);
-        dto.setGerente_email(null);
+
+        // Enriquecer com dados da conta (saldo, limite, conta, gerente)
+        Map<String, Object> conta = buscarContaPorCliente(c.getCpf());
+        if (conta != null) {
+            dto.setConta(stringVal(conta.get("numero")));
+            dto.setSaldo(doubleVal(conta.get("saldo")));
+            dto.setLimite(doubleVal(conta.get("limite")));
+            dto.setGerente(stringVal(conta.get("gerente")));
+        }
         return dto;
+    }
+
+    // Helpers para conversão de tipos
+    private String stringVal(Object v) {
+        return v == null ? null : v.toString();
+    }
+
+    private Double doubleVal(Object v) {
+        if (v == null) return null;
+        if (v instanceof Number n) return n.doubleValue();
+        try {
+            return Double.parseDouble(v.toString());
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

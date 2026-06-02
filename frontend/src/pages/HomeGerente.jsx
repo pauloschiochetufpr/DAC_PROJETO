@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 // Componentes do gerente
 import ListaAprovacao from "../components/gerente/ListaAprovacao";
 import ListaClientes from "../components/gerente/ListaClientes";
@@ -11,11 +13,139 @@ import { UserRoundSearch } from "lucide-react";
 import { useLanguage } from "../hooks/useLanguage";
 import { t } from "../lib/i18n";
 
-// ID do gerente logado (simulação simples)
-import { GERENTE_ID } from "../mocks/gerenteMockData";
+// Serviços
+import { ClienteService } from "../services/ClienteService";
+import { GerenteService } from "../services/GerenteService";
 
 export default function HomeGerente() {
   const { lang } = useLanguage();
+
+  // Clientes para aprovação
+  const [clientesPendentes, setClientesPendentes] = useState([]);
+  const [loadingPendentes, setLoadingPendentes] = useState(true);
+  const [erroPendentes, setErroPendentes] = useState(null);
+
+  // Clientes do gerente
+  const [meusClientes, setMeusClientes] = useState([]);
+  const [loadingClientes, setLoadingClientes] = useState(true);
+  const [erroClientes, setErroClientes] = useState(null);
+
+  // Melhores clientes
+  const [melhoresClientes, setMelhoresClientes] = useState([]);
+  const [erroMelhores, setErroMelhores] = useState(null);
+
+  const [feedback, setFeedback] = useState(null);
+
+  useEffect(() => {
+    async function carregarDados() {
+      setLoadingPendentes(true);
+      setLoadingClientes(true);
+
+      setErroPendentes(null);
+      setErroClientes(null);
+      setErroMelhores(null);
+
+      const [pendentesResult, clientesResult] = await Promise.allSettled([
+        ClienteService.listarPendentes(),
+        GerenteService.listarMeusClientes(),
+        ClienteService.listarComFiltro("melhores_clientes"),
+      ]);
+
+      // Pendentes
+      if (pendentesResult.status === "fulfilled") {
+        setClientesPendentes(pendentesResult.value);
+      } else {
+        console.error(pendentesResult.reason);
+
+        setErroPendentes(
+          pendentesResult.reason.message ||
+            "Erro ao carregar clientes pendentes",
+        );
+      }
+
+      // Clientes do gerente
+      if (clientesResult.status === "fulfilled") {
+        setMeusClientes(clientesResult.value);
+      } else {
+        console.error(clientesResult.reason);
+
+        setErroClientes(
+          clientesResult.reason.message || "Erro ao carregar clientes",
+        );
+      }
+
+      // Melhores clientes
+      if (melhoresResult.status === "fulfilled") {
+        setMelhoresClientes(melhoresResult.value);
+      } else {
+        console.error(melhoresResult.reason);
+
+        setErroMelhores(
+          melhoresResult.reason.message || "Erro ao carregar melhores clientes",
+        );
+      }
+
+      setLoadingPendentes(false);
+      setLoadingClientes(false);
+    }
+
+    carregarDados();
+  }, []);
+
+  async function handleAprovar(cpf) {
+    try {
+      await ClienteService.aprovar(cpf);
+
+      setClientesPendentes((prev) => prev.filter((c) => c.cpf !== cpf));
+
+      setFeedback({
+        tipo: "sucesso",
+        msg: "Cliente aprovado",
+      });
+
+      return true;
+    } catch (err) {
+      setFeedback({
+        tipo: "erro",
+        msg: err.message,
+      });
+
+      return false;
+    }
+  }
+
+  async function handleRejeitar(cpf, motivo) {
+    try {
+      await ClienteService.rejeitar(cpf, motivo);
+
+      setClientesPendentes((prev) => prev.filter((c) => c.cpf !== cpf));
+
+      setFeedback({
+        tipo: "sucesso",
+        msg: "Cliente rejeitado",
+      });
+
+      return true;
+    } catch (err) {
+      setFeedback({
+        tipo: "erro",
+        msg: err.message,
+      });
+
+      return false;
+    }
+  }
+
+  useEffect(() => {
+    if (!feedback) return;
+
+    const timer = setTimeout(() => {
+      setFeedback(null);
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, [feedback]);
+
   return (
     <div
       className="relative flex flex-col items-center w-full min-h-screen
@@ -40,7 +170,14 @@ export default function HomeGerente() {
                       rounded-2xl border border-secundary/70 shadow-dourado-sutil
                       "
         >
-          <ListaAprovacao idGerente={GERENTE_ID} />
+          <ListaAprovacao
+            clientes={clientesPendentes}
+            loading={loadingPendentes}
+            erro={erroPendentes}
+            feedback={feedback}
+            onAprovar={handleAprovar}
+            onRejeitar={handleRejeitar}
+          />
         </div>
 
         {/* Consulta de Clientes */}
@@ -49,14 +186,18 @@ export default function HomeGerente() {
                       rounded-2xl border border-secundary/70 shadow-dourado-sutil
                       "
         >
-          <ListaClientes idGerente={GERENTE_ID} />
+          <ListaClientes
+            clientes={meusClientes}
+            loading={loadingClientes}
+            erro={erroClientes}
+          />
         </div>
       </div>
       {/* Container secundário | Botões de navegação + pódio */}
       <div className="xl:flex-row flex-col gap-10 flex h-fit w-full mt-10 md:px-32 z-[200]">
         <div className="w-full h-fit justify-center items-center flex">
           <div className="w-screen xl:w-fit h-fit sm:py-16 xl:px-10 xl:py-8 bg-black/20 shadow-inner shadow-black/70 md:rounded-md">
-            <Podium />
+            <Podium clientes={melhoresClientes} erro={erroMelhores} />
           </div>
         </div>
         <div className="w-full h-fit justify-center flex flex-row xl:mt-14">

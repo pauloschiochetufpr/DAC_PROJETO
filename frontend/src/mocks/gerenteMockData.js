@@ -10,6 +10,7 @@
 
 // ── ID fixo do gerente logado (simulação) ──────────────────────────────
 export const GERENTE_ID = 1;
+export const Gerente_CPF = "98574307084";
 
 // ── Helpers de aleatorização ───────────────────────────────────────────
 const nomes = [

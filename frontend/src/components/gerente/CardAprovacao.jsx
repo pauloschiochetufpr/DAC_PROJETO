@@ -20,18 +20,32 @@ export default function CardAprovacao({
 
   // Handlers
   const handleAprovar = async () => {
-    setProcessando(true);
-    await onAprovar(cliente.cpf);
-    setProcessando(false);
+    try {
+      setProcessando(true);
+
+      await onAprovar(cliente.cpf);
+    } finally {
+      setProcessando(false);
+    }
   };
 
   const handleConfirmarRejeicao = async () => {
-    if (!motivo.trim()) return; // motivo obrigatório
-    setProcessando(true);
-    await onRejeitar(cliente.cpf, motivo.trim());
-    setProcessando(false);
-    setRejeitando(false);
-    setMotivo("");
+    if (!motivo.trim()) return;
+
+    let sucesso = false;
+
+    try {
+      setProcessando(true);
+
+      sucesso = await onRejeitar(cliente.cpf, motivo.trim());
+    } finally {
+      setProcessando(false);
+    }
+
+    if (sucesso) {
+      setRejeitando(false);
+      setMotivo("");
+    }
   };
 
   const handleCancelarRejeicao = () => {

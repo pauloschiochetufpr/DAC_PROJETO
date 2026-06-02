@@ -67,6 +67,15 @@ public class AutocadastroRequestDTO {
         this.cep = cep;
     }
 
+    public String getCEP() {
+        return cep;
+    }
+
+    @com.fasterxml.jackson.annotation.JsonSetter("CEP")
+    public void setCEP(String CEP) {
+        this.cep = CEP;
+    }
+
     public String getCidade() {
         return cidade;
     }

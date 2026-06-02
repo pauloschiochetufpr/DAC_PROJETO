@@ -15,21 +15,24 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@RequestMapping("/clientes")
 public class ClienteController {
 
     @Autowired
     private ClienteService service;
 
-    @PostMapping("/clientes")
+    @PostMapping
     public ResponseEntity<?> autocadastro(@RequestBody AutocadastroRequestDTO dto) {
         service.autocadastro(dto);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body("Solicitação de cadastro enviada. Aguarde a aprovação do gerente.");
+                .body(java.util.Map.of("cpf", dto.getCpf(), "email", dto.getEmail()));
     }
 
-    @GetMapping("/clientes")
+    @GetMapping
     public ResponseEntity<?> listar(
-            @RequestParam(value = "filtro", required = false) String filtro) {
+            @RequestParam(value = "filtro", required = false) String filtro,
+            @RequestHeader(value = "x-user-role", required = false) String userRole,
+            @RequestHeader(value = "x-user-cpf", required = false) String userCpf) {
 
         if ("para_aprovar".equalsIgnoreCase(filtro)) {
             List<ClienteParaAprovarResponseDTO> pendentes = service.listarParaAprovar();
@@ -37,6 +40,9 @@ public class ClienteController {
         }
 
         if ("adm_relatorio_clientes".equalsIgnoreCase(filtro)) {
+            if (userRole == null || !"administrador".equalsIgnoreCase(userRole)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acesso negado");
+            }
             List<DadosClienteResponseDTO> relatorio = service.listarParaRelatorio();
             return ResponseEntity.ok(relatorio);
         }
@@ -46,29 +52,34 @@ public class ClienteController {
             return ResponseEntity.ok(melhores);
         }
 
+        if ("gerente".equalsIgnoreCase(userRole) && userCpf != null) {
+            List<ClienteResponseDTO> meusClientes = service.listarClientesDoGerente(userCpf);
+            return ResponseEntity.ok(meusClientes);
+        }
+
         List<ClienteResponseDTO> todos = service.listarTodosAprovados();
         return ResponseEntity.ok(todos);
     }
 
-    @GetMapping("/clientes/{cpf}")
+    @GetMapping("/{cpf}")
     public ResponseEntity<DadosClienteResponseDTO> consultar(@PathVariable String cpf) {
         return ResponseEntity.ok(service.consultarPorCpf(cpf));
     }
 
-    @PutMapping("/clientes/{cpf}")
+    @PutMapping("/{cpf}")
     public ResponseEntity<DadosClienteResponseDTO> atualizarPerfil(
             @PathVariable String cpf,
             @RequestBody PerfilRequestDTO dto) {
         return ResponseEntity.ok(service.atualizarPerfil(cpf, dto));
     }
 
-    @PostMapping("/clientes/{cpf}/aprovar")
+    @PostMapping("/{cpf}/aprovar")
     public ResponseEntity<?> aprovar(@PathVariable String cpf) {
         service.aprovarCliente(cpf);
         return ResponseEntity.ok("Cliente aprovado com sucesso.");
     }
 
-    @PostMapping("/clientes/{cpf}/rejeitar")
+    @PostMapping("/{cpf}/rejeitar")
     public ResponseEntity<?> rejeitar(
             @PathVariable String cpf,
             @RequestBody RejeitarClienteRequestDTO dto) {

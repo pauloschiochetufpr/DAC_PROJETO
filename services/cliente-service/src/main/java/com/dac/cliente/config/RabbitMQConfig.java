@@ -1,6 +1,7 @@
 package com.dac.cliente.config;
 
 import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -13,6 +14,8 @@ import org.springframework.context.annotation.Configuration;
 public class RabbitMQConfig {
 
     public static final String FILA_RESET         = "saga.reset";
+    public static final String SAGA_EXCHANGE      = "saga.exchange";
+    public static final String AUTH_EXCHANGE      = "auth.exchange";
     public static final String FILA_SAGA_APROVAR  = "saga.aprovar_cliente";
     public static final String FILA_CONTA_LIMITE  = "conta.limite";
     public static final String FILA_AUTH_CRIAR    = "auth.criar";
@@ -21,6 +24,16 @@ public class RabbitMQConfig {
     @Bean
     public Queue filaReset() {
         return new Queue(FILA_RESET, true);
+    }
+
+    @Bean
+    public TopicExchange sagaExchange() {
+        return new TopicExchange(SAGA_EXCHANGE);
+    }
+
+    @Bean
+    public TopicExchange authExchange() {
+        return new TopicExchange(AUTH_EXCHANGE);
     }
 
     @Bean

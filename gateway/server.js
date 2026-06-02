@@ -1,8 +1,9 @@
 const express = require("express");
 const { createProxyMiddleware } = require("http-proxy-middleware");
 const cors = require("cors");
+const crypto = require("crypto");
 // jose
-const { jwtVerify } = require("jose");
+const { jwtDecrypt } = require("jose");
 
 const app = express();
 
@@ -15,6 +16,9 @@ if (!JWT_SECRET) {
   process.exit(1);
 }
 
+// Blacklist de tokens revogados (logout)
+const tokenBlacklist = new Set();
+
 // Targets dos microsserviços na rede interna do docker-compose
 const SERVICE_TARGETS = {
   auth: "http://auth-service:8080",
@@ -24,11 +28,13 @@ const SERVICE_TARGETS = {
   saga: "http://saga-service:8080",
 };
 
-// validateJwt | valida JWT assinado HS256
+// validateJwt | valida JWT criptografado (JWE) com algoritmo DIR e A256GCM
 async function validateJwt(token) {
-  const key = new TextEncoder().encode(JWT_SECRET);
-  const { payload } = await jwtVerify(token, key, {
-    algorithms: ["HS256"],
+  // Deriva a chave de 256 bits (32 bytes) usando SHA-256 de forma idêntica ao Java
+  const key = crypto.createHash("sha256").update(JWT_SECRET).digest();
+  const { payload } = await jwtDecrypt(token, key, {
+    contentEncryptionAlgorithms: ["A256GCM"],
+    keyManagementAlgorithms: ["dir"]
   });
   return payload;
 }
@@ -56,8 +62,13 @@ const OPEN_ROUTES = [
   { method: "POST", path: /^\/auth\/login$/ },
   { method: "POST", path: /^\/auth\/logout$/ },
   { method: "POST", path: /^\/auth\/refresh$/ },
+  { method: "POST", path: /^\/auth\/ativar-conta$/ },
+  { method: "POST", path: /^\/login$/ },
+  { method: "POST", path: /^\/logout$/ },
+  { method: "POST", path: /^\/refresh$/ },
   { method: "POST", path: /^\/clientes$/ },
   { method: "GET", path: /^\/health$/ },
+  { method: "GET", path: /^\/reboot$/ },
   { method: "POST", path: /^\/reboot$/ },
 ];
 
@@ -129,6 +140,11 @@ async function authenticate(req, res, next) {
 
   const token = authHeader.substring(7);
 
+  // Verifica se o token foi revogado (logout)
+  if (tokenBlacklist.has(token)) {
+    return res.status(401).json({ error: "Token revogado" });
+  }
+
   let payload;
   try {
     payload = await validateJwt(token);
@@ -173,38 +189,85 @@ app.use(authenticate);
 app.use(
   "/auth",
   createServiceProxy(SERVICE_TARGETS.auth, "auth-service", {
-    pathRewrite: { "^": "/auth" },
+    pathRewrite: {
+      "^/(\\?.*)?$": "/auth$1",
+      "^/([^?]+)(\\?.*)?$": "/auth/$1$2",
+    },
+  }),
+);
+app.use(
+  "/login",
+  createServiceProxy(SERVICE_TARGETS.auth, "auth-service", {
+    pathRewrite: {
+      "^.*$": "/auth/login",
+    },
+  }),
+);
+app.use(
+  "/logout",
+  (req, res, next) => {
+    // Blacklista o token antes de encaminhar o logout ao auth-service
+    const authHeader = req.headers["authorization"];
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      tokenBlacklist.add(authHeader.substring(7));
+    }
+    next();
+  },
+  createServiceProxy(SERVICE_TARGETS.auth, "auth-service", {
+    pathRewrite: {
+      "^.*$": "/auth/logout",
+    },
+  }),
+);
+app.use(
+  "/refresh",
+  createServiceProxy(SERVICE_TARGETS.auth, "auth-service", {
+    pathRewrite: {
+      "^.*$": "/auth/refresh",
+    },
   }),
 );
 app.use(
   "/clientes",
   createServiceProxy(SERVICE_TARGETS.cliente, "cliente-service", {
-    pathRewrite: { "^": "/clientes" },
+    pathRewrite: {
+      "^/(\\?.*)?$": "/clientes$1",
+      "^/([^?]+)(\\?.*)?$": "/clientes/$1$2",
+    },
   }),
 );
 app.use(
   "/contas",
   createServiceProxy(SERVICE_TARGETS.conta, "conta-service", {
-    pathRewrite: { "^": "/contas" },
+    pathRewrite: {
+      "^/(\\?.*)?$": "/contas$1",
+      "^/([^?]+)(\\?.*)?$": "/contas/$1$2",
+    },
   }),
 );
 app.use(
   "/gerentes",
   createServiceProxy(SERVICE_TARGETS.gerente, "gerente-service", {
-    pathRewrite: { "^": "/gerentes" },
+    pathRewrite: {
+      "^/(\\?.*)?$": "/gerentes$1",
+      "^/([^?]+)(\\?.*)?$": "/gerentes/$1$2",
+    },
   }),
 );
 app.use(
   "/saga",
   createServiceProxy(SERVICE_TARGETS.saga, "saga-service", {
-    pathRewrite: { "^": "/saga" },
+    pathRewrite: {
+      "^/(\\?.*)?$": "/saga$1",
+      "^/([^?]+)(\\?.*)?$": "/saga/$1$2",
+    },
   }),
 );
 
 app.use(express.json());
 
 // reboot | encaminha ao saga-service
-app.post(
+app.all(
   "/reboot",
   createProxyMiddleware({
     target: SERVICE_TARGETS.saga,

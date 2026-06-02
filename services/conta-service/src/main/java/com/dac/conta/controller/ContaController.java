@@ -18,9 +18,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 @RestController
+@RequestMapping("/contas")
 public class ContaController {
 
     @Autowired
@@ -78,6 +80,11 @@ public class ContaController {
         return ResponseEntity.ok(contaService.consultarContaPorCliente(cpf));
     }
 
+    @GetMapping("/por-gerente/{cpf}")
+    public ResponseEntity<List<ContaResponseDTO>> contasPorGerente(@PathVariable String cpf) {
+        return ResponseEntity.ok(contaService.consultarContasPorGerente(cpf));
+    }
+
     // -------------------------
     // Endpoints internos para o gerente-service (R17/R18)
     // -------------------------
@@ -90,6 +97,11 @@ public class ContaController {
     @GetMapping("/saldo-positivo-por-gerente")
     public ResponseEntity<Map<String, Double>> saldoPositivoPorGerente() {
         return ResponseEntity.ok(contaService.saldoPositivoPorGerente());
+    }
+
+    @GetMapping("/saldo-negativo-por-gerente")
+    public ResponseEntity<Map<String, Double>> saldoNegativoPorGerente() {
+        return ResponseEntity.ok(contaService.saldoNegativoPorGerente());
     }
 
     @PostMapping("/redistribuir")

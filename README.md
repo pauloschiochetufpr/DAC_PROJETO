@@ -138,3 +138,69 @@ Observação: Por ser um projeto de faculdadee, expor portas de bancod e dados e
 - RabbitMQ Management UI: `15672` - útil para inspeção via browser.
 - Frontend: `5173` - Sempre aberto, tem que ser acessado pelo cliente.
 - Gateway: `8080` - Interface de acesso aos MS's.
+
+---
+
+## 8) Script `start.sh` — inicialização interativa completa
+
+O `start.sh` é o ponto de entrada recomendado para subir o ambiente do zero. Ele gerencia compilação Maven, build das imagens Docker e inicialização dos containers através de menus interativos.
+
+### Pré-requisitos
+
+- Docker em execução (daemon ativo)
+- WSL funcional e acessível no terminal Windows
+- `docker compose` disponível dentro do WSL (plugin V2 ou standalone)
+- Maven + JDK 17 instalados no WSL (opcional — se ausentes, o script compila via container `maven:3.9-eclipse-temurin-17` automaticamente)
+- O arquivo `docker-compose.yml` deve estar na raiz do projeto
+
+### Como rodar
+
+A partir de um terminal Windows, na raiz do projeto:
+
+```bash
+wsl bash ./start.sh
+```
+
+### Fluxo ao iniciar
+
+Ao rodar, o script exibe dois menus em sequência antes de subir o ambiente:
+
+**1. Menu de compilação — preparação dos JARs Java**
+
+| Opção | Ação                                        |
+| ----- | ------------------------------------------- |
+| `[1]` | Compila apenas os serviços sem JAR gerado   |
+| `[2]` | Recompila todos os serviços Java            |
+| `[3]` | Escolhe um serviço específico para compilar |
+| `[4]` | Pula a compilação (JARs já estão prontos)   |
+
+**2. Menu de inicialização — como subir o ambiente**
+
+| Opção | Ação                                                                      |
+| ----- | ------------------------------------------------------------------------- |
+| `[1]` | Sobe normalmente aproveitando cache de imagens existente                  |
+| `[2]` | Rebuild completo — derruba tudo, recompila e reconstrói imagens sem cache |
+| `[3]` | Sai sem fazer nada                                                        |
+
+### Menu principal (pós-boot)
+
+Após o ambiente estar no ar, o script entra em loop com o menu principal:
+
+| Opção | Ação                                                                              |
+| ----- | --------------------------------------------------------------------------------- |
+| `[1]` | Ver logs em tempo real de todos os containers (`Ctrl+C` volta ao menu)            |
+| `[2]` | Exibir status atual dos containers                                                |
+| `[3]` | Gerenciar um serviço individual (subir ou derrubar)                               |
+| `[4]` | Rebuild completo com confirmação (derruba tudo e recria imagens)                  |
+| `[5]` | Recompilar serviços Java (abre o menu de compilação novamente)                    |
+| `[6]` | Apagar todos os volumes persistentes com confirmação (dados do banco, fila, etc.) |
+| `[7]` | Sair e derrubar todos os containers (`Ctrl+C` tem o mesmo efeito)                 |
+
+### Observações
+
+- Se a compilação falhar em qualquer serviço, o script exibe o output do erro e interrompe o processo.
+- A rede `dac-network` é criada automaticamente caso não exista.
+- Volumes Maven são cacheados no volume `masterbank-maven-cache` para evitar download repetido de dependências ao compilar via Docker.
+- `Ctrl+C` a qualquer momento executa teardown e derruba os containers limpo.
+
+---
