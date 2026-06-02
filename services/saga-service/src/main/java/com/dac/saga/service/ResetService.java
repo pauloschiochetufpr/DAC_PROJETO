@@ -6,6 +6,9 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 public class ResetService {
@@ -25,15 +28,17 @@ public class ResetService {
     private final HttpClient httpClient = HttpClient.newHttpClient();
 
     public void solicitarResetOrquestrado() {
-        System.out.println("Saga: iniciando reset síncrono de todos os serviços...");
+        System.out.println("Saga: iniciando reset paralelo de todos os serviços...");
 
-        
-        postReset(authUrl + "/reboot");
-        postReset(clienteUrl + "/reboot");
-        postReset(gerenteUrl + "/reboot");
-        postReset(contaUrl + "/reboot");
+        List<CompletableFuture<Void>> tarefas = List.of(
+            CompletableFuture.runAsync(() -> postReset(authUrl + "/reboot")),
+            CompletableFuture.runAsync(() -> postReset(clienteUrl + "/reboot")),
+            CompletableFuture.runAsync(() -> postReset(gerenteUrl + "/reboot")),
+            CompletableFuture.runAsync(() -> postReset(contaUrl + "/reboot"))
+        );
 
-        
+        CompletableFuture.allOf(tarefas.toArray(new CompletableFuture[0])).join();
+
         System.out.println("Saga: reset de todos os serviços concluído!");
     }
 
@@ -41,10 +46,10 @@ public class ResetService {
         try {
             HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
+                .timeout(Duration.ofSeconds(10))
                 .POST(HttpRequest.BodyPublishers.noBody())
                 .build();
 
-            
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             System.out.println("Saga reset: POST " + url + " -> Status " + response.statusCode());
             if (response.statusCode() >= 400) {
