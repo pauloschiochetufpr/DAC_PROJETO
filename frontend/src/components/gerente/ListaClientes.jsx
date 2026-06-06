@@ -218,10 +218,10 @@ export default function ListaClientes({ clientes, loading, erro }) {
                               <Detail label="Nome" value={c.nome} />
                               <Detail label="Telefone" value={c.telefone} />
                               <Detail label="E-mail" value={c.email} />
-                              <Detail
+                              {/* <Detail
                                 label="Salário"
                                 value={fmtBRL(c.salario)}
-                              />
+                              /> */}
                               <Detail label="Endereço" value={c.endereco} />
                               <Detail
                                 label="Cidade / UF"

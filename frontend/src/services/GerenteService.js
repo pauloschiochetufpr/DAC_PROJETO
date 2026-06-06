@@ -43,27 +43,9 @@ export const GerenteService = {
     }
   },
 
-  listarClientes: async (cpf) => {
-    try {
-      const response = await API.listarClientesGerente(cpf);
-
-      return response.data;
-    } catch (err) {
-      throw new Error(
-        getHttpErrorMessage(err, "Erro ao listar clientes do gerente"),
-      );
-    }
-  },
-
   listarMeusClientes: async () => {
     try {
-      const cpf = getCpfUsuario();
-
-      if (!cpf) {
-        throw new Error("Usuário não autenticado");
-      }
-
-      const response = await API.listarClientesGerente(cpf);
+      const response = await API.listarClientes();
 
       return response.data;
     } catch (err) {

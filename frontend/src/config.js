@@ -101,6 +101,12 @@ export const API = {
   /** POST /auth/logout */
   logout: () => axiosPublic.post("/auth/logout"),
 
+  /** POST /auth/refresh -> { access_token } */
+  refresh: async () => {
+    const deviceId = await getDeviceId();
+    return axiosPublic.post("/auth/refresh", { deviceId });
+  },
+
   // CONTA do CLIENTE (protegido)
   /** GET /contas/:numero/saldo */
   consultarSaldo: (numero) => axiosAuth.get(`/contas/${numero}/saldo`),
@@ -127,10 +133,10 @@ export const API = {
 
   // CLIENTE
   /** GET /clientes/:cpf */
-  buscarClientePorCpf: (cpf) => axiosAuth.get(`/clientes/${cpf}`),
+  buscarPorCpf: (cpf) => axiosAuth.get(`/clientes/${cpf}`),
 
   /** GET /clientes */
-  listarClientes: () => axiosAuth.get("/clientes"),
+  listar: () => axiosAuth.get("/clientes"),
 
   /** GET /clientes requestParams */
   listarComFiltro: (filtro) =>
@@ -140,7 +146,7 @@ export const API = {
 
   /** GET /clientes requestParams para_aprovar */
   listarPendentes: () =>
-    API.listarClientesComParametro({
+    API.listarComFiltro({
       filtro: "para_aprovar",
     }),
 
@@ -155,10 +161,10 @@ export const API = {
 
   //GERENTE
   /** GET /gerentes */
-  listarGerentes: () => axiosAuth.get("/gerentes"),
+  listar: () => axiosAuth.get("/gerentes"),
 
   /** GET /gerentes/:cpf */
-  buscarGerentePorCpf: (cpf) => axiosAuth.get(`/gerentes/${cpf}`),
+  buscarPorCpf: (cpf) => axiosAuth.get(`/gerentes/${cpf}`),
 
   /** PUT /gerentes/:cpf */
   atualizar: (cpf, data) => axiosAuth.put(`/gerentes/${cpf}`, data),
@@ -166,8 +172,8 @@ export const API = {
   /** DELETE /gerentes/:cpf */
   excluir: (cpf) => axiosAuth.delete(`/gerentes/${cpf}`),
 
-  /** GET /gerentes/:cpf/clientes */
-  listarClientesGerente: (cpf) => axiosAuth.get(`/gerentes/${cpf}/clientes`),
+  /** GET /clientes */
+  listarClientes: () => axiosAuth.get("/clientes"),
 
   // CONTA (protegido)
   /** GET /contas/por-cliente/:cpf */
