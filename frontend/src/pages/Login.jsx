@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import FormLogin from "../components/login/FormLogin";
 import FormCad from "../components/login/FormCad";
 import templeBg from "../assets/temple.jpg";
@@ -11,6 +12,16 @@ import { t } from "../lib/i18n";
 export default function Login() {
   const { lang } = useLanguage();
   const [isLogin, setIsLogin] = useState(true);
+  const navigate = useNavigate();
+
+  // redireciona para home se já houver sessão ativa
+  useEffect(() => {
+    const token = localStorage.getItem("access_token");
+    const authUser = localStorage.getItem("auth_user");
+    if (token || authUser) {
+      navigate("/", { replace: true });
+    }
+  }, []);
 
   return (
     <div className="w-screen lg:h-[calc(100vh-48px)] min-h-[calc(100vh-48px)] relative overflow-hidden 2xl:p-12 pb-12">
