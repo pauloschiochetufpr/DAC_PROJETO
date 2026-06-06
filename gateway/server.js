@@ -34,7 +34,7 @@ async function validateJwt(token) {
   const key = crypto.createHash("sha256").update(JWT_SECRET).digest();
   const { payload } = await jwtDecrypt(token, key, {
     contentEncryptionAlgorithms: ["A256GCM"],
-    keyManagementAlgorithms: ["dir"]
+    keyManagementAlgorithms: ["dir"],
   });
   return payload;
 }
@@ -57,7 +57,7 @@ function createServiceProxy(target, serviceName, extraOpts = {}) {
   });
 }
 
-// Rotas abertas — não exigem token
+// Rotas abertas - não exigem token
 const OPEN_ROUTES = [
   { method: "POST", path: /^\/auth\/login$/ },
   { method: "POST", path: /^\/auth\/logout$/ },
@@ -72,10 +72,10 @@ const OPEN_ROUTES = [
   { method: "POST", path: /^\/reboot$/ },
 ];
 
-// Rotas internas — bloqueadas externamente
+// Rotas internas - bloqueadas externamente
 const BLOCKED_ROUTES = [{ method: "POST", path: /^\/auth\/validate$/ }];
 
-// Regras de acesso por role — primeiro match vence
+// Regras de acesso por role - primeiro match vence
 // Rotas autenticadas sem regra são acessíveis por qualquer usuário logado
 const ROLE_RULES = [
   // Clientes

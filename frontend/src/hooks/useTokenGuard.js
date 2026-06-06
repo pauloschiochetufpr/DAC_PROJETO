@@ -18,15 +18,14 @@ const INTERVALO_MS = 1500;
 
 // useTokenGuard | monitora access_token e auth_user e executa logout atômico ao detectar remoção ou adulteração
 export function useTokenGuard() {
-  const { usuario, limparUsuario } = useAuth();
+  const { usuario, limparUsuario, tokenSnapshotRef } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   // flag em memória: evita múltiplas execuções enquanto a transação de logout está em progresso
   const executando = useRef(false);
 
-  // snapshot dos valores legítimos da sessão atual para detectar adulteração
-  const snapshotToken = useRef(null);
+  // snapshot do auth_user para detectar adulteração (token snapshot vive no AuthContext)
   const snapshotUser = useRef(null);
 
   // refs para valores dinâmicos usados em callbacks estáticos (evita closures stale)
@@ -44,22 +43,24 @@ export function useTokenGuard() {
     navigateRef.current = navigate;
   }, [navigate]);
 
-  // atualiza snapshot e reseta flag quando uma sessão válida é estabelecida
+  // atualiza snapshots e reseta flag quando uma sessão válida é estabelecida
   useEffect(() => {
     const token = localStorage.getItem("access_token");
     const authUser = localStorage.getItem("auth_user");
     if (token && authUser && usuario) {
-      snapshotToken.current = token;
+      tokenSnapshotRef.current = token;
       snapshotUser.current = authUser;
       executando.current = false;
     }
+    // tokenSnapshotRef é um ref estável (useRef) — não dispara re-render, dependência segura
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [usuario]);
 
   // verifica se os tokens ainda existem e não foram adulterados
   function verificarIntegridade() {
     if (ROTAS_PUBLICAS.includes(pathnameRef.current)) return;
     if (executando.current) return;
-    if (!snapshotToken.current) return;
+    if (!tokenSnapshotRef.current) return;
 
     const token = localStorage.getItem("access_token");
     const authUser = localStorage.getItem("auth_user");
@@ -67,7 +68,7 @@ export function useTokenGuard() {
     const invalido =
       !token ||
       !authUser ||
-      token !== snapshotToken.current ||
+      token !== tokenSnapshotRef.current ||
       authUser !== snapshotUser.current;
 
     if (invalido) {

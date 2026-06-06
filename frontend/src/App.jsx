@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import MainLayout from "./layouts/MainLayout";
 
 // Páginas
@@ -17,10 +17,13 @@ import GerenciarGerentes from "./pages/GerenciarGerentes";
 import { useAuth } from "./hooks/useAuth";
 
 // RotaProtegida
-import RotaProtegida from  "./lib/RotaProtegida";
+import RotaProtegida from "./lib/RotaProtegida";
 
 // useTokenGuard
 import { useTokenGuard } from "./hooks/useTokenGuard";
+
+// useRefresh
+import { useRefresh } from "./hooks/useRefresh";
 
 function normalizarTipoUsuario(tipo) {
   if (tipo === 1 || tipo === "1" || tipo === "administrador") {
@@ -40,6 +43,7 @@ function normalizarTipoUsuario(tipo) {
 
 export default function App() {
   useTokenGuard();
+  useRefresh();
   const { usuario } = useAuth();
   const role = normalizarTipoUsuario(usuario?.tipo);
   let HomeCorreto;
@@ -53,6 +57,9 @@ export default function App() {
   } else if (role === "CLIENTE") {
     // Roteamento para Cliente
     HomeCorreto = <HomeCliente />;
+  } else {
+    // Sem sessão ativa - redireciona para login
+    HomeCorreto = <Navigate to="/login" replace />;
   }
 
   return (
@@ -64,19 +71,53 @@ export default function App() {
         {/* Gerente */}
         <Route
           path="/consulta_especializada"
-          element={<RotaProtegida element={<ConsultaEspecializada />} cargosPermitidos={["GERENTE"]} />}
+          element={
+            <RotaProtegida
+              element={<ConsultaEspecializada />}
+              cargosPermitidos={["GERENTE"]}
+            />
+          }
         />
 
         {/* Administrador */}
         <Route
           path="/gerenciar_gerentes"
-          element={<RotaProtegida element={<GerenciarGerentes />} cargosPermitidos={["ADMINISTRADOR"]} />}
+          element={
+            <RotaProtegida
+              element={<GerenciarGerentes />}
+              cargosPermitidos={["ADMINISTRADOR"]}
+            />
+          }
         />
 
         {/* Cliente */}
-        <Route path="/perfil" element={<RotaProtegida element={<Perfil />} cargosPermitidos={["CLIENTE"]} />} />
-        <Route path="/operations" element={<RotaProtegida element={<OperationsCli />} cargosPermitidos={["CLIENTE"]} />} />
-        <Route path="/extrato" element={<RotaProtegida element={<ExtratoGeral />} cargosPermitidos={["CLIENTE"]} />} />
+        <Route
+          path="/perfil"
+          element={
+            <RotaProtegida
+              element={<Perfil />}
+              cargosPermitidos={["CLIENTE"]}
+            />
+          }
+        />
+        <Route
+          path="/operations"
+          element={
+            <RotaProtegida
+              element={<OperationsCli />}
+              cargosPermitidos={["CLIENTE"]}
+            />
+          }
+        />
+        <Route
+          path="/extrato"
+          element={
+            <RotaProtegida
+              element={<ExtratoGeral />}
+              cargosPermitidos={["CLIENTE"]}
+            />
+          }
+        />
 
         {/* Funcionais */}
         <Route path="/login" element={<Login />} />

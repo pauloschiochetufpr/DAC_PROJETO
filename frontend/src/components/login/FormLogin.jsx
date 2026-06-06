@@ -48,6 +48,8 @@ export default function FormLogin() {
       const response = await API.login(form.email, form.senha);
       if (response.data?.access_token) {
         localStorage.setItem("access_token", response.data.access_token);
+        // timestamp de expiração calculado no cliente; usado pelo useRefresh para controle de vida útil
+        localStorage.setItem("access_token_exp", String(Date.now() + 600_000));
       }
       if (response.data?.tipo || response.data?.usuario) {
         salvarUsuario({
