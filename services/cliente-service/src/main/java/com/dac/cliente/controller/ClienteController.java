@@ -53,11 +53,11 @@ public class ClienteController {
         }
 
         if ("gerente".equalsIgnoreCase(userRole) && userCpf != null) {
-            List<ClienteResponseDTO> meusClientes = service.listarClientesDoGerente(userCpf);
+            List<DadosClienteResponseDTO> meusClientes = service.listarClientesDoGerente(userCpf);
             return ResponseEntity.ok(meusClientes);
         }
 
-        List<ClienteResponseDTO> todos = service.listarTodosAprovados();
+        List<DadosClienteResponseDTO> todos = service.listarTodosAprovados();
         return ResponseEntity.ok(todos);
     }
 

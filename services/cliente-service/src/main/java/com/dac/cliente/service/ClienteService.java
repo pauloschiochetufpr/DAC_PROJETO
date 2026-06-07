@@ -96,17 +96,17 @@ public class ClienteService {
     // -------------------------
     // R12 — Listar aprovados (para gerente — retorna clientes do próprio gerente)
     // -------------------------
-    public List<ClienteResponseDTO> listarTodosAprovados() {
+    public List<DadosClienteResponseDTO> listarTodosAprovados() {
         return repository.findByStatusOrderByNomeAsc(StatusCliente.APROVADO)
                 .stream()
-                .map(this::toClienteResponseDTO)
+                .map(this::toDadosClienteDTO)
                 .collect(Collectors.toList());
     }
 
     // -------------------------
     // R12 — Listar clientes do gerente (filtra por gerente CPF via conta-service)
     // -------------------------
-    public List<ClienteResponseDTO> listarClientesDoGerente(String gerenteCpf) {
+    public List<DadosClienteResponseDTO> listarClientesDoGerente(String gerenteCpf) {
         try {
             String json = httpGet(contaUrl + "/contas/por-gerente/" + gerenteCpf);
             List<Map<String, Object>> contas = objectMapper.readValue(json,
@@ -115,18 +115,19 @@ public class ClienteService {
             return contas.stream()
                 .map(conta -> {
                     String clienteCpf = stringVal(conta.get("cliente"));
-                    ClienteResponseDTO dto = repository.findById(clienteCpf)
-                        .map(this::toClienteResponseDTOSimples)
+                    DadosClienteResponseDTO dto = repository.findById(clienteCpf)
+                        .map(this::toDadosClienteDTOSimples)
                         .orElse(null);
                     if (dto != null) {
                         dto.setConta(stringVal(conta.get("numero")));
                         dto.setSaldo(doubleVal(conta.get("saldo")));
                         dto.setLimite(doubleVal(conta.get("limite")));
+                        dto.setGerente(stringVal(conta.get("gerente")));
                     }
                     return dto;
                 })
                 .filter(java.util.Objects::nonNull)
-                .sorted(Comparator.comparing(ClienteResponseDTO::getNome, Comparator.nullsLast(Comparator.naturalOrder())))
+                .sorted(Comparator.comparing(DadosClienteResponseDTO::getNome, Comparator.nullsLast(Comparator.naturalOrder())))
                 .collect(Collectors.toList());
         } catch (Exception e) {
             // Fallback: retorna lista vazia se conta-service indisponível
@@ -135,15 +136,17 @@ public class ClienteService {
     }
 
     // Mapper simples sem buscar conta (será preenchido pelo chamador)
-    private ClienteResponseDTO toClienteResponseDTOSimples(Cliente c) {
-        ClienteResponseDTO dto = new ClienteResponseDTO();
+    private DadosClienteResponseDTO toDadosClienteDTOSimples(Cliente c) {
+        DadosClienteResponseDTO dto = new DadosClienteResponseDTO();
         dto.setCpf(c.getCpf());
         dto.setNome(c.getNome());
         dto.setEmail(c.getEmail());
         dto.setTelefone(c.getTelefone());
         dto.setEndereco(c.getEndereco());
+        dto.setCep(c.getCep());
         dto.setCidade(c.getCidade());
         dto.setEstado(c.getEstado());
+        dto.setSalario(c.getSalario());
         return dto;
     }
 
@@ -320,6 +323,7 @@ public class ClienteService {
                 + e.getMessage());
         }
     }
+
 
     // -------------------------
     // HTTP client helpers para buscar dados do conta-service
