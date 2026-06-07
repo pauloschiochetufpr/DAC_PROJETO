@@ -56,7 +56,8 @@ public class DevService {
             contaCUD("0950", "09506382000", "Cleuddônio", "64065268052", "Godophredo", -10000.0, 10000.0, LocalDateTime.of(1990, 10, 10, 0, 0)),
             contaCUD("8573", "85733854057", "Catianna",   "23862179060", "Gyândula",   -1000.0,   1500.0, LocalDateTime.of(2012, 12, 12, 0, 0)),
             contaCUD("5887", "58872160006", "Cutardo",    "98574307084", "Geniéve",   150000.0,      0.0, LocalDateTime.of(2022,  2, 22, 0, 0)),
-            contaCUD("7617", "76179646090", "Coândrya",   "64065268052", "Godophredo",     0.0,   1500.0, LocalDateTime.of(2025,  1,  1, 0, 0))
+            contaCUD("7617", "76179646090", "Coândrya",   "64065268052", "Godophredo",     0.0,   1500.0, LocalDateTime.of(2025,  1,  1, 0, 0)),
+            contaCUD("5299", "52998224725", "Cidônia",    "11144477735", "Galdério",    2500.0,   3500.0, LocalDateTime.of(2024,  6,  6, 0, 0))
         );
     }
 
@@ -75,7 +76,8 @@ public class DevService {
             movCUD(TipoMovimentacao.DEPOSITO,      null,   "0950",   7000.0, LocalDateTime.of(2025,  2,  5, 10, 0)),
             movCUD(TipoMovimentacao.DEPOSITO,      null,   "8573",   1000.0, LocalDateTime.of(2025,  5,  5, 10, 0)),
             movCUD(TipoMovimentacao.SAQUE,        "8573",   null,    2000.0, LocalDateTime.of(2025,  5,  6, 10, 0)),
-            movCUD(TipoMovimentacao.DEPOSITO,      null,   "5887", 150000.0, LocalDateTime.of(2025,  6,  1, 10, 0))
+            movCUD(TipoMovimentacao.DEPOSITO,      null,   "5887", 150000.0, LocalDateTime.of(2025,  6,  1, 10, 0)),
+            movCUD(TipoMovimentacao.DEPOSITO,      null,   "5299",   2500.0, LocalDateTime.of(2024,  6,  6, 10, 0))
         );
     }
 
@@ -89,7 +91,8 @@ public class DevService {
             contaR("0950", "09506382000", "Cleuddônio", "64065268052", "Godophredo", new BigDecimal("-10000"),  new BigDecimal("10000"), "aprovado", LocalDate.of(1990, 10, 10)),
             contaR("8573", "85733854057", "Catianna",   "23862179060", "Gyândula",   new BigDecimal("-1000"),   new BigDecimal("1500"),  "aprovado", LocalDate.of(2012, 12, 12)),
             contaR("5887", "58872160006", "Cutardo",    "98574307084", "Geniéve",    new BigDecimal("150000"),  new BigDecimal("0"),     "aprovado", LocalDate.of(2022,  2, 22)),
-            contaR("7617", "76179646090", "Coândrya",   "64065268052", "Godophredo", new BigDecimal("0"),       new BigDecimal("1500"),  "aprovado", LocalDate.of(2025,  1,  1))
+            contaR("7617", "76179646090", "Coândrya",   "64065268052", "Godophredo", new BigDecimal("0"),       new BigDecimal("1500"),  "aprovado", LocalDate.of(2025,  1,  1)),
+            contaR("5299", "52998224725", "Cidônia",    "11144477735", "Galdério",   new BigDecimal("2500"),    new BigDecimal("3500"),  "aprovado", LocalDate.of(2024,  6,  6))
         );
     }
 
@@ -108,7 +111,8 @@ public class DevService {
             movR("DEPOSITO",      null,   "0950", null,          "09506382000", new BigDecimal("7000"),   LocalDateTime.of(2025,  2,  5, 10, 0)),
             movR("DEPOSITO",      null,   "8573", null,          "85733854057", new BigDecimal("1000"),   LocalDateTime.of(2025,  5,  5, 10, 0)),
             movR("SAQUE",        "8573",   null,  "85733854057", null,          new BigDecimal("2000"),   LocalDateTime.of(2025,  5,  6, 10, 0)),
-            movR("DEPOSITO",      null,   "5887", null,          "58872160006", new BigDecimal("150000"), LocalDateTime.of(2025,  6,  1, 10, 0))
+            movR("DEPOSITO",      null,   "5887", null,          "58872160006", new BigDecimal("150000"), LocalDateTime.of(2025,  6,  1, 10, 0)),
+            movR("DEPOSITO",      null,   "5299", null,          "52998224725", new BigDecimal("2500"),   LocalDateTime.of(2024,  6,  6, 10, 0))
         );
     }
 
