@@ -1,19 +1,26 @@
 package com.dac.auth.controller;
 
 // DTOs
+import com.dac.auth.dto.request.BotLoginRequestDTO;
 import com.dac.auth.dto.request.LoginRequestDTO;
 import com.dac.auth.dto.request.RefreshRequestDTO;
+import com.dac.auth.dto.response.BotLoginResponseDTO;
 import com.dac.auth.dto.response.ErrorResponseDTO;
 import com.dac.auth.dto.response.LoginResponseDTO;
 import com.dac.auth.dto.response.LogoutResponseDTO;
 import com.dac.auth.dto.response.RefreshResponseDTO;
+// exceções
+import com.dac.auth.exception.AuthenticationException;
 // entidades
 import com.dac.auth.entity.Session;
 import com.dac.auth.entity.Usuario;
 // repositórios
 import com.dac.auth.repository.UsuarioRepository;
+// config
+import com.dac.auth.config.BotEmailsConfig;
 // services
 import com.dac.auth.service.AuthService;
+import com.dac.auth.service.BotAuthService;
 import com.dac.auth.service.JwtService;
 import com.dac.auth.service.RefreshTokenService;
 // util
@@ -36,6 +43,12 @@ public class AuthController {
     private AuthService authService;
 
     @Autowired
+    private BotAuthService botAuthService;
+
+    @Autowired
+    private BotEmailsConfig botEmailsConfig;
+
+    @Autowired
     private JwtService jwtService;
 
     @Autowired
@@ -54,14 +67,35 @@ public class AuthController {
         DevLog.log("Requisição de login recebida - email: " + request.getEmail() + ", deviceId: " + request.getDeviceId());
 
         if (request.getEmail() == null || request.getEmail().isBlank() ||
-            request.getPassword() == null || request.getPassword().isBlank() ||
-            request.getDeviceId() == null || request.getDeviceId().isBlank() ||
-            request.getDeviceName() == null || request.getDeviceName().isBlank()) 
+            request.getPassword() == null || request.getPassword().isBlank())
+        {
+            DevLog.log("Login rejeitado - email ou senha ausente");
+            return ResponseEntity.badRequest().body(new ErrorResponseDTO(400, "Campos obrigatórios ausentes ou em branco"));
+        }
+
+        // fluxo alternativo para o bot - sem device/session/cookie
+        if (botEmailsConfig.isBotEmail(request.getEmail())) {
+            DevLog.log("Login via fluxo bot - email: " + request.getEmail());
+            try {
+                BotLoginRequestDTO botRequest = new BotLoginRequestDTO();
+                botRequest.setLogin(request.getEmail());
+                botRequest.setSenha(request.getPassword());
+                BotLoginResponseDTO botResponse = botAuthService.login(botRequest);
+                return ResponseEntity.ok(botResponse);
+            } catch (AuthenticationException e) {
+                DevLog.log("BotLogin falhou - " + e.getMessage());
+                return ResponseEntity.status(401).body(new ErrorResponseDTO(401, "Credenciais inválidas"));
+            }
+        }
+
+        // fluxo normal do frontend - deviceId e deviceName obrigatórios
+        if (request.getDeviceId() == null || request.getDeviceId().isBlank() ||
+            request.getDeviceName() == null || request.getDeviceName().isBlank())
         {
             DevLog.log("Login rejeitado - campo obrigatorio ausente: email=" + request.getEmail() + ", deviceId=" + request.getDeviceId());
             return ResponseEntity.badRequest().body(new ErrorResponseDTO(400, "Campos obrigatórios ausentes ou em branco"));
         }
-        
+
         // gateway injeta X-Forwarded-For via xfwd:true; fallback para remoteAddr em dev local
         // X-Forwarded-For pode ter formato "client, proxy1, proxy2" - o IP real é sempre o primeiro
         String xForwardedFor = httpRequest.getHeader("X-Forwarded-For");
@@ -145,7 +179,7 @@ public class AuthController {
 
     // logout | revoga sessão, expira cookie e retorna dados do usuário se o access token ainda for válido
     @PostMapping("/logout")
-    public ResponseEntity<LogoutResponseDTO> logout(
+    public ResponseEntity<?> logout(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @CookieValue(name = "refreshToken", required = false) String refreshToken,
             HttpServletResponse httpResponse) {
@@ -160,25 +194,33 @@ public class AuthController {
         httpResponse.addHeader("Set-Cookie",
             "refreshToken=; Path=/; HttpOnly; Secure; Max-Age=0; SameSite=Strict");
 
-        LogoutResponseDTO logoutResponse = new LogoutResponseDTO();
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            try {
-                String token = authHeader.substring(7);
-                JWTClaimsSet claims = jwtService.validateToken(token);
-                String cpf = claims.getSubject();
-                Usuario usuario = usuarioRepository.findByCpf(cpf).orElse(null);
-                if (usuario != null) {
-                    logoutResponse.setCpf(usuario.getCpf());
-                    logoutResponse.setNome(usuario.getNome());
-                    logoutResponse.setEmail(usuario.getEmail());
-                    logoutResponse.setTipo(usuario.getTipo());
-                }
-            } catch (Exception ignored) {
-                // token expirado ainda permite logout sem erros
-            }
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            DevLog.log("Logout sem token - retornando 401");
+            return ResponseEntity.status(401).body(new ErrorResponseDTO(401, "Usuário não está logado"));
         }
 
-        DevLog.log("Logout OK - cpf: " + logoutResponse.getCpf());
-        return ResponseEntity.ok(logoutResponse);
+        try {
+            String token = authHeader.substring(7);
+            JWTClaimsSet claims = jwtService.validateToken(token);
+            String cpf = claims.getSubject();
+            Usuario usuario = usuarioRepository.findByCpf(cpf).orElse(null);
+
+            if (usuario == null) {
+                DevLog.log("Logout - usuário não encontrado para cpf: " + cpf);
+                return ResponseEntity.status(401).body(new ErrorResponseDTO(401, "Usuário não está logado"));
+            }
+
+            LogoutResponseDTO logoutResponse = new LogoutResponseDTO();
+            logoutResponse.setCpf(usuario.getCpf());
+            logoutResponse.setNome(usuario.getNome());
+            logoutResponse.setEmail(usuario.getEmail());
+            logoutResponse.setTipo(usuario.getTipo());
+
+            DevLog.log("Logout OK - cpf: " + logoutResponse.getCpf());
+            return ResponseEntity.ok(logoutResponse);
+        } catch (Exception e) {
+            DevLog.log("Logout - token inválido ou expirado: " + e.getMessage());
+            return ResponseEntity.status(401).body(new ErrorResponseDTO(401, "Usuário não está logado"));
+        }
     }
 }

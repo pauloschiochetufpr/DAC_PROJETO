@@ -1,8 +1,16 @@
 package com.dac.auth.dto.request;
 
+// Jackson
+import com.fasterxml.jackson.annotation.JsonAlias;
+
 public class LoginRequestDTO {
 
+    // aceita "email" (frontend) ou "login"
+    @JsonAlias("login")
     private String email;
+
+    // aceita "password" (frontend) ou "senha"
+    @JsonAlias("senha")
     private String password;
 
     // fingerprint SHA-256 gerado pelo frontend para rastreamento de dispositivo
