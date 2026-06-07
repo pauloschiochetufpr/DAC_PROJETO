@@ -101,6 +101,12 @@ export const API = {
   /** POST /auth/logout */
   logout: () => axiosPublic.post("/auth/logout"),
 
+  /** POST /auth/refresh -> { access_token } */
+  refresh: async () => {
+    const deviceId = await getDeviceId();
+    return axiosPublic.post("/auth/refresh", { deviceId });
+  },
+
   // CONTA do CLIENTE (protegido)
   /** GET /contas/:numero/saldo */
   consultarSaldo: (numero) => axiosAuth.get(`/contas/${numero}/saldo`),

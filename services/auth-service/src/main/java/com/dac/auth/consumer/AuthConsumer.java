@@ -6,6 +6,8 @@ import com.dac.auth.config.RabbitMQConfig;
 import com.dac.auth.entity.Usuario;
 // repositórios
 import com.dac.auth.repository.UsuarioRepository;
+// util
+import com.dac.auth.util.DevLog;
 // Spring AMQP / RabbitMQ
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,11 +46,11 @@ public class AuthConsumer {
         String senha = msg.get("senha");
         String tipo  = msg.get("tipo");
 
-        System.out.println("Auth: criando usuario para CPF " + cpf);
+        DevLog.log("criarUsuario - recebido CPF: " + cpf + ", email: " + email + ", tipo: " + tipo);
 
         Optional<Usuario> existente = usuarioRepository.findByCpf(cpf);
         if (existente.isPresent()) {
-            System.out.println("Auth: usuario com CPF " + cpf + " já existe, ignorando.");
+            DevLog.log("criarUsuario ignorado - CPF ja existe: " + cpf);
             return;
         }
 
@@ -60,7 +62,7 @@ public class AuthConsumer {
         usuario.setTipo(tipo);
 
         usuarioRepository.save(usuario);
-        System.out.println("Auth: usuario criado com sucesso para " + email);
+        DevLog.log("criarUsuario OK - email: " + email + ", CPF: " + cpf);
     }
 
     // atualizarUsuario | atualiza campos de um usuário existente com os dados recebidos via fila
@@ -68,11 +70,11 @@ public class AuthConsumer {
     public void atualizarUsuario(Map<String, String> msg) {
         String cpf = msg.get("cpf");
 
-        System.out.println("Auth: atualizando usuario CPF " + cpf);
+        DevLog.log("atualizarUsuario - recebido CPF: " + cpf);
 
         Optional<Usuario> opt = usuarioRepository.findByCpf(cpf);
         if (opt.isEmpty()) {
-            System.err.println("Auth: usuario com CPF " + cpf + " não encontrado para atualização.");
+            DevLog.log("atualizarUsuario falhou - CPF nao encontrado: " + cpf);
             return;
         }
 
@@ -83,7 +85,7 @@ public class AuthConsumer {
         if (msg.containsKey("senha")) usuario.setSenhaHash(hashIfNeeded(msg.get("senha")));
 
         usuarioRepository.save(usuario);
-        System.out.println("Auth: usuario " + cpf + " atualizado.");
+        DevLog.log("atualizarUsuario OK - CPF: " + cpf);
     }
 
     // removerUsuario | exclui o usuário do banco a partir do CPF recebido via fila
@@ -91,15 +93,15 @@ public class AuthConsumer {
     public void removerUsuario(Map<String, String> msg) {
         String cpf = msg.get("cpf");
 
-        System.out.println("Auth: removendo usuario CPF " + cpf);
+        DevLog.log("removerUsuario - recebido CPF: " + cpf);
 
         Optional<Usuario> opt = usuarioRepository.findByCpf(cpf);
         if (opt.isEmpty()) {
-            System.err.println("Auth: usuario com CPF " + cpf + " não encontrado para remoção.");
+            DevLog.log("removerUsuario falhou - CPF nao encontrado: " + cpf);
             return;
         }
 
         usuarioRepository.delete(opt.get());
-        System.out.println("Auth: usuario " + cpf + " removido.");
+        DevLog.log("removerUsuario OK - CPF: " + cpf);
     }
 }
