@@ -63,15 +63,20 @@ public class AuthController {
         }
         
         // gateway injeta X-Forwarded-For via xfwd:true; fallback para remoteAddr em dev local
-        String ip = httpRequest.getHeader("X-Forwarded-For");
-        if (ip == null || ip.isBlank())
+        // X-Forwarded-For pode ter formato "client, proxy1, proxy2" - o IP real é sempre o primeiro
+        String xForwardedFor = httpRequest.getHeader("X-Forwarded-For");
+        String ip;
+        if (xForwardedFor != null && !xForwardedFor.isBlank()) {
+            ip = xForwardedFor.split(",")[0].trim();
+        } else {
             ip = httpRequest.getRemoteAddr();
+        }
 
         AuthService.LoginResult result = authService.login(request, ip);
 
         // SameSite=Strict via header manual | API Cookie do Jakarta não expõe setSameSite()
         httpResponse.addHeader("Set-Cookie",
-            String.format("refreshToken=%s; Path=/; HttpOnly; Max-Age=%d; SameSite=Strict",
+            String.format("refreshToken=%s; Path=/; HttpOnly; Secure; Max-Age=%d; SameSite=Strict",
                 result.refreshId(), 12 * 60 * 60));
 
         DevLog.log("Login OK - email: " + request.getEmail() + ", tipo: " + result.response().getTipo());
@@ -93,7 +98,19 @@ public class AuthController {
             return ResponseEntity.status(401).body(new ErrorResponseDTO(401, "Cookie de refresh ausente"));
         }
 
-        String ip = httpRequest.getRemoteAddr();
+        if (request.getDeviceId() == null || request.getDeviceId().isBlank()) {
+            DevLog.log("Refresh rejeitado - deviceId ausente ou em branco");
+            return ResponseEntity.badRequest().body(new ErrorResponseDTO(400, "deviceId é obrigatório"));
+        }
+
+        // mesmo tratamento do login: primeiro IP da cadeia X-Forwarded-For é o cliente real
+        String xForwardedFor = httpRequest.getHeader("X-Forwarded-For");
+        String ip;
+        if (xForwardedFor != null && !xForwardedFor.isBlank()) {
+            ip = xForwardedFor.split(",")[0].trim();
+        } else {
+            ip = httpRequest.getRemoteAddr();
+        }
         Session newSession = refreshTokenService.rotateSession(refreshToken, request.getDeviceId(), ip);
 
         // userId null indica inconsistência no banco; não deve ocorrer em fluxo normal
@@ -103,10 +120,10 @@ public class AuthController {
             throw new RuntimeException("Sessão sem userId");
         }
 
-        Usuario usuario = usuarioRepository.findById(userId)
+        Usuario usuario = usuarioRepository.findByCpf(userId)
             .orElseThrow(() -> {
-                DevLog.log("Refresh falhou - usuario nao encontrado para userId: " + userId);
-                return new RuntimeException("Usuário não encontrado para o userId da sessão: " + userId);
+                DevLog.log("Refresh falhou - usuario nao encontrado para cpf: " + userId);
+                return new RuntimeException("Usuário não encontrado para o cpf da sessão: " + userId);
             });
 
         String newToken = jwtService.generateToken(
@@ -117,7 +134,7 @@ public class AuthController {
 
         // SameSite=Strict via header manual - API Cookie do Jakarta não expõe setSameSite()
         httpResponse.addHeader("Set-Cookie",
-            String.format("refreshToken=%s; Path=/; HttpOnly; Max-Age=%d; SameSite=Strict",
+            String.format("refreshToken=%s; Path=/; HttpOnly; Secure; Max-Age=%d; SameSite=Strict",
                 newSession.getRefreshId(), 12 * 60 * 60));
 
         RefreshResponseDTO response = new RefreshResponseDTO();
@@ -141,7 +158,7 @@ public class AuthController {
 
         // sobrescreve o cookie com maxAge=0 para forçar expiração no browser
         httpResponse.addHeader("Set-Cookie",
-            "refreshToken=; Path=/; HttpOnly; Max-Age=0; SameSite=Strict");
+            "refreshToken=; Path=/; HttpOnly; Secure; Max-Age=0; SameSite=Strict");
 
         LogoutResponseDTO logoutResponse = new LogoutResponseDTO();
         if (authHeader != null && authHeader.startsWith("Bearer ")) {

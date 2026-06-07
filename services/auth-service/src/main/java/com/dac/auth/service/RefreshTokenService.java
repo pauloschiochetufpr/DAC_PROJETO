@@ -46,11 +46,15 @@ public class RefreshTokenService {
         return sessionRepository.save(session);
     }
 
-    // registerOrUpdateDevice | registra um novo dispositivo ou atualiza lastSeen e IP do existente
+    // registerOrUpdateDevice | registra um novo dispositivo ou atualiza lastSeen e IP do existente; bloqueia login se device estiver blacklistado
     public Device registerOrUpdateDevice(String userId, String deviceId,
                                          String deviceName, String ip) {
         return deviceRepository.findByDeviceId(deviceId)
             .map(existing -> {
+                if (existing.isBlacklisted()) {
+                    DevLog.log("Login bloqueado - dispositivo blacklistado tentou autenticar: " + deviceId + ", userId: " + userId);
+                    throw new SecurityException("DEVICE_BLACKLISTED");
+                }
                 existing.setLastSeen(Instant.now());
                 existing.setIpLast(ip);
                 return deviceRepository.save(existing);
@@ -129,6 +133,11 @@ public class RefreshTokenService {
         session.setRevoked(true);
         sessionRepository.save(session);
 
+        // alerta quando IP muda entre rotações - pode indicar token roubado
+        String previousIp = device.getIpLast();
+        if (previousIp != null && !previousIp.equals(ip)) {
+            DevLog.log("ALERTA: mudanca de IP detectada - deviceId: " + device.getDeviceId() + ", userId: " + session.getUserId() + ", ip anterior: " + previousIp + ", ip atual: " + ip);
+        }
         device.setLastSeen(Instant.now());
         device.setIpLast(ip);
         deviceRepository.save(device);
