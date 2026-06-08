@@ -44,6 +44,16 @@ export const ClienteService = {
     }
   },
 
+  atualizarPerfil: async (cpf, dados) => {
+    try {
+      const response = await API.atualizarPerfilCliente(cpf, dados);
+
+      return response.data;
+    } catch (err) {
+      throw new Error(getHttpErrorMessage(err, "Erro ao atualizar perfil"));
+    }
+  },
+
   aprovar: async (cpf) => {
     try {
       const response = await API.aprovar(cpf);
@@ -56,7 +66,7 @@ export const ClienteService = {
 
   rejeitar: async (cpf, motivo) => {
     try {
-      const response = await API.rejeitar(cpf, { motivo });
+      const response = await API.rejeitarCliente(cpf, motivo);
 
       return response.data;
     } catch (err) {

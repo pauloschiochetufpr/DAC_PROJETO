@@ -11,11 +11,12 @@ import { useLanguage } from "../hooks/useLanguage";
 import { t } from "../lib/i18n";
 
 // Libs
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
-// Banco de mocks temporário
-import { useBanco } from "../hooks/useBanco";
+// Context e Services
+import { useAuth } from "../hooks/useAuth";
+import { ClienteService } from "../services/ClienteService";
 
 // componentes
 /// Credito
@@ -27,15 +28,42 @@ import MiniExtratoMob from "../components/listas/MiniExtratoMob";
 
 export default function HomeCliente() {
   const { lang } = useLanguage();
-  // Mock renderizado
-  const { conta, saldo } = useBanco();
+  const { usuario } = useAuth();
+
+  const [cliente, setCliente] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState(null);
 
   // States de interface
-
-  // Show info - persiste no localStorage entre recarregadas e abas
   const [showInfo, setShowInfo] = useState(
     () => localStorage.getItem("showInfo") !== "false",
   );
+
+  useEffect(() => {
+    async function carregarCliente() {
+      if (!usuario?.cpf) {
+        setErro("Não foi possível identificar o cliente autenticado.");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setErro(null);
+
+        const data = await ClienteService.buscarPorCpf(usuario.cpf);
+
+        setCliente(data);
+      } catch (err) {
+        console.error("Erro ao carregar cliente:", err);
+        setErro(err.message || "Erro ao carregar os dados do cliente.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    carregarCliente();
+  }, [usuario?.cpf]);
 
   const toggleShowInfo = () => {
     setShowInfo((prev) => {
@@ -45,7 +73,9 @@ export default function HomeCliente() {
     });
   };
 
-  // Conversões e mascaras
+  // Dados do cliente
+  const numeroConta = cliente?.conta ?? "—";
+  const saldo = Number(cliente?.saldo ?? 0);
   const balance = saldo.toLocaleString("pt-BR", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -105,7 +135,7 @@ export default function HomeCliente() {
                           "
               >
                 <div className="bg-black/50 shadow-inner shadow-black rounded-lg px-4 py-2 select-none text-nowrap font-orienta">
-                  {t(lang, "HomeClient.accountNumber")}: {conta}
+                  {t(lang, "HomeClient.accountNumber")}: {numeroConta}
                 </div>
               </h1>
             </div>

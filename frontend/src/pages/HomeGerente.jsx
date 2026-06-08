@@ -45,11 +45,12 @@ export default function HomeGerente() {
       setErroClientes(null);
       setErroMelhores(null);
 
-      const [pendentesResult, clientesResult] = await Promise.allSettled([
-        ClienteService.listarPendentes(),
-        GerenteService.listarMeusClientes(),
-        ClienteService.listarComFiltro("melhores_clientes"),
-      ]);
+      const [pendentesResult, clientesResult, melhoresResult] =
+        await Promise.allSettled([
+          ClienteService.listarPendentes(),
+          GerenteService.listarMeusClientes(),
+          ClienteService.listarComFiltro("melhores_clientes"),
+        ]);
 
       // Pendentes
       if (pendentesResult.status === "fulfilled") {

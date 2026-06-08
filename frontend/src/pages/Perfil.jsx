@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { useBanco } from "../hooks/useBanco";
-import { useAuth } from "../hooks/useAuth";
+
 import { MetalSurface } from "../components/MetalSurface";
 import WaveSimpleRed from "../components/WaveSimpleRed";
 import SecundaryBorder from "../assets/icons/SecundaryBorder.svg";
 import { ArrowLeft, ArrowRight } from "lucide-react";
+
+// Context e Services
+import { useAuth } from "../hooks/useAuth";
+import { ClienteService } from "../services/ClienteService";
 
 // i18n
 import { useLanguage } from "../hooks/useLanguage";
@@ -13,16 +16,44 @@ import { t } from "../lib/i18n";
 
 export default function Perfil() {
   const { lang } = useLanguage();
-  const { client, contaInfo, atualizarPerfil, saldo } = useBanco();
   const { usuario } = useAuth();
-  if (!client || !contaInfo) {
-    return <div>Carregando...</div>;
-  }
+
+  const [cliente, setCliente] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState(null);
+  const [salvando, setSalvando] = useState(false);
 
   const [isEditing, setIsEditing] = useState(false);
   const [fieldEditing, setFieldEditing] = useState({});
   const [form, setForm] = useState({});
   const [profileSection, setProfileSection] = useState("profile");
+
+  useEffect(() => {
+    async function carregarPerfil() {
+      if (!usuario?.cpf) {
+        setErro("Não foi possível identificar o cliente autenticado.");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setErro(null);
+
+        const data = await ClienteService.buscarPorCpf(usuario.cpf);
+
+        setCliente(data);
+        setForm(data);
+      } catch (err) {
+        console.error("Erro ao carregar perfil:", err);
+        setErro(err.message || "Erro ao carregar os dados do perfil.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    carregarPerfil();
+  }, [usuario?.cpf]);
 
   function calcularLimiteParaSalario(salario, saldoAtual) {
     const base = salario >= 2000 ? salario / 2 : 0;
@@ -47,13 +78,15 @@ export default function Perfil() {
 
   // mantém form sincronizado mesclando dados de identidade do usuario com dados financeiros do client
   useEffect(() => {
+    if (!cliente) return;
+
     setForm({
-      nome: usuario?.nome ?? "",
-      cpf: usuario?.cpf ?? "",
-      email: usuario?.email ?? "",
-      ...client,
+      ...cliente,
+      nome: cliente.nome ?? usuario?.nome ?? "",
+      cpf: cliente.cpf ?? usuario?.cpf ?? "",
+      email: cliente.email ?? usuario?.email ?? "",
     });
-  }, [client, usuario]);
+  }, [cliente, usuario]);
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -74,14 +107,25 @@ export default function Perfil() {
     setForm(updated);
   }
 
+  function criarFormulario(clienteAtual) {
+    return {
+      ...clienteAtual,
+      nome: clienteAtual?.nome ?? usuario?.nome ?? "",
+      cpf: clienteAtual?.cpf ?? usuario?.cpf ?? "",
+      email: clienteAtual?.email ?? usuario?.email ?? "",
+    };
+  }
+
   function handleEdit() {
-    setForm({
-      nome: usuario?.nome ?? "",
-      cpf: usuario?.cpf ?? "",
-      email: usuario?.email ?? "",
-      ...client,
-    });
+    setForm(criarFormulario(cliente));
+    setFieldEditing({});
     setIsEditing(true);
+  }
+
+  function handleCancel() {
+    setForm(criarFormulario(cliente));
+    setFieldEditing({});
+    setIsEditing(false);
   }
 
   function handleFieldClick(name) {
@@ -90,21 +134,51 @@ export default function Perfil() {
     setFieldEditing((s) => ({ ...s, [name]: true }));
   }
 
-  function handleCancel() {
-    setForm({
-      nome: usuario?.nome ?? "",
-      cpf: usuario?.cpf ?? "",
-      email: usuario?.email ?? "",
-      ...client,
-    });
-    setIsEditing(false);
-  }
+  async function handleSave() {
+    if (!usuario?.cpf || salvando) return;
 
-  function handleSave() {
-    atualizarPerfil(form).then(() => {
+    try {
+      setSalvando(true);
+      setErro(null);
+
+      const dadosAtualizacao = {
+        nome: form.nome?.trim(),
+        email: form.email?.trim(),
+        telefone: form.telefone?.trim(),
+        salario: Number(form.salario ?? 0),
+        cep: form.cep?.trim(),
+        endereco: form.endereco?.trim(),
+        cidade: form.cidade?.trim(),
+        estado: form.estado?.trim(),
+      };
+
+      const atualizado = await ClienteService.atualizarPerfil(
+        usuario.cpf,
+        dadosAtualizacao,
+      );
+
+      setCliente(atualizado);
+      setForm(criarFormulario(atualizado));
       setIsEditing(false);
       setFieldEditing({});
-    });
+    } catch (err) {
+      console.error("Erro ao atualizar perfil:", err);
+      setErro(err.message || "Erro ao atualizar o perfil.");
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  if (loading) {
+    return <div>Carregando...</div>;
+  }
+
+  if (erro && !cliente) {
+    return <div className="text-red-500">{erro}</div>;
+  }
+
+  if (!cliente) {
+    return <div>Dados do cliente não encontrados.</div>;
   }
 
   return (
@@ -249,7 +323,7 @@ export default function Perfil() {
                                 value={
                                   isEditing
                                     ? (form?.[f.key] ?? "")
-                                    : (client?.[f.key] ??
+                                    : (cliente?.[f.key] ??
                                       usuario?.[f.key] ??
                                       "")
                                 }
@@ -294,7 +368,7 @@ export default function Perfil() {
                               value={
                                 isEditing
                                   ? (form.salario ?? "").toString()
-                                  : Number(client?.salario ?? 0).toFixed(2)
+                                  : Number(cliente?.salario ?? 0).toFixed(2)
                               }
                               onChange={(e) => {
                                 let value = e.target.value;
@@ -332,11 +406,11 @@ export default function Perfil() {
                               type="text"
                               value={calcularLimiteParaSalario(
                                 isEditing
-                                  ? (form.salario ?? client?.salario ?? 0)
-                                  : (client?.salario ?? 0),
+                                  ? (form.salario ?? cliente?.salario ?? 0)
+                                  : (cliente?.salario ?? 0),
                                 isEditing
-                                  ? (form.saldo ?? client?.saldo ?? 0)
-                                  : (client?.saldo ?? 0),
+                                  ? (form.saldo ?? cliente?.saldo ?? 0)
+                                  : (cliente?.saldo ?? 0),
                               ).toFixed(2)}
                               readOnly
                               disabled
@@ -395,7 +469,7 @@ export default function Perfil() {
                                 value={
                                   isEditing
                                     ? (form?.[f.key] ?? "")
-                                    : (client?.[f.key] ?? "")
+                                    : (cliente?.[f.key] ?? "")
                                 }
                                 onChange={handleChange}
                                 disabled={!isFieldEditable}
@@ -458,9 +532,12 @@ export default function Perfil() {
                     <>
                       <button
                         onClick={handleSave}
-                        className="flex-1 text-green-400 text-xs lg:text-sm hover:bg-white/5 transition"
+                        disabled={salvando}
+                        className="flex-1 text-green-400 text-xs lg:text-sm hover:bg-white/5 transition disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {t(lang, "Profile.actions.save")}
+                        {salvando
+                          ? "Salvando..."
+                          : t(lang, "Profile.actions.save")}
                       </button>
 
                       <div className="w-[1px] bg-white/10" />
@@ -579,7 +656,11 @@ export default function Perfil() {
             text-secundary font-semibold
           "
               >
-                R$ {Number(saldo ?? 0).toFixed(2)}
+                R${" "}
+                {Number(cliente?.saldo ?? 0).toLocaleString("pt-BR", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
               </span>
             </div>
 
@@ -591,7 +672,7 @@ export default function Perfil() {
                   {t(lang, "Profile.accountInfo.accountNumber")}
                 </span>
                 <span className="text-base sm:text-lg md:text-xl font-medium text-zinc-100 break-all">
-                  {contaInfo.conta}
+                  {cliente?.conta ?? "—"}
                 </span>
               </div>
 
@@ -601,7 +682,7 @@ export default function Perfil() {
                   {t(lang, "Profile.accountInfo.manager")}
                 </span>
                 <span className="text-base sm:text-lg md:text-xl font-medium text-zinc-100">
-                  {contaInfo.gerente}
+                  {cliente?.gerente_nome ?? "—"}
                 </span>
               </div>
             </div>

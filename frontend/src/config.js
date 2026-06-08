@@ -133,7 +133,7 @@ export const API = {
 
   // CLIENTE
   /** GET /clientes/:cpf */
-  buscarPorCpf: (cpf) => axiosAuth.get(`/clientes/${cpf}`),
+  buscarClientePorCpf: (cpf) => axiosAuth.get(`/clientes/${cpf}`),
 
   /** GET /clientes */
   listar: () => axiosAuth.get("/clientes"),
@@ -149,6 +149,10 @@ export const API = {
     API.listarComFiltro({
       filtro: "para_aprovar",
     }),
+
+  /** PUT /clientes/:cpf */
+  atualizarPerfilCliente: (cpf, dados) =>
+    axiosAuth.put(`/clientes/${cpf}`, dados),
 
   /** POST /clientes/:cpf/aprovar */
   aprovar: (cpf) => axiosAuth.post(`/clientes/${cpf}/aprovar`),
