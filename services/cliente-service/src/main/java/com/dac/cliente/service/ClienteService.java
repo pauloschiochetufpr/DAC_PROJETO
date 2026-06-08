@@ -429,7 +429,7 @@ public class ClienteService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Salário inválido");
 
         String cpf = normalizarDocumento(dto.getCpf());
-        if (cpf.length() != 11)
+        if (!com.dac.cliente.util.CpfValidator.isValid(cpf))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CPF inválido");
 
         String cep = normalizarDocumento(dto.getCep());
