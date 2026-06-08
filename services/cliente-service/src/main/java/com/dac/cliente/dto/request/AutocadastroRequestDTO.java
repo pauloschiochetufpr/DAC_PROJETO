@@ -59,21 +59,16 @@ public class AutocadastroRequestDTO {
         this.endereco = endereco;
     }
 
+    @com.fasterxml.jackson.annotation.JsonProperty("CEP")
+    @com.fasterxml.jackson.annotation.JsonAlias("cep")
     public String getCep() {
         return cep;
     }
 
+    @com.fasterxml.jackson.annotation.JsonProperty("CEP")
+    @com.fasterxml.jackson.annotation.JsonAlias("cep")
     public void setCep(String cep) {
         this.cep = cep;
-    }
-
-    public String getCEP() {
-        return cep;
-    }
-
-    @com.fasterxml.jackson.annotation.JsonSetter("CEP")
-    public void setCEP(String CEP) {
-        this.cep = CEP;
     }
 
     public String getCidade() {

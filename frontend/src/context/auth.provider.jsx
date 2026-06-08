@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 
 // AuthContext
 import { AuthContext } from "./auth.context";
@@ -20,6 +20,9 @@ export function AuthProvider({ children }) {
   // Usuário autenticado: { tipo, nome, cpf, email }
   const [usuario, setUsuario] = useState(() => lerUsuarioSalvo());
 
+  // snapshot do access_token atual; compartilhado entre useTokenGuard e useRefresh
+  const tokenSnapshotRef = useRef(null);
+
   // salvarUsuario | persiste o usuário autenticado no state e no localStorage
   const salvarUsuario = useCallback((dadosUsuario) => {
     setUsuario(dadosUsuario);
@@ -31,10 +34,25 @@ export function AuthProvider({ children }) {
     setUsuario(null);
     localStorage.removeItem(AUTH_USER_KEY);
     localStorage.removeItem("access_token");
+    localStorage.removeItem("access_token_exp");
+    tokenSnapshotRef.current = null;
+  }, []);
+
+  // atualizarTokenSnapshot | atualiza o snapshot do access_token sem causar re-render
+  const atualizarTokenSnapshot = useCallback((novoToken) => {
+    tokenSnapshotRef.current = novoToken;
   }, []);
 
   return (
-    <AuthContext.Provider value={{ usuario, salvarUsuario, limparUsuario }}>
+    <AuthContext.Provider
+      value={{
+        usuario,
+        salvarUsuario,
+        limparUsuario,
+        tokenSnapshotRef,
+        atualizarTokenSnapshot,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

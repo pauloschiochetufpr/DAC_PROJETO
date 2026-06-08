@@ -38,6 +38,7 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 cookie-debug.md
+useLogs.md
 
 node_modules
 dist

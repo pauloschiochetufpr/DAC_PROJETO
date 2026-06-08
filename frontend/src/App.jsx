@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import MainLayout from "./layouts/MainLayout";
 
 // Páginas
@@ -16,24 +16,25 @@ import GerenciarGerentes from "./pages/GerenciarGerentes";
 // useAuth
 import { useAuth } from "./hooks/useAuth";
 
+// RotaProtegida
+import RotaProtegida from "./lib/RotaProtegida";
+
 // useTokenGuard
 import { useTokenGuard } from "./hooks/useTokenGuard";
 
+// useRefresh
+import { useRefresh } from "./hooks/useRefresh";
+
 function normalizarTipoUsuario(tipo) {
-  if (
-    tipo === 1 ||
-    tipo === "1" ||
-    tipo === "ADMIN" ||
-    tipo === "ADMINISTRADOR"
-  ) {
+  if (tipo === 1 || tipo === "1" || tipo === "administrador") {
     return "ADMINISTRADOR";
   }
 
-  if (tipo === 2 || tipo === "2" || tipo === "GERENTE") {
+  if (tipo === 2 || tipo === "2" || tipo === "gerente") {
     return "GERENTE";
   }
 
-  if (tipo === 3 || tipo === "3" || tipo === "CLIENTE") {
+  if (tipo === 3 || tipo === "3" || tipo === "cliente") {
     return "CLIENTE";
   }
 
@@ -42,6 +43,7 @@ function normalizarTipoUsuario(tipo) {
 
 export default function App() {
   useTokenGuard();
+  useRefresh();
   const { usuario } = useAuth();
   const role = normalizarTipoUsuario(usuario?.tipo);
   let HomeCorreto;
@@ -55,21 +57,69 @@ export default function App() {
   } else if (role === "CLIENTE") {
     // Roteamento para Cliente
     HomeCorreto = <HomeCliente />;
+  } else {
+    // Sem sessão ativa - redireciona para login
+    HomeCorreto = <Navigate to="/login" replace />;
   }
 
   return (
     <MainLayout>
       <Routes>
-        <Route path="/" element={HomeCorreto ?? null} />
+        {/* Globais */}
+        <Route path="/" element={HomeCorreto} />
+
+        {/* Gerente */}
         <Route
           path="/consulta_especializada"
-          element={<ConsultaEspecializada />}
+          element={
+            <RotaProtegida
+              element={<ConsultaEspecializada />}
+              cargosPermitidos={["GERENTE"]}
+            />
+          }
         />
-        <Route path="/gerenciar_gerentes" element={<GerenciarGerentes />} />
-        <Route path="/perfil" element={<Perfil />} />
-        <Route path="/operations" element={<OperationsCli />} />
-        <Route path="/extrato" element={<ExtratoGeral />} />
 
+        {/* Administrador */}
+        <Route
+          path="/gerenciar_gerentes"
+          element={
+            <RotaProtegida
+              element={<GerenciarGerentes />}
+              cargosPermitidos={["ADMINISTRADOR"]}
+            />
+          }
+        />
+
+        {/* Cliente */}
+        <Route
+          path="/perfil"
+          element={
+            <RotaProtegida
+              element={<Perfil />}
+              cargosPermitidos={["CLIENTE"]}
+            />
+          }
+        />
+        <Route
+          path="/operations"
+          element={
+            <RotaProtegida
+              element={<OperationsCli />}
+              cargosPermitidos={["CLIENTE"]}
+            />
+          }
+        />
+        <Route
+          path="/extrato"
+          element={
+            <RotaProtegida
+              element={<ExtratoGeral />}
+              cargosPermitidos={["CLIENTE"]}
+            />
+          }
+        />
+
+        {/* Funcionais */}
         <Route path="/login" element={<Login />} />
 
         {/* Guard global para rotas inexistentes */}
