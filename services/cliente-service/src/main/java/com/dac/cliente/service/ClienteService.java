@@ -225,6 +225,17 @@ public class ClienteService {
 
         repository.save(c);
 
+        try {
+            Map<String, String> authUpdate = new HashMap<>();
+            authUpdate.put("cpf", cpf);
+            if (dto.getNome() != null)  authUpdate.put("nome", normalizarTexto(dto.getNome()));
+            if (dto.getEmail() != null) authUpdate.put("email", normalizarEmail(dto.getEmail()));
+            rabbitTemplate.convertAndSend(RabbitMQConfig.AUTH_EXCHANGE, "auth.atualizar", authUpdate);
+        } catch (Exception e) {
+            System.err.println("cliente-service: aviso - não foi possível publicar evento auth.atualizar: "
+                + e.getMessage());
+        }
+
         // R4: se salário mudou, notifica conta-service para recalcular limite
         if (salarioAlterado) {
             try {
