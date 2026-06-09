@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { API } from "../../config";
 
 // i18n
 import { useLanguage } from "../../hooks/useLanguage";
@@ -32,6 +33,20 @@ function formatSalary(value) {
   const cleaned = value.replace(/\D/g, "");
   const number = (Number(cleaned) / 100).toFixed(2);
   return `R$ ${number}`;
+}
+
+function onlyDigits(value) {
+  return (value || "").replace(/\D/g, "");
+}
+
+function parseSalary(value) {
+  const digits = onlyDigits(value);
+  return digits ? Number(digits) / 100 : 0;
+}
+
+function buildEndereco({ logradouro, numero, complemento }) {
+  const base = [logradouro?.trim(), numero?.trim()].filter(Boolean).join(", ");
+  return complemento?.trim() ? `${base} - ${complemento.trim()}` : base;
 }
 
 function Field({
@@ -128,11 +143,26 @@ export default function FormCad() {
     setLoading(true);
 
     try {
-      console.log("Cadastro:", form);
-      await new Promise((res) => setTimeout(res, 1000));
+      const payload = {
+        nome: form.nome.trim(),
+        cpf: onlyDigits(form.cpf),
+        email: form.email.trim(),
+        telefone: onlyDigits(form.telefone),
+        cep: onlyDigits(form.cep),
+        endereco: buildEndereco(form),
+        cidade: form.cidade.trim(),
+        estado: form.estado.trim().toUpperCase(),
+        salario: parseSalary(form.salario),
+      };
+
+      await API.autocadastroCliente(payload);
       setStep(4);
-    } catch {
-      setError(t(lang, "LoginPage.register.errors.submit_error"));
+    } catch (err) {
+      setError(
+        err?.response?.data?.message ||
+          err?.response?.data?.error ||
+          t(lang, "LoginPage.register.errors.submit_error"),
+      );
     } finally {
       setLoading(false);
     }

@@ -107,6 +107,9 @@ export const API = {
     return axiosPublic.post("/auth/refresh", { deviceId });
   },
 
+  /** POST /clientes */
+  autocadastroCliente: (dados) => axiosPublic.post("/clientes", dados),
+
   // CONTA do CLIENTE (protegido)
   /** GET /contas/:numero/saldo */
   consultarSaldo: (numero) => axiosAuth.get(`/contas/${numero}/saldo`),
@@ -136,7 +139,7 @@ export const API = {
   buscarClientePorCpf: (cpf) => axiosAuth.get(`/clientes/${cpf}`),
 
   /** GET /clientes */
-  listar: () => axiosAuth.get("/clientes"),
+  listarClientesAprovados: () => axiosAuth.get("/clientes"),
 
   /** GET /clientes requestParams */
   listarComFiltro: (filtro) =>
@@ -165,7 +168,7 @@ export const API = {
 
   //GERENTE
   /** GET /gerentes */
-  listar: () => axiosAuth.get("/gerentes"),
+  listarGerentes: () => axiosAuth.get("/gerentes"),
 
   /** GET /gerentes/:cpf */
   buscarPorCpf: (cpf) => axiosAuth.get(`/gerentes/${cpf}`),

@@ -16,6 +16,7 @@ public class RabbitMQConfig {
     public static final String SAGA_EXCHANGE = "saga.exchange";
     public static final String FILA_APROVAR = "saga.aprovar_cliente.queue";
     public static final String FILA_REJEITAR = "saga.rejeitar_cliente.queue";
+    public static final String FILA_EMAIL_SEND_ACTIVATION = "email.send.activation";
 
     @Bean
     public Queue filaReset() {
@@ -40,6 +41,11 @@ public class RabbitMQConfig {
     @Bean
     public Queue filaRejeitar() {
         return new Queue(FILA_REJEITAR, true);
+    }
+
+    @Bean
+    public Queue filaEmailSendActivation() {
+        return new Queue(FILA_EMAIL_SEND_ACTIVATION, true);
     }
 
     @Bean

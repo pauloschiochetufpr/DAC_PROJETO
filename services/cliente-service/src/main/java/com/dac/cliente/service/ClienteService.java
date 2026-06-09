@@ -295,9 +295,13 @@ public class ClienteService {
             sagaEvento.put("nome", c.getNome());
             sagaEvento.put("email", c.getEmail());
             sagaEvento.put("limite", limite);
-            httpPost(sagaUrl + "/saga/aprovar", objectMapper.writeValueAsString(sagaEvento));
+            rabbitTemplate.convertAndSend(
+                RabbitMQConfig.SAGA_EXCHANGE,
+                RabbitMQConfig.FILA_SAGA_APROVAR,
+                sagaEvento
+            );
         } catch (Exception e) {
-            System.err.println("cliente-service: erro na aprovação síncrona via saga: "
+            System.err.println("cliente-service: erro ao publicar aprovação na saga: "
                 + e.getMessage());
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                 "Falha ao criar conta para o cliente: " + e.getMessage());
