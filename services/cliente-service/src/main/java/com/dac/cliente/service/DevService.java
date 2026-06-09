@@ -27,8 +27,7 @@ public class DevService {
             cliente("09506382000", "Cleuddônio",  "cli2@bantads.com.br", 20000.0, "Curitiba", "PR", StatusCliente.APROVADO),
             cliente("85733854057", "Catianna",    "cli3@bantads.com.br",  3000.0, "Curitiba", "PR", StatusCliente.APROVADO),
             cliente("58872160006", "Cutardo",     "cli4@bantads.com.br",   500.0, "Curitiba", "PR", StatusCliente.APROVADO),
-            cliente("76179646090", "Coândrya",    "cli5@bantads.com.br",  1500.0, "Curitiba", "PR", StatusCliente.APROVADO),
-            cliente("52998224725", "Cidônia",     "cli6@bantads.com.br",  7000.0, "Curitiba", "PR", StatusCliente.APROVADO)
+            cliente("76179646090", "Coândrya",    "cli5@bantads.com.br",  1500.0, "Curitiba", "PR", StatusCliente.APROVADO)
         );
     }
 

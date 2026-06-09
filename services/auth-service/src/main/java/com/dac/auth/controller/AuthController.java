@@ -88,14 +88,6 @@ public class AuthController {
             }
         }
 
-        // fluxo normal do frontend - deviceId e deviceName obrigatórios
-        if (request.getDeviceId() == null || request.getDeviceId().isBlank() ||
-            request.getDeviceName() == null || request.getDeviceName().isBlank())
-        {
-            DevLog.log("Login rejeitado - campo obrigatorio ausente: email=" + request.getEmail() + ", deviceId=" + request.getDeviceId());
-            return ResponseEntity.badRequest().body(new ErrorResponseDTO(400, "Campos obrigatórios ausentes ou em branco"));
-        }
-
         // gateway injeta X-Forwarded-For via xfwd:true; fallback para remoteAddr em dev local
         // X-Forwarded-For pode ter formato "client, proxy1, proxy2" - o IP real é sempre o primeiro
         String xForwardedFor = httpRequest.getHeader("X-Forwarded-For");
@@ -109,9 +101,11 @@ public class AuthController {
         AuthService.LoginResult result = authService.login(request, ip);
 
         // SameSite=Strict via header manual | API Cookie do Jakarta não expõe setSameSite()
-        httpResponse.addHeader("Set-Cookie",
-            String.format("refreshToken=%s; Path=/; HttpOnly; Secure; Max-Age=%d; SameSite=Strict",
-                result.refreshId(), 12 * 60 * 60));
+        if (result.refreshId() != null) {
+            httpResponse.addHeader("Set-Cookie",
+                String.format("refreshToken=%s; Path=/; HttpOnly; Secure; Max-Age=%d; SameSite=Strict",
+                    result.refreshId(), 12 * 60 * 60));
+        }
 
         DevLog.log("Login OK - email: " + request.getEmail() + ", tipo: " + result.response().getTipo());
         return ResponseEntity.ok(result.response());

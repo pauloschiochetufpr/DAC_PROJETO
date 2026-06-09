@@ -8,7 +8,6 @@ import com.dac.auth.entity.Session;
 import com.dac.auth.entity.Usuario;
 // exceções
 import com.dac.auth.exception.AuthenticationException;
-import com.dac.auth.exception.BadRequestException;
 // repositórios
 import com.dac.auth.repository.UsuarioRepository;
 // util
@@ -70,18 +69,18 @@ public class AuthService {
             throw new AuthenticationException("Usuário/Senha incorretos");
         }
 
-        if (request.getDeviceId() == null || request.getDeviceId().isBlank()) {
-            throw new BadRequestException("deviceId é obrigatório");
-        }
         String deviceId = request.getDeviceId();
+        String refreshId = null;
 
-        DevLog.log("Registrando/atualizando dispositivo - deviceId: " + deviceId + ", userId: " + usuario.getCpf());
-        refreshTokenService.registerOrUpdateDevice(
-            usuario.getCpf(),
-            deviceId,
-            request.getDeviceName() != null ? request.getDeviceName() : "unknown",
-            ip != null ? ip : "unknown"
-        );
+        if (deviceId != null && !deviceId.isBlank()) {
+            DevLog.log("Registrando/atualizando dispositivo - deviceId: " + deviceId + ", userId: " + usuario.getCpf());
+            refreshTokenService.registerOrUpdateDevice(
+                usuario.getCpf(),
+                deviceId,
+                request.getDeviceName() != null ? request.getDeviceName() : "unknown",
+                ip != null ? ip : "unknown"
+            );
+        }
 
         String token;
         try {
@@ -95,9 +94,13 @@ public class AuthService {
             throw new RuntimeException("Erro ao gerar token de acesso", e);
         }
 
-        Session session = refreshTokenService.createSession(usuario.getCpf(), deviceId);
+        if (deviceId != null && !deviceId.isBlank()) {
+            Session session = refreshTokenService.createSession(usuario.getCpf(), deviceId);
+            refreshId = session.getRefreshId();
+            DevLog.log("Sessao criada - sessionId: " + refreshId + ", userId: " + usuario.getCpf());
+        }
 
-        DevLog.log("Sessao criada - sessionId: " + session.getRefreshId() + ", userId: " + usuario.getCpf());
+        String tipo = usuario.getTipo() != null ? usuario.getTipo().toUpperCase() : null;
 
         LoginResponseDTO.UsuarioDTO usuarioDTO = new LoginResponseDTO.UsuarioDTO();
         usuarioDTO.setNome(usuario.getNome());
@@ -106,11 +109,11 @@ public class AuthService {
 
         LoginResponseDTO response = new LoginResponseDTO();
         response.setAccess_token(token);
-        response.setToken_tipo("bearer");
-        response.setTipo(usuario.getTipo());
+        response.setToken_type("bearer");
+        response.setTipo(tipo);
         response.setUsuario(usuarioDTO);
 
-        DevLog.log("Login concluido com sucesso - email: " + request.getEmail() + ", tipo: " + usuario.getTipo());
-        return new LoginResult(response, session.getRefreshId());
+        DevLog.log("Login concluido com sucesso - email: " + request.getEmail() + ", tipo: " + tipo);
+        return new LoginResult(response, refreshId);
     }
 }
