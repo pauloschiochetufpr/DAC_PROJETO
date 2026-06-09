@@ -23,12 +23,10 @@ public class DevService {
 
     private List<Gerente> mocks() {
         return List.of(
-            gerente("98574307084", "Geniéve",    "ger1@bantads.com.br", TipoGerente.GERENTE),
-            gerente("64065268052", "Godophredo",  "ger2@bantads.com.br", TipoGerente.GERENTE),
-            gerente("23862179060", "Gyândula",    "ger3@bantads.com.br", TipoGerente.GERENTE),
-            gerente("11144477735", "Galdério",    "ger4@bantads.com.br", TipoGerente.GERENTE),
-            gerente("40501740066", "Adamântio",   "adm1@bantads.com.br", TipoGerente.ADMINISTRADOR),
-            gerente("40730217027", "Adânio",      "adm2@bantads.com.br", TipoGerente.ADMINISTRADOR)
+            gerente("98574307084", "Geniéve",   "ger1@bantads.com.br", TipoGerente.GERENTE),
+            gerente("64065268052", "Godophredo", "ger2@bantads.com.br", TipoGerente.GERENTE),
+            gerente("23862179060", "Gyândula",   "ger3@bantads.com.br", TipoGerente.GERENTE),
+            gerente("40501740066", "Adamântio",  "adm1@bantads.com.br", TipoGerente.ADMINISTRADOR)
         );
     }
 

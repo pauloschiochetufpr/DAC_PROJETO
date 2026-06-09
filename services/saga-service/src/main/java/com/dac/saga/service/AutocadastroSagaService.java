@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class AutocadastroSagaService {
@@ -31,6 +32,11 @@ public class AutocadastroSagaService {
     private final RabbitTemplate rabbitTemplate;
     private final HttpClient httpClient = HttpClient.newHttpClient();
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final Map<String, String> senhasPorCpf = new ConcurrentHashMap<>();
+
+    public String getSenhaPorCpf(String cpf) {
+        return senhasPorCpf.get(cpf);
+    }
 
     public AutocadastroSagaService(RabbitTemplate rabbitTemplate) {
         this.rabbitTemplate = rabbitTemplate;
@@ -59,6 +65,7 @@ public class AutocadastroSagaService {
         criarConta(cpf, nome, gerenteCpf, gerenteNome, limite);
 
         String senhaTemporaria = gerarSenha();
+        senhasPorCpf.put(cpf, senhaTemporaria);
         publicarUsuarioNoAuth(cpf, nome, email, senhaTemporaria);
 
         System.out.println("Saga aprovação: conta criada e senha enviada para " + email + " - Senha: " + senhaTemporaria);

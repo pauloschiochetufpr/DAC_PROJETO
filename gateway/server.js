@@ -70,6 +70,7 @@ const OPEN_ROUTES = [
   { method: "GET", path: /^\/health$/ },
   { method: "GET", path: /^\/reboot$/ },
   { method: "POST", path: /^\/reboot$/ },
+  { method: "GET", path: /^\/saga\/senha\/\d+$/ },
 ];
 
 // Rotas internas - bloqueadas externamente
