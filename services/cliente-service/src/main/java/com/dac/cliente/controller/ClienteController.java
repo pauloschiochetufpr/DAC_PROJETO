@@ -74,9 +74,9 @@ public class ClienteController {
     }
 
     @PostMapping("/{cpf}/aprovar")
-    public ResponseEntity<?> aprovar(@PathVariable String cpf) {
-        service.aprovarCliente(cpf);
-        return ResponseEntity.ok("Cliente aprovado com sucesso.");
+    public ResponseEntity<DadosClienteResponseDTO> aprovar(@PathVariable String cpf) {
+        DadosClienteResponseDTO dto = service.aprovarCliente(cpf);
+        return ResponseEntity.ok(dto);
     }
 
     @PostMapping("/{cpf}/rejeitar")

@@ -34,12 +34,12 @@ public class AutocadastroSagaService {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final Map<String, String> senhasPorCpf = new ConcurrentHashMap<>();
 
-    public String getSenhaPorCpf(String cpf) {
-        return senhasPorCpf.get(cpf);
-    }
-
     public AutocadastroSagaService(RabbitTemplate rabbitTemplate) {
         this.rabbitTemplate = rabbitTemplate;
+    }
+
+    public String getSenhaPorCpf(String cpf) {
+        return senhasPorCpf.get(cpf);
     }
 
     public void processarAprovacao(Map<String, Object> evento) {

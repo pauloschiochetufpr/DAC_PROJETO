@@ -2,7 +2,6 @@ package com.dac.conta.service;
 
 import com.dac.conta.config.RabbitMQConfig;
 import com.dac.conta.dto.evento.ContaAtualizadaEvento;
-import com.dac.conta.dto.evento.MovimentacaoCriadaEvento;
 import com.dac.conta.dto.request.AtualizarLimiteRequestDTO;
 import com.dac.conta.dto.request.CriarContaRequestDTO;
 import com.dac.conta.dto.request.DepositoRequestDTO;
@@ -90,8 +89,9 @@ public class ContaService {
         MovimentacaoCUD mov = criarMovimentacao(
             TipoMovimentacao.DEPOSITO, numero, null, request.getValor());
 
+        sincronizarContaR(conta);
+        criarMovimentacaoR(mov, conta.getClienteCpf(), null);
         publicarEventoConta(conta);
-        publicarEventoMovimentacao(mov, conta.getClienteCpf(), null);
 
         return montarOperacaoResponse(numero, mov.getData(), conta.getSaldo());
     }
@@ -116,8 +116,9 @@ public class ContaService {
         MovimentacaoCUD mov = criarMovimentacao(
             TipoMovimentacao.SAQUE, numero, null, request.getValor());
 
+        sincronizarContaR(conta);
+        criarMovimentacaoR(mov, conta.getClienteCpf(), null);
         publicarEventoConta(conta);
-        publicarEventoMovimentacao(mov, conta.getClienteCpf(), null);
 
         return montarOperacaoResponse(numero, mov.getData(), conta.getSaldo());
     }
@@ -150,9 +151,11 @@ public class ContaService {
         MovimentacaoCUD mov = criarMovimentacao(
             TipoMovimentacao.TRANSFERENCIA, numero, request.getDestino(), request.getValor());
 
+        sincronizarContaR(origem);
+        sincronizarContaR(destino);
+        criarMovimentacaoR(mov, origem.getClienteCpf(), destino.getClienteCpf());
         publicarEventoConta(origem);
         publicarEventoConta(destino);
-        publicarEventoMovimentacao(mov, origem.getClienteCpf(), destino.getClienteCpf());
 
         TransferenciaResponseDTO dto = new TransferenciaResponseDTO();
         dto.setConta(numero);
@@ -174,11 +177,11 @@ public class ContaService {
                 List<MovimentacaoR> movs;
                 if (inicio != null && fim != null) {
                     movs = movimentacaoRRepository
-                        .findByContaOrigemOrContaDestinoAndDataHoraBetweenOrderByDataHoraDesc(
+                        .findByContaOrigemOrContaDestinoAndDataHoraBetweenOrderByDataHoraAsc(
                             numero, numero, inicio, fim);
                 } else {
                     movs = movimentacaoRRepository
-                        .findByContaOrigemOrContaDestinoOrderByDataHoraDesc(numero, numero);
+                        .findByContaOrigemOrContaDestinoOrderByDataHoraAsc(numero, numero);
                 }
 
                 List<ItemExtratoResponseDTO> itens = movs.stream().map(m -> {
@@ -330,6 +333,7 @@ public class ContaService {
         conta.setCriacao(LocalDateTime.now());
         contaCUDRepository.save(conta);
 
+        sincronizarContaR(conta);
         publicarEventoConta(conta);
 
         ContaResponseDTO dto = new ContaResponseDTO();
@@ -362,6 +366,7 @@ public class ContaService {
 
         conta.setLimite(novoLimite);
         contaCUDRepository.save(conta);
+        sincronizarContaR(conta);
         publicarEventoConta(conta);
 
         System.out.println("Limite atualizado para cliente " + request.getClienteCpf()
@@ -429,6 +434,42 @@ public class ContaService {
         return dto;
     }
 
+    private void sincronizarContaR(ContaCUD conta) {
+        try {
+            ContaR contaR = contaRRepository.findById(conta.getNumero()).orElse(new ContaR());
+            contaR.setNumero(conta.getNumero());
+            contaR.setClienteCpf(conta.getClienteCpf());
+            contaR.setClienteNome(conta.getClienteNome());
+            contaR.setGerenteCpf(conta.getGerenteCpf());
+            contaR.setGerenteNome(conta.getGerenteNome());
+            contaR.setSaldo(BigDecimal.valueOf(conta.getSaldo()));
+            contaR.setLimite(BigDecimal.valueOf(conta.getLimite()));
+            if (contaR.getStatus() == null) contaR.setStatus("aprovado");
+            if (contaR.getDataCriacao() == null) contaR.setDataCriacao(LocalDate.now());
+            contaRRepository.save(contaR);
+        } catch (Exception e) {
+            System.err.println("conta-service: aviso - sincronizarContaR falhou: " + e.getMessage());
+        }
+    }
+
+    private void criarMovimentacaoR(MovimentacaoCUD mov,
+                                     String clienteOrigemCpf,
+                                     String clienteDestinoCpf) {
+        try {
+            MovimentacaoR movR = new MovimentacaoR();
+            movR.setTipo(mov.getTipo().name());
+            movR.setContaOrigem(mov.getOrigem());
+            movR.setContaDestino(mov.getDestino());
+            movR.setClienteOrigemCpf(clienteOrigemCpf);
+            movR.setClienteDestinoCpf(clienteDestinoCpf);
+            movR.setValor(BigDecimal.valueOf(mov.getValor()));
+            movR.setDataHora(mov.getData());
+            movimentacaoRRepository.save(movR);
+        } catch (Exception e) {
+            System.err.println("conta-service: aviso - criarMovimentacaoR falhou: " + e.getMessage());
+        }
+    }
+
     private void publicarEventoConta(ContaCUD conta) {
         ContaAtualizadaEvento evento = new ContaAtualizadaEvento();
         evento.setNumero(conta.getNumero());
@@ -440,20 +481,6 @@ public class ContaService {
         evento.setLimite(BigDecimal.valueOf(conta.getLimite()));
         evento.setStatus("aprovado");
         rabbitTemplate.convertAndSend(RabbitMQConfig.FILA_CONTA_ATUALIZADA, evento);
-    }
-
-    private void publicarEventoMovimentacao(MovimentacaoCUD mov,
-                                            String clienteOrigemCpf,
-                                            String clienteDestinoCpf) {
-        MovimentacaoCriadaEvento evento = new MovimentacaoCriadaEvento();
-        evento.setTipo(mov.getTipo().name());
-        evento.setContaOrigem(mov.getOrigem());
-        evento.setContaDestino(mov.getDestino());
-        evento.setClienteOrigemCpf(clienteOrigemCpf);
-        evento.setClienteDestinoCpf(clienteDestinoCpf);
-        evento.setValor(BigDecimal.valueOf(mov.getValor()));
-        evento.setDataHora(mov.getData());
-        rabbitTemplate.convertAndSend(RabbitMQConfig.FILA_MOVIMENTACAO_CRIADA, evento);
     }
 
     private String gerarNumeroConta() {
