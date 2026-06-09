@@ -161,21 +161,28 @@ public class ClienteService {
     }
 
     // -------------------------
-    // Melhores clientes — top 3 por saldo real (da conta)
+    // Melhores clientes — top 3 por saldo_positivo
     // -------------------------
     public List<ClienteResponseDTO> listarMelhoresClientes() {
-        List<ClienteResponseDTO> todos = repository.findByStatusOrderByNomeAsc(StatusCliente.APROVADO)
+        return repository.findByStatusOrderByNomeAsc(StatusCliente.APROVADO)
                 .stream()
                 .map(this::toClienteResponseDTO)
-                .collect(Collectors.toList());
-
-        // Ordena por saldo decrescente e pega os 3 primeiros
-        return todos.stream()
+                .map(dto -> {
+                    dto.setSaldo(calcSaldoPositivo(dto.getSaldo(), dto.getLimite()));
+                    return dto;
+                })
                 .sorted((a, b) -> Double.compare(
                     b.getSaldo() != null ? b.getSaldo() : 0,
                     a.getSaldo() != null ? a.getSaldo() : 0))
                 .limit(3)
                 .collect(Collectors.toList());
+    }
+
+    private double calcSaldoPositivo(Double saldo, Double limite) {
+        if (saldo == null) return 0;
+        if (saldo > 0) return saldo;
+        if (saldo == 0 && limite != null) return limite;
+        return 0;
     }
 
     // -------------------------
@@ -268,7 +275,7 @@ public class ClienteService {
     // Publica para saga-service criar conta
     // -------------------------
     @Transactional
-    public void aprovarCliente(String cpf) {
+    public DadosClienteResponseDTO aprovarCliente(String cpf) {
         Cliente c = repository.findById(cpf)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                     "Cliente não encontrado"));
@@ -302,6 +309,8 @@ public class ClienteService {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                 "Falha ao criar conta para o cliente: " + e.getMessage());
         }
+
+        return toDadosClienteDTO(c);
     }
 
     // -------------------------
