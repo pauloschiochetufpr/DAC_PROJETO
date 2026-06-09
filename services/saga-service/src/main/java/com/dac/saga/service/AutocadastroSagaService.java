@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class AutocadastroSagaService {
@@ -32,9 +33,14 @@ public class AutocadastroSagaService {
     private final RabbitTemplate rabbitTemplate;
     private final HttpClient httpClient = HttpClient.newHttpClient();
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final Map<String, String> senhasPorCpf = new ConcurrentHashMap<>();
 
     public AutocadastroSagaService(RabbitTemplate rabbitTemplate) {
         this.rabbitTemplate = rabbitTemplate;
+    }
+
+    public String getSenhaPorCpf(String cpf) {
+        return senhasPorCpf.get(cpf);
     }
 
     public void processarAprovacao(Map<String, Object> evento) {
@@ -60,6 +66,7 @@ public class AutocadastroSagaService {
         criarConta(cpf, nome, gerenteCpf, gerenteNome, limite);
 
         String senhaProvisoria = gerarSenhaProvisoria();
+        senhasPorCpf.put(cpf, senhaProvisoria);
 
         publicarUsuarioNoAuth(cpf, nome, email, senhaProvisoria);
         publicarSolicitacaoEmail(cpf, nome, email, senhaProvisoria);

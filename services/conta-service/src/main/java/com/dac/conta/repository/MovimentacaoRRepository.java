@@ -10,10 +10,10 @@ import java.util.List;
 @Repository
 public interface MovimentacaoRRepository extends JpaRepository<MovimentacaoR, Long> {
 
-    List<MovimentacaoR> findByContaOrigemOrContaDestinoOrderByDataHoraDesc(
+    List<MovimentacaoR> findByContaOrigemOrContaDestinoOrderByDataHoraAsc(
         String contaOrigem, String contaDestino);
 
-    List<MovimentacaoR> findByContaOrigemOrContaDestinoAndDataHoraBetweenOrderByDataHoraDesc(
+    List<MovimentacaoR> findByContaOrigemOrContaDestinoAndDataHoraBetweenOrderByDataHoraAsc(
         String contaOrigem, String contaDestino,
         LocalDateTime inicio, LocalDateTime fim);
 }

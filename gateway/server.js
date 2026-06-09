@@ -70,6 +70,7 @@ const OPEN_ROUTES = [
   { method: "GET", path: /^\/health$/ },
   { method: "GET", path: /^\/reboot$/ },
   { method: "POST", path: /^\/reboot$/ },
+  { method: "GET", path: /^\/saga\/senha\/\d+$/ },
 ];
 
 // Rotas internas - bloqueadas externamente
@@ -267,14 +268,10 @@ app.use(
 app.use(express.json());
 
 // reboot | encaminha ao saga-service
-app.all(
+app.use(
   "/reboot",
-  createProxyMiddleware({
-    target: SERVICE_TARGETS.saga,
-    changeOrigin: true,
-    xfwd: true,
-    pathRewrite: { "^/reboot": "/reboot" },
-    logLevel: "warn",
+  createServiceProxy(SERVICE_TARGETS.saga, "saga-service", {
+    pathRewrite: { "^/": "/reboot" },
   }),
 );
 

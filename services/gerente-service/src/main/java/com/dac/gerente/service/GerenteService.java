@@ -264,12 +264,8 @@ public class GerenteService {
         if (candidatos.size() == 1) {
             gerenteOrigem = candidatos.get(0);
         } else {
-            String saldosJson = httpGet(contaUrl + "/contas/saldo-positivo-por-gerente");
-            Map<String, Double> saldos = objectMapper.readValue(
-                    saldosJson, new TypeReference<Map<String, Double>>() {});
-
             gerenteOrigem = candidatos.stream()
-                    .min(Comparator.comparingDouble(c -> saldos.getOrDefault(c, 0.0)))
+                    .min(Comparator.naturalOrder())
                     .orElse(candidatos.get(0));
         }
 
