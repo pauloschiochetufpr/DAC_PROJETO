@@ -161,16 +161,38 @@ public class ClienteService {
     }
 
     // -------------------------
-    // Melhores clientes — top 3 por saldo_positivo
+    // Melhores clientes — top 3 por saldo_positivo (apenas contas com histórico)
     // -------------------------
     public List<ClienteResponseDTO> listarMelhoresClientes() {
+        java.time.LocalDate hoje = java.time.LocalDate.now();
         return repository.findByStatusOrderByNomeAsc(StatusCliente.APROVADO)
                 .stream()
-                .map(this::toClienteResponseDTO)
-                .map(dto -> {
-                    dto.setSaldo(calcSaldoPositivo(dto.getSaldo(), dto.getLimite()));
+                .map(c -> {
+                    Map<String, Object> conta = buscarContaPorCliente(c.getCpf());
+                    if (conta == null) return null;
+                    // Excluir contas criadas hoje (recém-aprovadas, sem histórico)
+                    Object criacaoObj = conta.get("criacao");
+                    if (criacaoObj != null) {
+                        try {
+                            java.time.LocalDate criacao = java.time.LocalDate.parse(
+                                criacaoObj.toString().substring(0, 10));
+                            if (!criacao.isBefore(hoje)) return null;
+                        } catch (Exception ignored) {}
+                    }
+                    ClienteResponseDTO dto = new ClienteResponseDTO();
+                    dto.setCpf(c.getCpf());
+                    dto.setNome(c.getNome());
+                    dto.setEmail(c.getEmail());
+                    dto.setTelefone(c.getTelefone());
+                    dto.setEndereco(c.getEndereco());
+                    dto.setCidade(c.getCidade());
+                    dto.setEstado(c.getEstado());
+                    dto.setConta(stringVal(conta.get("numero")));
+                    dto.setSaldo(calcSaldoPositivo(doubleVal(conta.get("saldo")), doubleVal(conta.get("limite"))));
+                    dto.setLimite(doubleVal(conta.get("limite")));
                     return dto;
                 })
+                .filter(java.util.Objects::nonNull)
                 .sorted((a, b) -> Double.compare(
                     b.getSaldo() != null ? b.getSaldo() : 0,
                     a.getSaldo() != null ? a.getSaldo() : 0))

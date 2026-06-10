@@ -15,14 +15,14 @@ import com.dac.conta.dto.response.OperacaoResponseDTO;
 import com.dac.conta.dto.response.SaldoResponseDTO;
 import com.dac.conta.dto.response.TransferenciaResponseDTO;
 import com.dac.conta.entity.ContaCUD;
-import com.dac.conta.entity.ContaR;
 import com.dac.conta.entity.MovimentacaoCUD;
-import com.dac.conta.entity.MovimentacaoR;
 import com.dac.conta.entity.TipoMovimentacao;
+import com.dac.conta.read.entity.ContaR;
+import com.dac.conta.read.entity.MovimentacaoR;
 import com.dac.conta.repository.ContaCUDRepository;
-import com.dac.conta.repository.ContaRRepository;
 import com.dac.conta.repository.MovimentacaoCUDRepository;
-import com.dac.conta.repository.MovimentacaoRRepository;
+import com.dac.conta.read.repository.ContaRRepository;
+import com.dac.conta.read.repository.MovimentacaoRRepository;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -330,7 +330,7 @@ public class ContaService {
         conta.setGerenteNome(gerenteNome);
         conta.setSaldo(0.0);
         conta.setLimite(limite);
-        conta.setCriacao(LocalDateTime.now());
+        conta.setCriacao(LocalDateTime.now().truncatedTo(java.time.temporal.ChronoUnit.MICROS));
         contaCUDRepository.save(conta);
 
         sincronizarContaR(conta);
@@ -420,7 +420,7 @@ public class ContaService {
         mov.setOrigem(origem);
         mov.setDestino(destino);
         mov.setValor(valor);
-        mov.setData(LocalDateTime.now());
+        mov.setData(LocalDateTime.now().truncatedTo(java.time.temporal.ChronoUnit.MICROS));
         return movimentacaoCUDRepository.save(mov);
     }
 

@@ -1,19 +1,4 @@
 package com.dac.conta.repository;
 
-import com.dac.conta.entity.MovimentacaoR;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-
-import java.time.LocalDateTime;
-import java.util.List;
-
-@Repository
-public interface MovimentacaoRRepository extends JpaRepository<MovimentacaoR, Long> {
-
-    List<MovimentacaoR> findByContaOrigemOrContaDestinoOrderByDataHoraAsc(
-        String contaOrigem, String contaDestino);
-
-    List<MovimentacaoR> findByContaOrigemOrContaDestinoAndDataHoraBetweenOrderByDataHoraAsc(
-        String contaOrigem, String contaDestino,
-        LocalDateTime inicio, LocalDateTime fim);
-}
+// Movido para com.dac.conta.read.repository.MovimentacaoRRepository
+// Este arquivo existe apenas para não quebrar o histórico git.

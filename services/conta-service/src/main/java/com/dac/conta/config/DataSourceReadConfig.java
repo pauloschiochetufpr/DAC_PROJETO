@@ -6,41 +6,36 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.sql.DataSource;
 import java.util.Properties;
 
 @Configuration
-@EnableTransactionManagement
 @EnableJpaRepositories(
-    basePackages = "com.dac.conta.repository",
-    entityManagerFactoryRef = "entityManagerFactory",
-    transactionManagerRef = "transactionManager"
+    basePackages = "com.dac.conta.read.repository",
+    entityManagerFactoryRef = "readEntityManagerFactory",
+    transactionManagerRef = "readTransactionManager"
 )
-public class DataSourceConfig {
+public class DataSourceReadConfig {
 
     @Bean
-    @Primary
-    @ConfigurationProperties(prefix = "spring.datasource")
-    public DataSource mainDataSource() {
+    @ConfigurationProperties(prefix = "spring.datasource-read")
+    public DataSource readDataSource() {
         return DataSourceBuilder.create().build();
     }
 
     @Bean
-    @Primary
-    public LocalContainerEntityManagerFactoryBean entityManagerFactory(
-            @Qualifier("mainDataSource") DataSource mainDataSource) {
+    public LocalContainerEntityManagerFactoryBean readEntityManagerFactory(
+            @Qualifier("readDataSource") DataSource readDataSource) {
         LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
-        em.setDataSource(mainDataSource);
-        em.setPackagesToScan("com.dac.conta.entity");
-        em.setPersistenceUnitName("cud");
+        em.setDataSource(readDataSource);
+        em.setPackagesToScan("com.dac.conta.read.entity");
+        em.setPersistenceUnitName("read");
 
         HibernateJpaVendorAdapter adapter = new HibernateJpaVendorAdapter();
         adapter.setGenerateDdl(true);
@@ -48,7 +43,6 @@ public class DataSourceConfig {
 
         Properties props = new Properties();
         props.setProperty("hibernate.hbm2ddl.auto", "update");
-        props.setProperty("hibernate.format_sql", "true");
         props.setProperty("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
         em.setJpaProperties(props);
 
@@ -56,9 +50,8 @@ public class DataSourceConfig {
     }
 
     @Bean
-    @Primary
-    public PlatformTransactionManager transactionManager(
-            @Qualifier("entityManagerFactory") EntityManagerFactory entityManagerFactory) {
-        return new JpaTransactionManager(entityManagerFactory);
+    public PlatformTransactionManager readTransactionManager(
+            @Qualifier("readEntityManagerFactory") EntityManagerFactory readEntityManagerFactory) {
+        return new JpaTransactionManager(readEntityManagerFactory);
     }
 }
