@@ -1,6 +1,5 @@
 package com.dac.saga.service;
 
-import com.dac.saga.config.RabbitMQConfig;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -13,12 +12,12 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.security.SecureRandom;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
@@ -65,13 +64,11 @@ public class AutocadastroSagaService {
 
         criarConta(cpf, nome, gerenteCpf, gerenteNome, limite);
 
-        String senhaProvisoria = gerarSenhaProvisoria();
-        senhasPorCpf.put(cpf, senhaProvisoria);
+        String senhaTemporaria = gerarSenha();
+        senhasPorCpf.put(cpf, senhaTemporaria);
+        publicarUsuarioNoAuth(cpf, nome, email, senhaTemporaria);
 
-        publicarUsuarioNoAuth(cpf, nome, email, senhaProvisoria);
-        publicarSolicitacaoEmail(cpf, nome, email, senhaProvisoria);
-
-        System.out.println("Saga aprovacao: conta e usuario criados para " + email);
+        System.out.println("Saga aprovação: conta criada e senha enviada para " + email + " - Senha: " + senhaTemporaria);
     }
 
     private Map<String, Object> selecionarGerenteComMenosClientes() {
@@ -121,40 +118,15 @@ public class AutocadastroSagaService {
         }
     }
 
-    private void publicarUsuarioNoAuth(
-            String cpf,
-            String nome,
-            String email,
-            String senhaProvisoria) {
+    private void publicarUsuarioNoAuth(String cpf, String nome, String email, String senhaTemporaria) {
         Map<String, String> authEvento = new HashMap<>();
         authEvento.put("acao", "criar");
         authEvento.put("cpf", cpf);
         authEvento.put("nome", nome);
         authEvento.put("email", email.toLowerCase(Locale.ROOT));
-        authEvento.put("senha", senhaProvisoria);
+        authEvento.put("senha", senhaTemporaria);
         authEvento.put("tipo", "cliente");
         rabbitTemplate.convertAndSend("auth.exchange", "auth.criar", authEvento);
-    }
-
-    private void publicarSolicitacaoEmail(
-            String cpf,
-            String nome,
-            String email,
-            String senhaProvisoria) {
-        Map<String, String> eventoEmail = new HashMap<>();
-        eventoEmail.put("tipo", "CLIENTE_APROVADO");
-        eventoEmail.put("cpf", cpf);
-        eventoEmail.put("nome", nome);
-        eventoEmail.put("email", email.toLowerCase(Locale.ROOT));
-        eventoEmail.put("senha", senhaProvisoria);
-
-        rabbitTemplate.convertAndSend(RabbitMQConfig.FILA_EMAIL_SEND_ACTIVATION, eventoEmail);
-    }
-
-    private String gerarSenhaProvisoria() {
-        Random random = new Random();
-        int numero = 100000 + random.nextInt(900000);
-        return "Bantads@" + numero;
     }
 
     private String httpGet(String url) throws Exception {
@@ -180,6 +152,16 @@ public class AutocadastroSagaService {
             throw new RuntimeException("HTTP " + response.statusCode() + ": " + response.body());
         }
         return response.body();
+    }
+
+    private String gerarSenha() {
+        String chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+        SecureRandom random = new SecureRandom();
+        StringBuilder sb = new StringBuilder(10);
+        for (int i = 0; i < 10; i++) {
+            sb.append(chars.charAt(random.nextInt(chars.length())));
+        }
+        return sb.toString();
     }
 
     private String normalizarDocumento(String valor) {
