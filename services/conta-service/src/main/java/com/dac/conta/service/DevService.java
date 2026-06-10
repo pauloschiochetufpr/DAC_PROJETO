@@ -1,14 +1,14 @@
 package com.dac.conta.service;
 
 import com.dac.conta.entity.ContaCUD;
-import com.dac.conta.entity.ContaR;
 import com.dac.conta.entity.MovimentacaoCUD;
-import com.dac.conta.entity.MovimentacaoR;
 import com.dac.conta.entity.TipoMovimentacao;
+import com.dac.conta.read.entity.ContaR;
+import com.dac.conta.read.entity.MovimentacaoR;
 import com.dac.conta.repository.ContaCUDRepository;
-import com.dac.conta.repository.ContaRRepository;
 import com.dac.conta.repository.MovimentacaoCUDRepository;
-import com.dac.conta.repository.MovimentacaoRRepository;
+import com.dac.conta.read.repository.ContaRRepository;
+import com.dac.conta.read.repository.MovimentacaoRRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
