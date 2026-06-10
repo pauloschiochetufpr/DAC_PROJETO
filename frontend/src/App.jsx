@@ -25,16 +25,19 @@ import { useTokenGuard } from "./hooks/useTokenGuard";
 // useRefresh
 import { useRefresh } from "./hooks/useRefresh";
 
+// aceita número (1/2/3) ou string em qualquer caixa ("gerente", "GERENTE", ...)
 function normalizarTipoUsuario(tipo) {
-  if (tipo === 1 || tipo === "1" || tipo === "administrador") {
+  const t = typeof tipo === "string" ? tipo.toLowerCase() : tipo;
+
+  if (t === 1 || t === "1" || t === "administrador") {
     return "ADMINISTRADOR";
   }
 
-  if (tipo === 2 || tipo === "2" || tipo === "gerente") {
+  if (t === 2 || t === "2" || t === "gerente") {
     return "GERENTE";
   }
 
-  if (tipo === 3 || tipo === "3" || tipo === "cliente") {
+  if (t === 3 || t === "3" || t === "cliente") {
     return "CLIENTE";
   }
 
