@@ -4,11 +4,12 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 
 // normalizarTipoUsuario | converte o campo tipo do usuário para string padronizada
+// aceita número (1/2/3) ou string em qualquer caixa ("gerente", "GERENTE", ...)
 function normalizarTipoUsuario(tipo) {
-  if (tipo === 1 || tipo === "1" || tipo === "administrador")
-    return "ADMINISTRADOR";
-  if (tipo === 2 || tipo === "2" || tipo === "gerente") return "GERENTE";
-  if (tipo === 3 || tipo === "3" || tipo === "cliente") return "CLIENTE";
+  const t = typeof tipo === "string" ? tipo.toLowerCase() : tipo;
+  if (t === 1 || t === "1" || t === "administrador") return "ADMINISTRADOR";
+  if (t === 2 || t === "2" || t === "gerente") return "GERENTE";
+  if (t === 3 || t === "3" || t === "cliente") return "CLIENTE";
   return null;
 }
 
