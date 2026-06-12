@@ -1,7 +1,5 @@
 import React, { useMemo, useState } from "react";
 
-// Hook e utilitários
-import { useBanco } from "../../hooks/useBanco";
 import { formatarData } from "../../lib/dataUtils";
 
 // SVG's
@@ -57,17 +55,23 @@ const BATCH = 10;
 // Corte dos ultimos 30 dias, fixo no carregamento do modulo
 const CORTE_30_DIAS = Date.now() - 30 * 24 * 60 * 60 * 1000;
 
-export default function MiniExtratoMob({ showInfo }) {
+export default function MiniExtratoMob({
+  showInfo,
+  movimentacoes = [],
+  conta = "",
+  loading = false,
+  erro = null,
+}) {
   const { lang } = useLanguage();
-  const { movimentacoes, conta } = useBanco();
   const masked = "R$ --,--";
 
-  // Filtra ultimos 30 dias
-  const transacoes = useMemo(
-    () =>
-      movimentacoes.filter((m) => new Date(m.data).getTime() >= CORTE_30_DIAS),
-    [movimentacoes],
-  );
+  // Filtra ultimos 30 dias ativar quando os dados estiverem atualizados
+  // const transacoes = useMemo(
+  //   () =>
+  //     movimentacoes.filter((m) => new Date(m.data).getTime() >= CORTE_30_DIAS),
+  //   [movimentacoes],
+  // );
+  const transacoes = useMemo(() => movimentacoes, [movimentacoes]); // trocar para o filtro dos 30 dias quando os dados estiverem atualizados
 
   const [visiveis, setVisiveis] = useState(BATCH);
 
@@ -102,7 +106,21 @@ export default function MiniExtratoMob({ showInfo }) {
 
       {/* Lista de transações */}
       <div className="w-full h-fit bg-contrast flex flex-col font-inter text-xs select-none justify-center items-center">
-        {itens.length === 0 ? (
+        {loading ? (
+          <div
+            className="py-8 text-center text-wrap text-base text-secundary select-none px-2 bg-black/40
+    rounded-md shadow-black/50 shadow-inner my-5 mx-10"
+          >
+            Carregando extrato...
+          </div>
+        ) : erro ? (
+          <div
+            className="py-8 text-center text-wrap text-base text-red-500 select-none px-2 bg-black/40
+    rounded-md shadow-black/50 shadow-inner my-5 mx-10"
+          >
+            {erro}
+          </div>
+        ) : itens.length === 0 ? (
           <div
             className="py-8 text-center text-wrap text-base  text-secundary select-none px-2  bg-black/40
           rounded-md shadow-black/50 shadow-inner my-5 mx-10"
@@ -130,9 +148,9 @@ export default function MiniExtratoMob({ showInfo }) {
                   </div>
                   <div className="flex flex-col flex-1 items-start justify-center pt-1.5 text-zinc-800">
                     <div className="flex flex-row h-[50%] w-full gap-2">
-                      <h1>{item.origem}</h1>
+                      <h1>{item.origem ?? "—"}</h1>
                       <ArrowRightFromLine size={16} />
-                      <h1>{item.destino}</h1>
+                      <h1>{item.destino ?? "—"}</h1>
                     </div>
                     <div className="flex flex-row flex-1 font-istok-web text-zinc-500">
                       <h1>{t(lang, `Types.${item.tipo}`)}</h1>
@@ -167,7 +185,7 @@ export default function MiniExtratoMob({ showInfo }) {
         )}
 
         {/* Botão carregar mais */}
-        {temMais && (
+        {!loading && !erro && temMais && (
           <button
             onClick={carregarMais}
             className="w-[80%] my-3 bg-secundaryDark/10 backdrop-blur-md py-3 border-secundary border rounded-sm

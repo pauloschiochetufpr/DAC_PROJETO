@@ -182,4 +182,10 @@ export const API = {
   // CONTA (protegido)
   /** GET /contas/por-cliente/:cpf */
   contaPorCliente: (cpf) => axiosAuth.get(`/contas/por-cliente/${cpf}`),
+
+  /** GET /contas/:numero/extrato */
+  buscarExtrato: (numero, filtros = {}) =>
+    axiosAuth.get(`/contas/${numero}/extrato`, {
+      params: filtros,
+    }),
 };

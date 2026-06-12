@@ -17,6 +17,7 @@ import { Link } from "react-router-dom";
 // Context e Services
 import { useAuth } from "../hooks/useAuth";
 import { ClienteService } from "../services/ClienteService";
+import { ContaService } from "../services/ContaService";
 
 // componentes
 /// Credito
@@ -34,16 +35,21 @@ export default function HomeCliente() {
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState(null);
 
+  const [extrato, setExtrato] = useState(null);
+  const [loadingExtrato, setLoadingExtrato] = useState(true);
+  const [erroExtrato, setErroExtrato] = useState(null);
+
   // States de interface
   const [showInfo, setShowInfo] = useState(
     () => localStorage.getItem("showInfo") !== "false",
   );
 
   useEffect(() => {
-    async function carregarCliente() {
+    async function carregarDadosCliente() {
       if (!usuario?.cpf) {
         setErro("Não foi possível identificar o cliente autenticado.");
         setLoading(false);
+        setLoadingExtrato(false);
         return;
       }
 
@@ -51,18 +57,39 @@ export default function HomeCliente() {
         setLoading(true);
         setErro(null);
 
-        const data = await ClienteService.buscarPorCpf(usuario.cpf);
+        const clienteData = await ClienteService.buscarPorCpf(usuario.cpf);
+        setCliente(clienteData);
 
-        setCliente(data);
+        if (!clienteData?.conta) {
+          setErroExtrato("Conta do cliente não encontrada.");
+          setLoadingExtrato(false);
+          return;
+        }
+
+        try {
+          setLoadingExtrato(true);
+          setErroExtrato(null);
+
+          const extratoData = await ContaService.buscarExtrato(
+            clienteData.conta,
+          );
+          setExtrato(extratoData);
+        } catch (err) {
+          console.error("Erro ao carregar extrato:", err);
+          setErroExtrato(err.message || "Erro ao carregar extrato.");
+        } finally {
+          setLoadingExtrato(false);
+        }
       } catch (err) {
         console.error("Erro ao carregar cliente:", err);
         setErro(err.message || "Erro ao carregar os dados do cliente.");
+        setLoadingExtrato(false);
       } finally {
         setLoading(false);
       }
     }
 
-    carregarCliente();
+    carregarDadosCliente();
   }, [usuario?.cpf]);
 
   const toggleShowInfo = () => {
@@ -72,14 +99,29 @@ export default function HomeCliente() {
       return next;
     });
   };
+  const normalizarTipoMovimentacao = (tipo) => {
+    return String(tipo || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
+  };
 
   // Dados do cliente
-  const numeroConta = cliente?.conta ?? "—";
+  const numeroConta = cliente?.conta ?? extrato?.conta ?? "";
   const saldo = Number(cliente?.saldo ?? 0);
   const balance = saldo.toLocaleString("pt-BR", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
+  const movimentacoes = (extrato?.movimentacoes ?? []).map((m, index) => ({
+    id: `${m.data}-${m.tipo}-${m.valor}-${index}`,
+    data: m.data,
+    tipo: normalizarTipoMovimentacao(m.tipo),
+    tipoOriginal: m.tipo,
+    origem: m.origem,
+    destino: m.destino,
+    valor: Number(m.valor ?? 0),
+  }));
   const masked = "--,--";
 
   return (
@@ -99,7 +141,13 @@ export default function HomeCliente() {
       >
         {/* Extrato tela grande */}
         <div className="w-[46%] 2xl:w-[42%] h-[30rem] hidden xl:block relative">
-          <Extrato showInfo={showInfo} />
+          <Extrato
+            showInfo={showInfo}
+            movimentacoes={movimentacoes}
+            conta={numeroConta}
+            loading={loadingExtrato}
+            erro={erroExtrato}
+          />
         </div>
         {/* Container do saldo */}
         <div
@@ -282,7 +330,13 @@ export default function HomeCliente() {
           className="w-full h-fit mt-10
          relative flex justify-center items-center overflow-hidden sm:hidden"
         >
-          <MiniExtratoMob showInfo={showInfo} />
+          <MiniExtratoMob
+            showInfo={showInfo}
+            movimentacoes={movimentacoes}
+            conta={numeroConta}
+            loading={loadingExtrato}
+            erro={erroExtrato}
+          />
         </div>
         {/* Crédito */}
         <div

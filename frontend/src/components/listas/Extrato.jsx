@@ -1,8 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-// Mock's
-import { useBanco } from "../../hooks/useBanco";
 import { formatarData } from "../../lib/dataUtils";
 
 // Lucide
@@ -51,10 +49,14 @@ const getIconeTipo = (tipo) => {
   }
 };
 
-export default function Extrato({ showInfo }) {
+export default function Extrato({
+  showInfo,
+  movimentacoes = [],
+  conta = "",
+  loading = false,
+  erro = null,
+}) {
   const { lang } = useLanguage();
-  // Mock renderizado
-  const { movimentacoes, conta } = useBanco();
 
   // Conversões e mascaras
   const masked = "R$ --,--";
@@ -122,58 +124,73 @@ export default function Extrato({ showInfo }) {
             className="extrato-scroll h-full w-full overflow-x-hidden overflow-y-auto text-xs
           z-[15] absolute md:overscroll-none"
           >
-            {movimentacoes.map((item) => {
-              const { dataFormatada, horario } = formatarData(item.data);
-              return (
-                <Link
-                  key={item.id}
-                  className="flex flex-col gap-3 max-h-32 h-[6rem] w-full border-black/15 border-b py-2 px-2
-                  cursor-pointer group"
-                >
-                  <div className="flex flex-row h-[70%] w-full gap-4 relative">
-                    <div className="flex h-full w-fit items-center justify-center pl-2">
-                      <div
-                        className="bg-secundary/25 text-secundary h-[2.5rem] w-[2.5rem] rounded-md
-                       flex items-center justify-center font-semibold"
-                      >
-                        {getIconeTipo(item.tipo)}
-                      </div>
-                    </div>
-                    <div className="flex flex-col flex-1 items-start justify-center pt-1.5">
-                      <div className="flex flex-row h-[50%] w-full gap-2">
-                        <h1>{item.origem}</h1>
-                        <ArrowRightFromLine size={16} />
-                        <h1>{item.destino}</h1>
-                      </div>
-                      <div className="flex flex-row flex-1 font-istok-web">
-                        <h1>{t(lang, `Types.${item.tipo}`) || item.tipo}</h1>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex-1 flex flex-row justify-between px-2">
-                    <div className="flex flex-row w-fit h-full justify-center items-center gap-2">
-                      <h1>{horario}</h1> <h1>|</h1> <h1>{dataFormatada}</h1>
-                    </div>
-                    <div className="flex flex-row w-fit h-full pr-2 justify-center items-center">
-                      <div
-                        className={`flex flex-row bg-white rounded-sm py-1.5 px-2 min-w-24 w-fit h-fit
-                          items-center justify-center gap-[3px] ${getValorClasseTexto(item.tipo, item.origem, conta)}`}
-                      >
-                        <span className="w-3 text-center">
-                          {getValorPrefixo(item.tipo, item.origem, conta)}
-                        </span>
+            {loading ? (
+              <div className="h-full flex items-center justify-center text-secundary text-base text-center px-4">
+                Carregando extrato...
+              </div>
+            ) : erro ? (
+              <div className="h-full flex items-center justify-center text-red-500 text-base text-center px-4">
+                {erro}
+              </div>
+            ) : movimentacoes.length === 0 ? (
+              <div className="h-full flex items-center justify-center text-secundary text-base text-center px-4">
+                {t(lang, "Statement.empty")}
+              </div>
+            ) : (
+              movimentacoes.map((item) => {
+                const { dataFormatada, horario } = formatarData(item.data);
 
-                        {showInfo ? (
-                          <p>{currencyFormatter.format(item.valor)}</p>
-                        ) : (
-                          masked
-                        )}
+                return (
+                  <Link
+                    key={item.id}
+                    className="flex flex-col gap-3 max-h-32 h-[6rem] w-full border-black/15 border-b py-2 px-2
+                  cursor-pointer group"
+                  >
+                    <div className="flex flex-row h-[70%] w-full gap-4 relative">
+                      <div className="flex h-full w-fit items-center justify-center pl-2">
+                        <div
+                          className="bg-secundary/25 text-secundary h-[2.5rem] w-[2.5rem] rounded-md
+                       flex items-center justify-center font-semibold"
+                        >
+                          {getIconeTipo(item.tipo)}
+                        </div>
+                      </div>
+                      <div className="flex flex-col flex-1 items-start justify-center pt-1.5">
+                        <div className="flex flex-row h-[50%] w-full gap-2">
+                          <h1>{item.origem ?? "—"}</h1>
+                          <ArrowRightFromLine size={16} />
+                          <h1>{item.destino ?? "—"}</h1>
+                        </div>
+                        <div className="flex flex-row flex-1 font-istok-web">
+                          <h1>{t(lang, `Types.${item.tipo}`) || item.tipo}</h1>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </Link>
-              );
-            })}
+                    <div className="flex-1 flex flex-row justify-between px-2">
+                      <div className="flex flex-row w-fit h-full justify-center items-center gap-2">
+                        <h1>{horario}</h1> <h1>|</h1> <h1>{dataFormatada}</h1>
+                      </div>
+                      <div className="flex flex-row w-fit h-full pr-2 justify-center items-center">
+                        <div
+                          className={`flex flex-row bg-white rounded-sm py-1.5 px-2 min-w-24 w-fit h-fit
+                          items-center justify-center gap-[3px] ${getValorClasseTexto(item.tipo, item.origem, conta)}`}
+                        >
+                          <span className="w-3 text-center">
+                            {getValorPrefixo(item.tipo, item.origem, conta)}
+                          </span>
+
+                          {showInfo ? (
+                            <p>{currencyFormatter.format(item.valor)}</p>
+                          ) : (
+                            masked
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })
+            )}
           </div>
         </div>
         <div className="h-full w-[5px] bg-secundary z-[-10]"></div>
