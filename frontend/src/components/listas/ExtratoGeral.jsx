@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 
-// Mock's
-import { useBanco } from "../../hooks/useBanco";
-
 // Utilitários
 import { formatarData } from "../../lib/dataUtils";
 
 // i18n
 import { useLanguage } from "../../hooks/useLanguage";
 import { t } from "../../lib/i18n";
+
+//seviços
+import { useAuth } from "../../hooks/useAuth";
+import { ClienteService } from "../../services/ClienteService";
+import { ContaService } from "../../services/ContaService";
 
 // Lucide
 import {
@@ -21,20 +23,6 @@ import {
   Search,
   Wallet,
 } from "lucide-react";
-
-// Fake HTTP
-function fetchExtrato(numeroConta, movimentacoes, saldo) {
-  return new Promise((resolve) => {
-    setTimeout(
-      () =>
-        resolve({
-          status: 200,
-          data: { conta: numeroConta, saldo, movimentacoes },
-        }),
-      600 + Math.random() * 400,
-    );
-  });
-}
 
 //  Funções auxiliares ultra-especificas
 const calcularDelta = (tipo, origem, valor, conta) => {
@@ -60,6 +48,13 @@ const addDays = (date, n) => {
   const d = new Date(date);
   d.setDate(d.getDate() + n);
   return d;
+};
+
+const normalizarTipoMovimentacao = (tipo) => {
+  return String(tipo || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
 };
 
 // Labels de interface
@@ -133,13 +128,18 @@ export default function ExtratoGeral() {
   // i18n
   const { lang } = useLanguage();
 
-  // Mock
-  const { conta, saldo, movimentacoes } = useBanco();
+  const { usuario } = useAuth();
+
+  const [conta, setConta] = useState("");
+  const [saldo, setSaldo] = useState(0);
 
   // Estados de filtro | Período padrão filtro de tempo = 30 dias atrás
   const hoje = useMemo(() => new Date(), []);
-  const [dataFim, setDataFim] = useState(toDateStr(hoje));
-  const [dataInicio, setDataInicio] = useState(toDateStr(addDays(hoje, -30)));
+  // Substituir os consts atuais pelos comentados quando os dados estiverem atualizados
+  // const [dataFim, setDataFim] = useState(toDateStr(hoje));
+  // const [dataInicio, setDataInicio] = useState(toDateStr(addDays(hoje, -30)));
+  const [dataFim, setDataFim] = useState("2020-01-31");
+  const [dataInicio, setDataInicio] = useState("2020-01-01");
   const [filtroTipo, setFiltroTipo] = useState("todos");
 
   // Estados de interface
@@ -147,38 +147,82 @@ export default function ExtratoGeral() {
   const [erro, setErro] = useState(null);
   const [resultado, setResultado] = useState(null);
 
-  // Simulação HTTP
   const consultar = useCallback(async () => {
+    if (!usuario?.cpf) {
+      setErro({
+        code: 401,
+        key: "ExtratoGeral.errors.session_expired",
+      });
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setErro(null);
+
     try {
-      const res = await fetchExtrato(conta, movimentacoes, saldo);
-      if (res.status === 200) {
-        setResultado(res.data);
-      } else if (res.status === 401) {
-        setErro({ code: 401, key: "ExtratoGeral.errors.session_expired" });
-      } else if (res.status === 403) {
+      const clienteData = await ClienteService.buscarPorCpf(usuario.cpf);
+
+      if (!clienteData?.conta) {
+        setErro({
+          code: 404,
+          key: "ExtratoGeral.errors.generic",
+        });
+        return;
+      }
+
+      const extratoData = await ContaService.buscarExtrato(clienteData.conta);
+
+      const movimentacoesNormalizadas = (extratoData?.movimentacoes ?? []).map(
+        (m, index) => ({
+          id: `${m.data}-${m.tipo}-${m.valor}-${index}`,
+          data: m.data,
+          tipo: normalizarTipoMovimentacao(m.tipo),
+          tipoOriginal: m.tipo,
+          origem: m.origem,
+          destino: m.destino,
+          valor: Number(m.valor ?? 0),
+        }),
+      );
+
+      const resultadoNormalizado = {
+        conta: extratoData?.conta ?? clienteData.conta,
+        saldo: Number(extratoData?.saldo ?? clienteData?.saldo ?? 0),
+        movimentacoes: movimentacoesNormalizadas,
+      };
+
+      setConta(resultadoNormalizado.conta);
+      setSaldo(resultadoNormalizado.saldo);
+      setResultado(resultadoNormalizado);
+    } catch (err) {
+      console.error("Erro ao carregar extrato:", err);
+
+      const status = err.response?.status;
+
+      if (status === 401) {
+        setErro({
+          code: 401,
+          key: "ExtratoGeral.errors.session_expired",
+        });
+      } else if (status === 403) {
         setErro({
           code: 403,
           key: "ExtratoGeral.errors.forbidden",
         });
       } else {
         setErro({
-          code: res.status,
-          key: "ExtratoGeral.errors.generic",
+          code: status ?? 0,
+          key: "ExtratoGeral.errors.connection",
         });
       }
-    } catch {
-      setErro({ code: 0, key: "ExtratoGeral.errors.connection" });
     } finally {
       setLoading(false);
     }
-  }, [conta, movimentacoes, saldo]);
+  }, [usuario?.cpf]);
 
-  // Consulta inicial ao montar | Linha de desativação de corretor do compilador abaixo (Não retirar)
   useEffect(() => {
     consultar();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [consultar]);
 
   //  Presets de data
   const setPreset = (dias) => {
@@ -190,15 +234,19 @@ export default function ExtratoGeral() {
   //  Dados processados por dia
   const diasData = useMemo(() => {
     if (!resultado) return [];
+
     const inicioDate = new Date(dataInicio + "T00:00:00-03:00");
     const fimDate = new Date(dataFim + "T23:59:59-03:00");
+
     if (inicioDate > fimDate) return [];
+
+    const todasMovimentacoes = resultado.movimentacoes ?? [];
 
     return enumerarDias(dataInicio, dataFim).map((dia) => {
       const diaStart = new Date(dia + "T00:00:00-03:00");
       const diaEnd = new Date(dia + "T23:59:59-03:00");
 
-      const todasDoDia = resultado.movimentacoes.filter((m) => {
+      const todasDoDia = todasMovimentacoes.filter((m) => {
         const d = new Date(m.data);
         return d >= diaStart && d <= diaEnd;
       });
@@ -211,9 +259,9 @@ export default function ExtratoGeral() {
 
       const saldoDia = saldoNoFimDoDia(
         dia,
-        resultado.movimentacoes,
+        todasMovimentacoes,
         resultado.saldo,
-        conta,
+        resultado.conta,
       );
 
       return {
@@ -223,7 +271,7 @@ export default function ExtratoGeral() {
         temMovimentos: todasDoDia.length > 0,
       };
     });
-  }, [resultado, dataInicio, dataFim, filtroTipo, conta]);
+  }, [resultado, dataInicio, dataFim, filtroTipo]);
 
   // Validação de datas
   const dataInvalida = dataInicio > dataFim;
