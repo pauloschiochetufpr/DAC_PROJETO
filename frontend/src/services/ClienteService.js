@@ -34,7 +34,7 @@ export const ClienteService = {
 
   listarPendentes: async () => {
     try {
-      const response = await API.listarComFiltro("para_aprovar");
+      const response = await API.listarPendentes();
 
       return response.data;
     } catch (err) {

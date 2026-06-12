@@ -148,10 +148,7 @@ export const API = {
     }),
 
   /** GET /clientes requestParams para_aprovar */
-  listarPendentes: () =>
-    API.listarComFiltro({
-      filtro: "para_aprovar",
-    }),
+  listarPendentes: () => API.listarComFiltro("para_aprovar"),
 
   /** PUT /clientes/:cpf */
   atualizarPerfilCliente: (cpf, dados) =>
@@ -161,7 +158,7 @@ export const API = {
   aprovar: (cpf) => axiosAuth.post(`/clientes/${cpf}/aprovar`),
 
   /** POST /clientes/:cpf/rejeitar */
-  rejeitar: (cpf, motivo) =>
+  rejeitarCliente: (cpf, motivo) =>
     axiosAuth.post(`/clientes/${cpf}/rejeitar`, {
       motivo,
     }),
