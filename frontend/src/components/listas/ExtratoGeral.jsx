@@ -136,10 +136,8 @@ export default function ExtratoGeral() {
   // Estados de filtro | Período padrão filtro de tempo = 30 dias atrás
   const hoje = useMemo(() => new Date(), []);
   // Substituir os consts atuais pelos comentados quando os dados estiverem atualizados
-  // const [dataFim, setDataFim] = useState(toDateStr(hoje));
-  // const [dataInicio, setDataInicio] = useState(toDateStr(addDays(hoje, -30)));
-  const [dataFim, setDataFim] = useState("2020-01-31");
-  const [dataInicio, setDataInicio] = useState("2020-01-01");
+  const [dataFim, setDataFim] = useState(toDateStr(hoje));
+  const [dataInicio, setDataInicio] = useState(toDateStr(addDays(hoje, -30)));
   const [filtroTipo, setFiltroTipo] = useState("todos");
 
   // Estados de interface

@@ -3,13 +3,20 @@ import { gsap } from "gsap";
 import waves from "../../assets/pattern/NotDone/waves.svg";
 import ScrollOperation from "./ScrollOperation";
 
-import { useBanco } from "../../hooks/useBanco";
+// serviços
+import { ContaService } from "../../services/ContaService";
 
 //i18n
 import { t } from "../../lib/i18n";
 import { useLanguage } from "../../hooks/useLanguage";
 
-export default function ScrollBox({ title, flowType, isOpen, onToggle }) {
+export default function ScrollBox({
+  title,
+  flowType,
+  contaOrigem,
+  isOpen,
+  onToggle,
+}) {
   const { lang } = useLanguage();
   const lidRef = useRef(null);
   const boxRef = useRef(null);
@@ -25,9 +32,7 @@ export default function ScrollBox({ title, flowType, isOpen, onToggle }) {
     conta: "",
   });
 
-  const { adicionarTransacao, saldo, client } = useBanco();
   const [resultado, setResultado] = useState(null);
-  const contasValidas = ["1234", "3245", "9999"];
 
   const flow = {
     Depósito: ["valor", "confirmar", "resultado"],
@@ -283,43 +288,71 @@ export default function ScrollBox({ title, flowType, isOpen, onToggle }) {
                         if (!valorNumerico || valorNumerico <= 0) return;
 
                         let tipoOperacao;
+
                         if (flowType === "Depósito") tipoOperacao = "deposito";
                         if (flowType === "Saque") tipoOperacao = "saque";
                         if (flowType === "Transferência")
                           tipoOperacao = "transferencia";
 
-                        // VALIDAÇÃO DE CONTA (transferência)
-                        if (tipoOperacao === "transferencia") {
-                          if (!contasValidas.includes(form.conta)) {
-                            setResultado({
-                              status: "error",
-                              message: t(lang, "Operations.invalid_account"),
-                            });
-                            setStep(step + 1);
-                            return;
+                        try {
+                          let response;
+
+                          if (tipoOperacao === "deposito") {
+                            response = await ContaService.depositar(
+                              contaOrigem,
+                              valorNumerico,
+                            );
                           }
-                        }
 
-                        const res = await adicionarTransacao({
-                          tipo: tipoOperacao,
-                          origem: "1234",
-                          destino: form.conta || "----",
-                          valor: valorNumerico,
-                        });
+                          if (tipoOperacao === "saque") {
+                            response = await ContaService.sacar(
+                              contaOrigem,
+                              valorNumerico,
+                            );
+                          }
 
-                        if (res.status !== 200) {
-                          setResultado({
-                            status: "error",
-                            message: res.message,
-                          });
-                        } else {
+                          if (tipoOperacao === "transferencia") {
+                            if (!form.conta?.trim()) {
+                              setResultado({
+                                status: "error",
+                                message: t(lang, "Operations.invalid_account"),
+                              });
+                              setStep(step + 1);
+                              return;
+                            }
+
+                            if (form.conta.trim() === contaOrigem) {
+                              setResultado({
+                                status: "error",
+                                message:
+                                  "A conta de destino deve ser diferente da sua conta.",
+                              });
+                              setStep(step + 1);
+                              return;
+                            }
+
+                            response = await ContaService.transferir(
+                              contaOrigem,
+                              form.conta.trim(),
+                              valorNumerico,
+                            );
+                          }
+
                           setResultado({
                             status: "success",
                             message: t(lang, "Operations.success"),
                             detalhes: {
                               valor: form.valor,
                               conta: form.conta,
+                              resposta: response,
                             },
+                          });
+                        } catch (err) {
+                          console.error("Erro na operação:", err);
+
+                          setResultado({
+                            status: "error",
+                            message: err.message || t(lang, "Operations.Error"),
                           });
                         }
 

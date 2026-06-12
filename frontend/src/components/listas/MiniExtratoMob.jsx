@@ -66,12 +66,11 @@ export default function MiniExtratoMob({
   const masked = "R$ --,--";
 
   // Filtra ultimos 30 dias ativar quando os dados estiverem atualizados
-  // const transacoes = useMemo(
-  //   () =>
-  //     movimentacoes.filter((m) => new Date(m.data).getTime() >= CORTE_30_DIAS),
-  //   [movimentacoes],
-  // );
-  const transacoes = useMemo(() => movimentacoes, [movimentacoes]); // trocar para o filtro dos 30 dias quando os dados estiverem atualizados
+  const transacoes = useMemo(
+    () =>
+      movimentacoes.filter((m) => new Date(m.data).getTime() >= CORTE_30_DIAS),
+    [movimentacoes],
+  );
 
   const [visiveis, setVisiveis] = useState(BATCH);
 

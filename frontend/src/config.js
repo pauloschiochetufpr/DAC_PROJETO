@@ -188,4 +188,23 @@ export const API = {
     axiosAuth.get(`/contas/${numero}/extrato`, {
       params: filtros,
     }),
+
+  /** POST /contas/:numero/depositar */
+  depositar: (numero, valor) =>
+    axiosAuth.post(`/contas/${numero}/depositar`, {
+      valor,
+    }),
+
+  /** POST /contas/:numero/sacar */
+  sacar: (numero, valor) =>
+    axiosAuth.post(`/contas/${numero}/sacar`, {
+      valor,
+    }),
+
+  /** POST /contas/:numero/transferir */
+  transferir: (numero, destino, valor) =>
+    axiosAuth.post(`/contas/${numero}/transferir`, {
+      destino,
+      valor,
+    }),
 };

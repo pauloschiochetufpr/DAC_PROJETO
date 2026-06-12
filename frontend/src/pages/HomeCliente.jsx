@@ -113,15 +113,17 @@ export default function HomeCliente() {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
-  const movimentacoes = (extrato?.movimentacoes ?? []).map((m, index) => ({
-    id: `${m.data}-${m.tipo}-${m.valor}-${index}`,
-    data: m.data,
-    tipo: normalizarTipoMovimentacao(m.tipo),
-    tipoOriginal: m.tipo,
-    origem: m.origem,
-    destino: m.destino,
-    valor: Number(m.valor ?? 0),
-  }));
+  const movimentacoes = (extrato?.movimentacoes ?? [])
+    .map((m, index) => ({
+      id: `${m.data}-${m.tipo}-${m.valor}-${index}`,
+      data: m.data,
+      tipo: normalizarTipoMovimentacao(m.tipo),
+      tipoOriginal: m.tipo,
+      origem: m.origem,
+      destino: m.destino,
+      valor: Number(m.valor ?? 0),
+    }))
+    .sort((a, b) => new Date(b.data) - new Date(a.data));
   const masked = "--,--";
 
   return (
