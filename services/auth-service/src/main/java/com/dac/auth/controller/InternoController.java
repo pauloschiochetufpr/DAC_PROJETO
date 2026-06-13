@@ -39,4 +39,14 @@ public class InternoController {
             "cpf", msg.getOrDefault("cpf", "")
         ));
     }
+
+    // removerUsuario | ação compensatória das sagas (rollback de criação de usuário)
+    @DeleteMapping("/usuario/{cpf}")
+    public ResponseEntity<Map<String, String>> removerUsuario(@PathVariable String cpf) {
+        boolean removido = usuarioService.removerUsuario(cpf);
+        return ResponseEntity.ok(Map.of(
+            "status", removido ? "removido" : "nao_encontrado",
+            "cpf", cpf
+        ));
+    }
 }

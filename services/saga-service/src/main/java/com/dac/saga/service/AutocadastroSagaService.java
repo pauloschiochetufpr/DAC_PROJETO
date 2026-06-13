@@ -1,5 +1,6 @@
 package com.dac.saga.service;
 
+import com.dac.saga.util.SagaCompensacao;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -65,17 +66,30 @@ public class AutocadastroSagaService {
         String gerenteCpf = normalizarDocumento((String) gerente.get("cpf"));
         String gerenteNome = texto((String) gerente.get("nome"));
 
-        criarConta(cpf, nome, gerenteCpf, gerenteNome, limite);
-
         String senhaTemporaria = gerarSenha();
-        senhasPorCpf.put(cpf, senhaTemporaria);
+        SagaCompensacao compensacao = new SagaCompensacao();
 
-        // Cria o usuário no auth de forma síncrona, garantindo que ele já exista quando a
-        // aprovação retornar (evita corrida no login logo após aprovar).
-        criarUsuarioNoAuthSincrono(cpf, nome, email, senhaTemporaria);
-        // Publica também o evento na fila (mensageria da SAGA). O consumer é idempotente,
-        // então a mensagem que chega depois apenas confirma — não duplica o usuário.
-        publicarUsuarioNoAuth(cpf, nome, email, senhaTemporaria);
+        try {
+            // Etapa 1 (MS Conta): cria a conta. Compensação: remover a conta criada.
+            criarConta(cpf, nome, gerenteCpf, gerenteNome, limite);
+            compensacao.registrar("remover conta do cliente " + cpf, () -> removerContaNoConta(cpf));
+
+            // Etapa 2 (MS Auth): cria o usuário de forma síncrona (garante login imediato).
+            // Compensação: remover o usuário criado no auth.
+            senhasPorCpf.put(cpf, senhaTemporaria);
+            criarUsuarioNoAuthSincrono(cpf, nome, email, senhaTemporaria);
+            compensacao.registrar("remover usuário auth do cliente " + cpf, () -> removerUsuarioNoAuth(cpf));
+
+            // Etapa 3 (mensageria): publica o evento na fila. O consumer é idempotente,
+            // então a mensagem apenas confirma — não duplica o usuário.
+            publicarUsuarioNoAuth(cpf, nome, email, senhaTemporaria);
+        } catch (RuntimeException e) {
+            System.err.println("Saga autocadastro: falha — executando compensação. Causa: " + e.getMessage());
+            compensacao.compensar();
+            senhasPorCpf.remove(cpf);
+            publicarEventoSaga("autocadastro.falha", cpf);
+            throw e;
+        }
 
         System.out.println("Saga aprovação: conta criada e senha enviada para " + email + " - Senha: " + senhaTemporaria);
     }
@@ -152,6 +166,49 @@ public class AutocadastroSagaService {
         authEvento.put("senha", senhaTemporaria);
         authEvento.put("tipo", "cliente");
         rabbitTemplate.convertAndSend("auth.exchange", "auth.criar", authEvento);
+    }
+
+    // Ação compensatória: remove a conta criada nesta saga.
+    private void removerContaNoConta(String cpf) {
+        try {
+            Map<String, String> body = new HashMap<>();
+            body.put("clienteCpf", cpf);
+            httpPost(contaUrl + "/contas/remover", objectMapper.writeValueAsString(body));
+        } catch (Exception e) {
+            throw new RuntimeException("Falha ao remover conta na compensação: " + e.getMessage(), e);
+        }
+    }
+
+    // Ação compensatória: remove o usuário criado no auth nesta saga.
+    private void removerUsuarioNoAuth(String cpf) {
+        try {
+            httpDelete(authUrl + "/interno/usuario/" + cpf);
+        } catch (Exception e) {
+            throw new RuntimeException("Falha ao remover usuário auth na compensação: " + e.getMessage(), e);
+        }
+    }
+
+    private void publicarEventoSaga(String routingKey, String cpf) {
+        try {
+            Map<String, Object> evento = new HashMap<>();
+            evento.put("saga", "autocadastro");
+            evento.put("cpf", cpf);
+            rabbitTemplate.convertAndSend("saga.exchange", routingKey, evento);
+        } catch (Exception ignored) {
+            // evento de acompanhamento é best-effort
+        }
+    }
+
+    private String httpDelete(String url) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create(url))
+            .DELETE()
+            .build();
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() >= 400) {
+            throw new RuntimeException("HTTP " + response.statusCode() + ": " + response.body());
+        }
+        return response.body();
     }
 
     private String httpGet(String url) throws Exception {

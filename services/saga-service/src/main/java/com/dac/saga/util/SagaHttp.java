@@ -40,6 +40,14 @@ public final class SagaHttp {
         return enviar(request);
     }
 
+    public static String delete(String url) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create(url))
+            .DELETE()
+            .build();
+        return enviar(request);
+    }
+
     private static String enviar(HttpRequest request) throws Exception {
         HttpResponse<String> response = CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() >= 400) {

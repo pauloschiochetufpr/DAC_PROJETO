@@ -38,9 +38,13 @@ public class SagaOperacoesController {
 
     @PostMapping("/inserir-gerente")
     public ResponseEntity<?> inserirGerente(@RequestBody Map<String, Object> body) {
-        String cpf = (String) body.get("gerenteCpf");
-        String nome = (String) body.get("gerenteNome");
-        insercaoGerenteSaga.executar(cpf, nome);
+        insercaoGerenteSaga.executar(
+            (String) body.get("gerenteCpf"),
+            (String) body.get("gerenteNome"),
+            (String) body.get("gerenteEmail"),
+            (String) body.get("gerenteSenha"),
+            (String) body.get("gerenteTipo")
+        );
         return ResponseEntity.ok(Map.of("status", "gerente_inserido"));
     }
 

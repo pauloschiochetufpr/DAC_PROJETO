@@ -268,14 +268,16 @@ public class ClienteService {
         // R4: se salário mudou, dispara a SAGA de alteração de perfil (orquestrada pelo
         // saga-service), que coordena o recálculo do limite no conta-service.
         if (salarioAlterado) {
+            // Se a saga (recálculo de limite na conta) falhar, propaga para que o @Transactional
+            // reverta a alteração dos dados do cliente já aplicada acima (compensação local).
             try {
                 Map<String, Object> body = new HashMap<>();
                 body.put("cpf", cpf);
                 body.put("novoSalario", dto.getSalario());
                 httpPost(sagaUrl + "/saga/alterar-perfil", objectMapper.writeValueAsString(body));
             } catch (Exception e) {
-                System.err.println("cliente-service: aviso - falha na saga de alteração de perfil: "
-                    + e.getMessage());
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Falha na saga de alteração de perfil: " + e.getMessage());
             }
         }
 

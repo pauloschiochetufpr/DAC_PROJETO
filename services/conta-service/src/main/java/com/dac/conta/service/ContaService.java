@@ -347,6 +347,25 @@ public class ContaService {
     }
 
     // -------------------------
+    // POST /contas/remover — ação compensatória da SAGA de autocadastro
+    // Remove a conta dos dois bancos (CUD e R) caso uma etapa posterior da saga falhe.
+    // -------------------------
+    public void removerContaPorCliente(String clienteCpf) {
+        String cpf = normalizarDocumento(clienteCpf);
+        try {
+            contaCUDRepository.findByClienteCpf(cpf).ifPresent(contaCUDRepository::delete);
+        } catch (Exception e) {
+            System.err.println("conta-service: aviso - remover conta CUD falhou: " + e.getMessage());
+        }
+        try {
+            contaRRepository.findByClienteCpf(cpf).ifPresent(contaRRepository::delete);
+        } catch (Exception e) {
+            System.err.println("conta-service: aviso - remover conta R falhou: " + e.getMessage());
+        }
+        System.out.println("conta-service: conta removida (compensação saga) para cliente " + cpf);
+    }
+
+    // -------------------------
     // PUT /contas/limite
     // -------------------------
     @Transactional
