@@ -29,6 +29,9 @@ public class AutocadastroSagaService {
     @Value("${saga.services.conta}")
     private String contaUrl;
 
+    @Value("${saga.services.auth}")
+    private String authUrl;
+
     private final RabbitTemplate rabbitTemplate;
     private final HttpClient httpClient = HttpClient.newHttpClient();
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -66,6 +69,12 @@ public class AutocadastroSagaService {
 
         String senhaTemporaria = gerarSenha();
         senhasPorCpf.put(cpf, senhaTemporaria);
+
+        // Cria o usuário no auth de forma síncrona, garantindo que ele já exista quando a
+        // aprovação retornar (evita corrida no login logo após aprovar).
+        criarUsuarioNoAuthSincrono(cpf, nome, email, senhaTemporaria);
+        // Publica também o evento na fila (mensageria da SAGA). O consumer é idempotente,
+        // então a mensagem que chega depois apenas confirma — não duplica o usuário.
         publicarUsuarioNoAuth(cpf, nome, email, senhaTemporaria);
 
         System.out.println("Saga aprovação: conta criada e senha enviada para " + email + " - Senha: " + senhaTemporaria);
@@ -115,6 +124,22 @@ public class AutocadastroSagaService {
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                 "Erro ao criar conta: " + e.getMessage(), e);
+        }
+    }
+
+    private void criarUsuarioNoAuthSincrono(String cpf, String nome, String email, String senhaTemporaria) {
+        try {
+            Map<String, String> body = new HashMap<>();
+            body.put("cpf", cpf);
+            body.put("nome", nome);
+            body.put("email", email.toLowerCase(Locale.ROOT));
+            body.put("senha", senhaTemporaria);
+            body.put("tipo", "cliente");
+
+            httpPost(authUrl + "/interno/usuario", objectMapper.writeValueAsString(body));
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                "Erro ao criar usuário no auth: " + e.getMessage(), e);
         }
     }
 

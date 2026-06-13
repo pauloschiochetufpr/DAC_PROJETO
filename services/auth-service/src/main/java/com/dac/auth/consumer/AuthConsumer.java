@@ -6,12 +6,13 @@ import com.dac.auth.config.RabbitMQConfig;
 import com.dac.auth.entity.Usuario;
 // repositórios
 import com.dac.auth.repository.UsuarioRepository;
+// service
+import com.dac.auth.service.UsuarioService;
 // util
 import com.dac.auth.util.DevLog;
 // Spring AMQP / RabbitMQ
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -24,45 +25,20 @@ public class AuthConsumer {
     private UsuarioRepository usuarioRepository;
 
     @Autowired
-    private PasswordEncoder passwordEncoder;
+    private UsuarioService usuarioService;
 
-    private String hashIfNeeded(String senha) {
-        if (senha == null || senha.isBlank()) return senha;
-
-        // Evita hash duplo quando a senha já vier em formato bcrypt.
-        if (senha.matches("^\\$2[aby]\\$.{56}$")) {
-            return senha;
-        }
-
-        return passwordEncoder.encode(senha);
-    }
-
-    // criarUsuario | recebe mensagem do gerente-service ou saga-service e persiste novo usuário
+    // criarUsuario | recebe mensagem do gerente-service ou saga-service e persiste novo usuário.
+    // Delega ao UsuarioService (idempotente) — o mesmo usado pelo endpoint interno síncrono.
     @RabbitListener(queues = RabbitMQConfig.FILA_AUTH_CRIAR)
     public void criarUsuario(Map<String, String> msg) {
-        String cpf   = msg.get("cpf");
-        String nome  = msg.get("nome");
-        String email = msg.get("email");
-        String senha = msg.get("senha");
-        String tipo  = msg.get("tipo");
-
-        DevLog.log("criarUsuario - recebido CPF: " + cpf + ", email: " + email + ", tipo: " + tipo);
-
-        Optional<Usuario> existente = usuarioRepository.findByCpf(cpf);
-        if (existente.isPresent()) {
-            DevLog.log("criarUsuario ignorado - CPF ja existe: " + cpf);
-            return;
-        }
-
-        Usuario usuario = new Usuario();
-        usuario.setCpf(cpf);
-        usuario.setNome(nome);
-        usuario.setEmail(email);
-        usuario.setSenhaHash(hashIfNeeded(senha));
-        usuario.setTipo(tipo);
-
-        usuarioRepository.save(usuario);
-        DevLog.log("criarUsuario OK - email: " + email + ", CPF: " + cpf);
+        DevLog.log("criarUsuario - recebido CPF: " + msg.get("cpf") + ", email: " + msg.get("email") + ", tipo: " + msg.get("tipo"));
+        usuarioService.criarUsuario(
+            msg.get("cpf"),
+            msg.get("nome"),
+            msg.get("email"),
+            msg.get("senha"),
+            msg.get("tipo")
+        );
     }
 
     // atualizarUsuario | atualiza campos de um usuário existente com os dados recebidos via fila
@@ -82,7 +58,7 @@ public class AuthConsumer {
 
         if (msg.containsKey("nome"))  usuario.setNome(msg.get("nome"));
         if (msg.containsKey("email")) usuario.setEmail(msg.get("email"));
-        if (msg.containsKey("senha")) usuario.setSenhaHash(hashIfNeeded(msg.get("senha")));
+        if (msg.containsKey("senha")) usuario.setSenhaHash(usuarioService.hashIfNeeded(msg.get("senha")));
 
         usuarioRepository.save(usuario);
         DevLog.log("atualizarUsuario OK - CPF: " + cpf);

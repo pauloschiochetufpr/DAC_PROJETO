@@ -265,26 +265,16 @@ public class ClienteService {
                 + e.getMessage());
         }
 
-        // R4: se salário mudou, notifica conta-service para recalcular limite
+        // R4: se salário mudou, dispara a SAGA de alteração de perfil (orquestrada pelo
+        // saga-service), que coordena o recálculo do limite no conta-service.
         if (salarioAlterado) {
             try {
-                Map<String, Object> limiteEvento = new HashMap<>();
-                limiteEvento.put("clienteCpf", cpf);
-                limiteEvento.put("novoSalario", dto.getSalario());
-                rabbitTemplate.convertAndSend(RabbitMQConfig.FILA_CONTA_LIMITE, limiteEvento);
-            } catch (Exception e) {
-                System.err.println("cliente-service: aviso - não foi possível publicar evento conta.limite: "
-                    + e.getMessage());
-            }
-
-            // Chamada síncrona para atualizar limite imediatamente (PyTest não espera mensageria)
-            try {
                 Map<String, Object> body = new HashMap<>();
-                body.put("clienteCpf", cpf);
+                body.put("cpf", cpf);
                 body.put("novoSalario", dto.getSalario());
-                httpPut(contaUrl + "/contas/limite", objectMapper.writeValueAsString(body));
+                httpPost(sagaUrl + "/saga/alterar-perfil", objectMapper.writeValueAsString(body));
             } catch (Exception e) {
-                System.err.println("cliente-service: aviso - falha na atualização síncrona de limite: "
+                System.err.println("cliente-service: aviso - falha na saga de alteração de perfil: "
                     + e.getMessage());
             }
         }
