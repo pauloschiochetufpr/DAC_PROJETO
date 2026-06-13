@@ -1,12 +1,10 @@
 package com.dac.saga.service;
 
+import com.dac.saga.bus.RespostaComando;
+import com.dac.saga.bus.SagaCommandBus;
 import com.dac.saga.config.RabbitMQConfig;
 import com.dac.saga.util.SagaCompensacao;
-import com.dac.saga.util.SagaHttp;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -19,25 +17,20 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 // InsercaoGerenteSagaService | orquestra a SAGA de Inserção de Gerente (R17).
-// Etapas coordenadas pelo orquestrador:
-//   1. MS Gerente: inserção do gerente (executada pelo gerente-service, que dispara esta saga
-//      e faz rollback transacional local caso a saga falhe)
-//   2. MS Auth: criação do usuário de autenticação do gerente (compensação: remover usuário)
+// Comunicação com os serviços 100% assíncrona via RabbitMQ (comando/resposta).
+// Etapas:
+//   1. MS Gerente: inserção do gerente (gerente-service dispara a saga; rollback transacional local)
+//   2. MS Auth: criação do usuário (compensação: remover usuário)
 //   3. MS Conta: consultar gerente com mais contas e atribuir 1 conta ao novo gerente
 @Service
 public class InsercaoGerenteSagaService {
 
-    @Value("${saga.services.conta}")
-    private String contaUrl;
-
-    @Value("${saga.services.auth}")
-    private String authUrl;
-
     private final RabbitTemplate rabbitTemplate;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final SagaCommandBus commandBus;
 
-    public InsercaoGerenteSagaService(RabbitTemplate rabbitTemplate) {
+    public InsercaoGerenteSagaService(RabbitTemplate rabbitTemplate, SagaCommandBus commandBus) {
         this.rabbitTemplate = rabbitTemplate;
+        this.commandBus = commandBus;
     }
 
     public void executar(String cpf, String nome, String email, String senha, String tipo) {
@@ -50,10 +43,9 @@ public class InsercaoGerenteSagaService {
 
         SagaCompensacao compensacao = new SagaCompensacao();
         try {
-            // Etapa MS Auth: cria o usuário de autenticação (síncrono). Compensação: removê-lo.
+            // Etapa MS Auth (comando): cria o usuário. Compensação: removê-lo.
             criarUsuarioNoAuth(cpf, nome, email, senha, tipoNorm);
             compensacao.registrar("remover usuário auth do gerente " + cpf, () -> removerUsuarioNoAuth(cpf));
-            publicarUsuarioNoAuth(cpf, nome, email, senha, tipoNorm);
 
             // Etapa MS Conta: somente gerentes recebem conta; administrador não.
             if ("gerente".equals(tipoNorm)) {
@@ -73,10 +65,17 @@ public class InsercaoGerenteSagaService {
         }
     }
 
-    private void redistribuirContaParaNovoGerente(String novoGerenteCpf, String novoGerenteNome) throws Exception {
-        String contagemJson = SagaHttp.get(contaUrl + "/contas/contagem-por-gerente");
-        Map<String, Long> contagem = objectMapper.readValue(
-            contagemJson, new TypeReference<Map<String, Long>>() {});
+    @SuppressWarnings("unchecked")
+    private void redistribuirContaParaNovoGerente(String novoGerenteCpf, String novoGerenteNome) {
+        // Consulta MS Conta (comando): contagem de contas por gerente
+        RespostaComando resp = commandBus.enviarEAguardar(
+            "comando.conta.consultar-contagem", "consultar_contagem", new HashMap<>());
+        Map<String, Object> contagemRaw = resp.getDados() != null
+            ? (Map<String, Object>) resp.getDados().getOrDefault("contagem", new HashMap<>())
+            : new HashMap<>();
+
+        Map<String, Long> contagem = new HashMap<>();
+        contagemRaw.forEach((k, v) -> contagem.put(k, ((Number) v).longValue()));
 
         if (contagem.isEmpty()) {
             return;
@@ -99,53 +98,32 @@ public class InsercaoGerenteSagaService {
             ? candidatos.get(0)
             : candidatos.stream().min(Comparator.naturalOrder()).orElse(candidatos.get(0));
 
-        Map<String, Object> body = new HashMap<>();
-        body.put("gerenteOrigemCpf", gerenteOrigem);
-        body.put("gerenteDestinoCpf", novoGerenteCpf);
-        body.put("gerenteDestinoNome", novoGerenteNome);
-        body.put("quantidade", 1);
-        SagaHttp.post(contaUrl + "/contas/redistribuir", objectMapper.writeValueAsString(body));
+        // Etapa MS Conta (comando): atribui 1 conta do gerente de origem ao novo gerente
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("gerenteOrigemCpf", gerenteOrigem);
+        payload.put("gerenteDestinoCpf", novoGerenteCpf);
+        payload.put("gerenteDestinoNome", novoGerenteNome);
+        payload.put("quantidade", 1);
+        commandBus.enviarEAguardar("comando.conta.redistribuir", "redistribuir", payload);
 
         System.out.println("Saga inserção de gerente: 1 conta redistribuída de "
             + gerenteOrigem + " para " + novoGerenteCpf);
     }
 
     private void criarUsuarioNoAuth(String cpf, String nome, String email, String senha, String tipo) {
-        try {
-            Map<String, String> body = new HashMap<>();
-            body.put("cpf", cpf);
-            body.put("nome", nome);
-            body.put("email", email != null ? email.toLowerCase(Locale.ROOT) : null);
-            body.put("senha", senha);
-            body.put("tipo", tipo);
-            SagaHttp.post(authUrl + "/interno/usuario", objectMapper.writeValueAsString(body));
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                "Falha ao criar usuário do gerente no auth: " + e.getMessage(), e);
-        }
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("cpf", cpf);
+        payload.put("nome", nome);
+        payload.put("email", email != null ? email.toLowerCase(Locale.ROOT) : null);
+        payload.put("senha", senha);
+        payload.put("tipo", tipo);
+        commandBus.enviarEAguardar("comando.auth.criar", "criar_usuario", payload);
     }
 
     private void removerUsuarioNoAuth(String cpf) {
-        try {
-            SagaHttp.delete(authUrl + "/interno/usuario/" + cpf);
-        } catch (Exception e) {
-            throw new RuntimeException("Falha ao remover usuário auth na compensação: " + e.getMessage(), e);
-        }
-    }
-
-    private void publicarUsuarioNoAuth(String cpf, String nome, String email, String senha, String tipo) {
-        try {
-            Map<String, String> evento = new HashMap<>();
-            evento.put("acao", "criar");
-            evento.put("cpf", cpf);
-            evento.put("nome", nome);
-            evento.put("email", email != null ? email.toLowerCase(Locale.ROOT) : null);
-            evento.put("senha", senha);
-            evento.put("tipo", tipo);
-            rabbitTemplate.convertAndSend("auth.exchange", "auth.criar", evento);
-        } catch (Exception ignored) {
-            // publicação assíncrona é best-effort; a criação síncrona já garantiu o usuário
-        }
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("cpf", cpf);
+        commandBus.enviarEAguardar("comando.auth.remover", "remover_usuario", payload);
     }
 
     private void publicarEvento(String routingKey, String gerenteCpf) {

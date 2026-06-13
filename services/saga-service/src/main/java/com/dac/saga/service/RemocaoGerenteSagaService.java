@@ -1,11 +1,9 @@
 package com.dac.saga.service;
 
+import com.dac.saga.bus.RespostaComando;
+import com.dac.saga.bus.SagaCommandBus;
 import com.dac.saga.config.RabbitMQConfig;
-import com.dac.saga.util.SagaHttp;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -14,26 +12,23 @@ import java.util.HashMap;
 import java.util.Map;
 
 // RemocaoGerenteSagaService | orquestra a SAGA de Remoção de Gerente (R18).
-// Etapas coordenadas pelo orquestrador:
-//   1. MS Gerente: consultar o gerente com menos contas (destino)
+// Comunicação com os serviços 100% assíncrona via RabbitMQ (comando/resposta).
+// Etapas:
+//   1. MS Conta/Gerente: consultar gerente com menos contas (destino)
 //   2. MS Conta: atribuição das contas ao novo gerente
-//   3. MS Gerente: remoção do gerente (executada pelo gerente-service após esta saga)
+//   3. MS Gerente: remoção do gerente (gerente-service, após o sucesso desta saga)
 @Service
 public class RemocaoGerenteSagaService {
 
-    @Value("${saga.services.conta}")
-    private String contaUrl;
-
-    @Value("${saga.services.gerente}")
-    private String gerenteUrl;
-
     private final RabbitTemplate rabbitTemplate;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final SagaCommandBus commandBus;
 
-    public RemocaoGerenteSagaService(RabbitTemplate rabbitTemplate) {
+    public RemocaoGerenteSagaService(RabbitTemplate rabbitTemplate, SagaCommandBus commandBus) {
         this.rabbitTemplate = rabbitTemplate;
+        this.commandBus = commandBus;
     }
 
+    @SuppressWarnings("unchecked")
     public void executar(String gerenteRemovidoCpf) {
         if (gerenteRemovidoCpf == null || gerenteRemovidoCpf.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CPF do gerente a remover obrigatório");
@@ -42,11 +37,15 @@ public class RemocaoGerenteSagaService {
         publicarEvento("remocao_gerente.iniciada", gerenteRemovidoCpf);
 
         try {
-            // Etapa MS Conta (consulta): contagem de contas por gerente
-            String contagemJson = SagaHttp.get(contaUrl + "/contas/contagem-por-gerente");
-            Map<String, Long> contagem = objectMapper.readValue(
-                contagemJson, new TypeReference<Map<String, Long>>() {});
+            // Consulta MS Conta (comando): contagem de contas por gerente
+            RespostaComando resp = commandBus.enviarEAguardar(
+                "comando.conta.consultar-contagem", "consultar_contagem", new HashMap<>());
+            Map<String, Object> contagemRaw = resp.getDados() != null
+                ? (Map<String, Object>) resp.getDados().getOrDefault("contagem", new HashMap<>())
+                : new HashMap<>();
 
+            Map<String, Long> contagem = new HashMap<>();
+            contagemRaw.forEach((k, v) -> contagem.put(k, ((Number) v).longValue()));
             contagem.remove(gerenteRemovidoCpf);
 
             // Sem outro gerente: nada a redistribuir
@@ -55,22 +54,23 @@ public class RemocaoGerenteSagaService {
                 return;
             }
 
-            // Etapa MS Gerente (consulta): gerente com menos contas recebe as contas
+            // Gerente com menos contas recebe as contas
             String gerenteDestinoCpf = contagem.entrySet().stream()
                 .min(Map.Entry.comparingByValue())
                 .map(Map.Entry::getKey)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT,
                     "Nenhum gerente disponível para redistribuição"));
 
+            // Consulta MS Gerente (comando): nome do gerente destino
             String gerenteDestinoNome = buscarNomeGerente(gerenteDestinoCpf);
 
-            // Etapa MS Conta: reatribuir todas as contas do gerente removido ao destino
-            Map<String, Object> body = new HashMap<>();
-            body.put("gerenteOrigemCpf", gerenteRemovidoCpf);
-            body.put("gerenteDestinoCpf", gerenteDestinoCpf);
-            body.put("gerenteDestinoNome", gerenteDestinoNome);
-            body.put("quantidade", -1);
-            SagaHttp.post(contaUrl + "/contas/redistribuir", objectMapper.writeValueAsString(body));
+            // Etapa MS Conta (comando): reatribui todas as contas do gerente removido ao destino
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("gerenteOrigemCpf", gerenteRemovidoCpf);
+            payload.put("gerenteDestinoCpf", gerenteDestinoCpf);
+            payload.put("gerenteDestinoNome", gerenteDestinoNome);
+            payload.put("quantidade", -1);
+            commandBus.enviarEAguardar("comando.conta.redistribuir", "redistribuir", payload);
 
             publicarEvento("remocao_gerente.concluida", gerenteRemovidoCpf);
             System.out.println("Saga remoção de gerente: contas de " + gerenteRemovidoCpf
@@ -85,12 +85,14 @@ public class RemocaoGerenteSagaService {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private String buscarNomeGerente(String cpf) {
         try {
-            String json = SagaHttp.get(gerenteUrl + "/gerentes/" + cpf);
-            Map<String, Object> gerente = objectMapper.readValue(
-                json, new TypeReference<Map<String, Object>>() {});
-            Object nome = gerente.get("nome");
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("cpf", cpf);
+            RespostaComando resp = commandBus.enviarEAguardar(
+                "comando.gerente.consultar", "consultar_gerente", payload);
+            Object nome = resp.getDados() != null ? resp.getDados().get("nome") : null;
             return nome != null ? nome.toString() : "";
         } catch (Exception e) {
             return "";

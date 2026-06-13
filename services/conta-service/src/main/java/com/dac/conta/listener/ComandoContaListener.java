@@ -1,7 +1,9 @@
 package com.dac.conta.listener;
 
 import com.dac.conta.config.RabbitMQConfig;
+import com.dac.conta.dto.request.AtualizarLimiteRequestDTO;
 import com.dac.conta.dto.request.CriarContaRequestDTO;
+import com.dac.conta.dto.request.RedistribuirRequestDTO;
 import com.dac.conta.dto.response.ContaResponseDTO;
 import com.dac.conta.service.ContaService;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -51,6 +53,28 @@ public class ComandoContaListener {
                 }
                 case "remover_conta": {
                     contaService.removerContaPorCliente((String) payload.get("clienteCpf"));
+                    break;
+                }
+                case "atualizar_limite": {
+                    AtualizarLimiteRequestDTO req = new AtualizarLimiteRequestDTO();
+                    req.setClienteCpf((String) payload.get("clienteCpf"));
+                    Object sal = payload.get("novoSalario");
+                    req.setNovoSalario(sal != null ? ((Number) sal).doubleValue() : null);
+                    contaService.atualizarLimite(req);
+                    break;
+                }
+                case "redistribuir": {
+                    RedistribuirRequestDTO req = new RedistribuirRequestDTO();
+                    req.setGerenteOrigemCpf((String) payload.get("gerenteOrigemCpf"));
+                    req.setGerenteDestinoCpf((String) payload.get("gerenteDestinoCpf"));
+                    req.setGerenteDestinoNome((String) payload.get("gerenteDestinoNome"));
+                    Object qtd = payload.get("quantidade");
+                    req.setQuantidade(qtd != null ? ((Number) qtd).intValue() : 1);
+                    contaService.redistribuir(req);
+                    break;
+                }
+                case "consultar_contagem": {
+                    dados.put("contagem", contaService.contagemPorGerente());
                     break;
                 }
                 default:
