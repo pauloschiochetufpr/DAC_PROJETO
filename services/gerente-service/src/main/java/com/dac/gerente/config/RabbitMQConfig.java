@@ -1,6 +1,9 @@
 package com.dac.gerente.config;
 
+import org.springframework.amqp.core.Binding;
+import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -14,9 +17,34 @@ public class RabbitMQConfig {
 
     public static final String FILA_RESET = "saga.reset";
 
+    // Comando/resposta da saga (orquestrador -> gerente -> orquestrador)
+    public static final String COMANDO_EXCHANGE     = "saga.comando";
+    public static final String RESPOSTA_EXCHANGE    = "saga.resposta";
+    public static final String FILA_COMANDO_GERENTE = "gerente.comando.queue";
+
     @Bean
     public Queue filaReset() {
         return new Queue(FILA_RESET, true);
+    }
+
+    @Bean
+    public TopicExchange comandoExchange() {
+        return new TopicExchange(COMANDO_EXCHANGE);
+    }
+
+    @Bean
+    public TopicExchange respostaExchange() {
+        return new TopicExchange(RESPOSTA_EXCHANGE);
+    }
+
+    @Bean
+    public Queue filaComandoGerente() {
+        return new Queue(FILA_COMANDO_GERENTE, true);
+    }
+
+    @Bean
+    public Binding bindingComandoGerente(Queue filaComandoGerente, TopicExchange comandoExchange) {
+        return BindingBuilder.bind(filaComandoGerente).to(comandoExchange).with("comando.gerente.#");
     }
 
     @Bean

@@ -4,6 +4,8 @@ package com.dac.auth.controller;
 import com.dac.auth.service.UsuarioService;
 // Spring
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,6 +39,16 @@ public class InternoController {
         return ResponseEntity.ok(Map.of(
             "status", criado ? "criado" : "ja_existia",
             "cpf", msg.getOrDefault("cpf", "")
+        ));
+    }
+
+    // removerUsuario | ação compensatória das sagas (rollback de criação de usuário)
+    @DeleteMapping("/usuario/{cpf}")
+    public ResponseEntity<Map<String, String>> removerUsuario(@PathVariable String cpf) {
+        boolean removido = usuarioService.removerUsuario(cpf);
+        return ResponseEntity.ok(Map.of(
+            "status", removido ? "removido" : "nao_encontrado",
+            "cpf", cpf
         ));
     }
 }

@@ -1,10 +1,8 @@
 package com.dac.saga.service;
 
+import com.dac.saga.bus.SagaCommandBus;
 import com.dac.saga.config.RabbitMQConfig;
-import com.dac.saga.util.SagaHttp;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -20,14 +18,12 @@ import java.util.Map;
 @Service
 public class AlteracaoPerfilSagaService {
 
-    @Value("${saga.services.conta}")
-    private String contaUrl;
-
     private final RabbitTemplate rabbitTemplate;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final SagaCommandBus commandBus;
 
-    public AlteracaoPerfilSagaService(RabbitTemplate rabbitTemplate) {
+    public AlteracaoPerfilSagaService(RabbitTemplate rabbitTemplate, SagaCommandBus commandBus) {
         this.rabbitTemplate = rabbitTemplate;
+        this.commandBus = commandBus;
     }
 
     public void executar(String cpf, Double novoSalario) {
@@ -40,12 +36,12 @@ public class AlteracaoPerfilSagaService {
 
         publicarEvento("perfil.iniciada", cpf, novoSalario);
 
-        // Etapa MS Conta: recalcular e atualizar o limite com base no novo salário.
+        // Etapa MS Conta via comando assíncrono (RabbitMQ): recalcular e atualizar o limite.
         try {
-            Map<String, Object> body = new HashMap<>();
-            body.put("clienteCpf", cpf);
-            body.put("novoSalario", novoSalario);
-            SagaHttp.put(contaUrl + "/contas/limite", objectMapper.writeValueAsString(body));
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("clienteCpf", cpf);
+            payload.put("novoSalario", novoSalario);
+            commandBus.enviarEAguardar("comando.conta.limite", "atualizar_limite", payload);
         } catch (Exception e) {
             publicarEvento("perfil.falha", cpf, novoSalario);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,

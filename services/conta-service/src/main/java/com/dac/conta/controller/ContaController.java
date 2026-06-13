@@ -128,4 +128,14 @@ public class ContaController {
         contaService.atualizarLimite(request);
         return ResponseEntity.ok().build();
     }
+
+    // -------------------------
+    // Endpoint interno de compensação (rollback da SAGA de autocadastro)
+    // -------------------------
+
+    @PostMapping("/remover")
+    public ResponseEntity<Void> remover(@RequestBody Map<String, String> body) {
+        contaService.removerContaPorCliente(body.get("clienteCpf"));
+        return ResponseEntity.ok().build();
+    }
 }

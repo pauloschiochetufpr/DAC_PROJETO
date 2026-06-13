@@ -55,4 +55,19 @@ public class UsuarioService {
         DevLog.log("criarUsuario OK - email: " + email + ", CPF: " + cpf);
         return true;
     }
+
+    // removerUsuario | remove o usuário pelo CPF; ação compensatória usada pelas sagas.
+    // Retorna true se removeu, false se não existia.
+    public boolean removerUsuario(String cpf) {
+        if (cpf == null || cpf.isBlank()) return false;
+
+        Optional<Usuario> existente = usuarioRepository.findByCpf(cpf);
+        if (existente.isEmpty()) {
+            return false;
+        }
+
+        usuarioRepository.delete(existente.get());
+        DevLog.log("removerUsuario OK (compensação) - CPF: " + cpf);
+        return true;
+    }
 }

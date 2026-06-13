@@ -190,37 +190,20 @@ public class GerenteService {
 
         gerenteRepository.save(gerente);
 
-        if (gerente.getTipo() == TipoGerente.GERENTE) {
-            try {
-                Map<String, Object> body = new HashMap<>();
-                body.put("gerenteCpf", dto.getCpf());
-                body.put("gerenteNome", dto.getNome());
-                httpPost(sagaUrl + "/saga/inserir-gerente", objectMapper.writeValueAsString(body));
-            } catch (Exception e) {
-                System.err.println("Aviso: saga de inserção de gerente (R17) falhou: " + e.getMessage());
-            }
-        }
-
-        Map<String, String> authEvent = new HashMap<>();
-        authEvent.put("acao", "criar");
-        authEvent.put("cpf", dto.getCpf());
-        authEvent.put("nome", dto.getNome());
-        authEvent.put("email", dto.getEmail());
-        authEvent.put("senha", dto.getSenha());
-        authEvent.put("tipo", tipoNormalizado);
-
-        // Cria o usuário no auth de forma síncrona, garantindo login imediato após a inserção
-        // (evita corrida). O auth é idempotente, então o evento assíncrono abaixo não duplica.
+        // Dispara a SAGA de inserção de gerente (orquestrada pelo saga-service): cria o usuário
+        // no auth e atribui uma conta ao novo gerente. Se a saga falhar, a exceção propaga e o
+        // @Transactional reverte o registro do gerente recém-salvo (compensação local).
         try {
-            httpPost(authUrl + "/interno/usuario", objectMapper.writeValueAsString(authEvent));
+            Map<String, Object> body = new HashMap<>();
+            body.put("gerenteCpf", dto.getCpf());
+            body.put("gerenteNome", dto.getNome());
+            body.put("gerenteEmail", dto.getEmail());
+            body.put("gerenteSenha", dto.getSenha());
+            body.put("gerenteTipo", tipoNormalizado);
+            httpPost(sagaUrl + "/saga/inserir-gerente", objectMapper.writeValueAsString(body));
         } catch (Exception e) {
-            System.err.println("Aviso: falha ao criar usuário no auth (síncrono): " + e.getMessage());
-        }
-
-        try {
-            rabbitTemplate.convertAndSend("auth.exchange", "auth.criar", authEvent);
-        } catch (Exception e) {
-            System.err.println("Aviso: não foi possível publicar evento no RabbitMQ: " + e.getMessage());
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                "Falha na saga de inserção de gerente: " + e.getMessage());
         }
 
         return toDTO(gerente);
@@ -237,12 +220,15 @@ public class GerenteService {
         }
 
         if (gerente.getTipo() == TipoGerente.GERENTE) {
+            // A SAGA redistribui as contas ANTES da remoção. Se falhar, propaga e a deleção
+            // destrutiva abaixo não acontece (compensação por gating: aborta sem remover).
             try {
                 Map<String, Object> body = new HashMap<>();
                 body.put("gerenteCpf", cpf);
                 httpPost(sagaUrl + "/saga/remover-gerente", objectMapper.writeValueAsString(body));
             } catch (Exception e) {
-                System.err.println("Aviso: saga de remoção de gerente (R18) falhou: " + e.getMessage());
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Falha na saga de remoção de gerente: " + e.getMessage());
             }
         }
 
