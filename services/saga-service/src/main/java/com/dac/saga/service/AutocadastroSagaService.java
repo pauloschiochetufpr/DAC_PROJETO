@@ -1,5 +1,6 @@
 package com.dac.saga.service;
 
+import com.dac.saga.bus.SagaCommandBus;
 import com.dac.saga.util.SagaCompensacao;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,12 +35,14 @@ public class AutocadastroSagaService {
     private String authUrl;
 
     private final RabbitTemplate rabbitTemplate;
+    private final SagaCommandBus commandBus;
     private final HttpClient httpClient = HttpClient.newHttpClient();
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final Map<String, String> senhasPorCpf = new ConcurrentHashMap<>();
 
-    public AutocadastroSagaService(RabbitTemplate rabbitTemplate) {
+    public AutocadastroSagaService(RabbitTemplate rabbitTemplate, SagaCommandBus commandBus) {
         this.rabbitTemplate = rabbitTemplate;
+        this.commandBus = commandBus;
     }
 
     public String getSenhaPorCpf(String cpf) {
@@ -125,36 +128,27 @@ public class AutocadastroSagaService {
         }
     }
 
+    // Etapa MS Conta via comando assíncrono (RabbitMQ): orquestrador publica o comando e
+    // aguarda a resposta correlacionada.
     private void criarConta(String clienteCpf, String clienteNome, String gerenteCpf, String gerenteNome, Double limite) {
-        try {
-            Map<String, Object> body = new HashMap<>();
-            body.put("clienteCpf", clienteCpf);
-            body.put("clienteNome", clienteNome);
-            body.put("gerenteCpf", gerenteCpf);
-            body.put("gerenteNome", gerenteNome);
-            body.put("limite", limite != null && limite >= 0 ? limite : 0.0);
-
-            httpPost(contaUrl + "/contas/criar", objectMapper.writeValueAsString(body));
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                "Erro ao criar conta: " + e.getMessage(), e);
-        }
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("clienteCpf", clienteCpf);
+        payload.put("clienteNome", clienteNome);
+        payload.put("gerenteCpf", gerenteCpf);
+        payload.put("gerenteNome", gerenteNome);
+        payload.put("limite", limite != null && limite >= 0 ? limite : 0.0);
+        commandBus.enviarEAguardar("comando.conta.criar", "criar_conta", payload);
     }
 
+    // Etapa MS Auth via comando assíncrono (RabbitMQ).
     private void criarUsuarioNoAuthSincrono(String cpf, String nome, String email, String senhaTemporaria) {
-        try {
-            Map<String, String> body = new HashMap<>();
-            body.put("cpf", cpf);
-            body.put("nome", nome);
-            body.put("email", email.toLowerCase(Locale.ROOT));
-            body.put("senha", senhaTemporaria);
-            body.put("tipo", "cliente");
-
-            httpPost(authUrl + "/interno/usuario", objectMapper.writeValueAsString(body));
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                "Erro ao criar usuário no auth: " + e.getMessage(), e);
-        }
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("cpf", cpf);
+        payload.put("nome", nome);
+        payload.put("email", email.toLowerCase(Locale.ROOT));
+        payload.put("senha", senhaTemporaria);
+        payload.put("tipo", "cliente");
+        commandBus.enviarEAguardar("comando.auth.criar", "criar_usuario", payload);
     }
 
     private void publicarUsuarioNoAuth(String cpf, String nome, String email, String senhaTemporaria) {
@@ -168,24 +162,18 @@ public class AutocadastroSagaService {
         rabbitTemplate.convertAndSend("auth.exchange", "auth.criar", authEvento);
     }
 
-    // Ação compensatória: remove a conta criada nesta saga.
+    // Ação compensatória (comando assíncrono): remove a conta criada nesta saga.
     private void removerContaNoConta(String cpf) {
-        try {
-            Map<String, String> body = new HashMap<>();
-            body.put("clienteCpf", cpf);
-            httpPost(contaUrl + "/contas/remover", objectMapper.writeValueAsString(body));
-        } catch (Exception e) {
-            throw new RuntimeException("Falha ao remover conta na compensação: " + e.getMessage(), e);
-        }
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("clienteCpf", cpf);
+        commandBus.enviarEAguardar("comando.conta.remover", "remover_conta", payload);
     }
 
-    // Ação compensatória: remove o usuário criado no auth nesta saga.
+    // Ação compensatória (comando assíncrono): remove o usuário criado no auth nesta saga.
     private void removerUsuarioNoAuth(String cpf) {
-        try {
-            httpDelete(authUrl + "/interno/usuario/" + cpf);
-        } catch (Exception e) {
-            throw new RuntimeException("Falha ao remover usuário auth na compensação: " + e.getMessage(), e);
-        }
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("cpf", cpf);
+        commandBus.enviarEAguardar("comando.auth.remover", "remover_usuario", payload);
     }
 
     private void publicarEventoSaga(String routingKey, String cpf) {

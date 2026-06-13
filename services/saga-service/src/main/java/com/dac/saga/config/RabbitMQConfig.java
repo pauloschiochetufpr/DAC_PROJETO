@@ -18,6 +18,11 @@ public class RabbitMQConfig {
     public static final String FILA_REJEITAR = "saga.rejeitar_cliente.queue";
     public static final String FILA_EMAIL_SEND_ACTIVATION = "email.send.activation";
 
+    // Topologia de comando/resposta (orquestrador <-> serviços, assíncrono via broker)
+    public static final String COMANDO_EXCHANGE = "saga.comando";
+    public static final String RESPOSTA_EXCHANGE = "saga.resposta";
+    public static final String FILA_RESPOSTA = "saga.resposta.queue";
+
     @Bean
     public Queue filaReset() {
         return new Queue(FILA_RESET, true);
@@ -56,6 +61,28 @@ public class RabbitMQConfig {
     @Bean
     public Binding bindingRejeitar(Queue filaRejeitar, TopicExchange sagaExchange) {
         return BindingBuilder.bind(filaRejeitar).to(sagaExchange).with("saga.rejeitar_cliente");
+    }
+
+    // Exchange por onde o orquestrador publica COMANDOS para os serviços participantes
+    @Bean
+    public TopicExchange comandoExchange() {
+        return new TopicExchange(COMANDO_EXCHANGE);
+    }
+
+    // Exchange + fila por onde os serviços devolvem as RESPOSTAS ao orquestrador
+    @Bean
+    public TopicExchange respostaExchange() {
+        return new TopicExchange(RESPOSTA_EXCHANGE);
+    }
+
+    @Bean
+    public Queue filaResposta() {
+        return new Queue(FILA_RESPOSTA, true);
+    }
+
+    @Bean
+    public Binding bindingResposta(Queue filaResposta, TopicExchange respostaExchange) {
+        return BindingBuilder.bind(filaResposta).to(respostaExchange).with("resposta.#");
     }
 
     @Bean
