@@ -1,14 +1,8 @@
-﻿import { useState, useEffect, useRef, useCallback } from "react";
+﻿import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 
 // i18n
 import { useLanguage } from "../../hooks/useLanguage";
 import { t } from "../../lib/i18n";
-
-// Mock's
-import {
-  getClientesAdminPaginado,
-  searchClientesAdmin,
-} from "../../mocks/adminMockData";
 
 // Lucide
 import { Search, X, Bug, LoaderCircle, UserRoundSearch } from "lucide-react";
@@ -17,11 +11,19 @@ import { Search, X, Bug, LoaderCircle, UserRoundSearch } from "lucide-react";
 import WaveSimpleRed from "../WaveSimpleRed";
 
 // Formatadores
-const fmtBRL = (v) =>
-  v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const fmtBRL = (valor) =>
+  Number(valor ?? 0).toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  });
 
-const cpfMask = (cpf) =>
-  cpf.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
+const cpfMask = (cpf) => {
+  const valor = String(cpf ?? "");
+
+  if (valor.length !== 11) return valor || "—";
+
+  return valor.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
+};
 
 // Crédito: randomizado uma vez por CPF (Para mostrar funcionalidade)
 const creditoCache = new Map();
@@ -41,147 +43,132 @@ const corCredito = (pct) => {
 const LIMITE_INICIAL = 15;
 const LIMITE_MAIS = 10;
 
-export default function ClientesAdminLista() {
-  // State da língua
+export default function ClientesAdminLista({
+  clientes = [],
+  loading = false,
+  erro = null,
+}) {
   const { lang } = useLanguage();
 
-  // Lazy load states
-  const offsetRef = useRef(0);
-  const [itens, setItens] = useState([]);
-  const [hasMore, setHasMore] = useState(true);
-  const [loadingInit, setLoadingInit] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [erroLoad, setErroLoad] = useState(null);
-
-  // Autocomplete states
+  // Busca e autocomplete
   const [inputBusca, setInputBusca] = useState("");
   const [mostrarPopup, setMostrarPopup] = useState(false);
-  const [sugestoes, setSugestoes] = useState([]);
-  const [loadingPopup, setLoadingPopup] = useState(false);
 
-  // Filtro (seleção do popup ou Enter)
+  // Filtro aplicado ao pressionar Enter ou escolher uma sugestão
   const [modoFiltro, setModoFiltro] = useState(false);
   const [clientesFiltro, setClientesFiltro] = useState([]);
 
-  // Ref para detectar clique fora do input ou popup
+  // Quantidade de clientes exibidos na lista sem filtro
+  const [limiteVisivel, setLimiteVisivel] = useState(LIMITE_INICIAL);
+
   const inputWrapRef = useRef(null);
 
-  // Simulação http GET /admin/clientes paginado
-  useEffect(() => {
-    let ok = true;
-    getClientesAdminPaginado(0, LIMITE_INICIAL).then((res) => {
-      if (!ok) return;
-      if (res.status === 200) {
-        setItens(res.data);
-        setHasMore(res.hasMore);
-        offsetRef.current = LIMITE_INICIAL;
-      } else {
-        setErroLoad(res.message || "Erro ao carregar clientes.");
-      }
-      setLoadingInit(false);
+  // Busca local por nome, CPF, e-mail, conta ou nome do gerente
+  const clientesEncontrados = useMemo(() => {
+    const termo = inputBusca.trim().toLowerCase();
+
+    if (!termo) return clientes;
+
+    return clientes.filter((cliente) => {
+      const nome = String(cliente.nome ?? "").toLowerCase();
+      const cpf = String(cliente.cpf ?? "");
+      const email = String(cliente.email ?? "").toLowerCase();
+      const conta = String(cliente.conta ?? "");
+      const gerenteNome = String(cliente.gerente_nome ?? "").toLowerCase();
+
+      return (
+        nome.includes(termo) ||
+        cpf.includes(termo) ||
+        email.includes(termo) ||
+        conta.includes(termo) ||
+        gerenteNome.includes(termo)
+      );
     });
-    return () => {
-      ok = false;
-    };
-  }, []);
+  }, [clientes, inputBusca]);
 
-  // Autocomplete com debounce:
-  // + Observa "inputBusca" e aguarda um curto timeout antes de disparar a chamada de busca.
-  // + Quando o termo é vazio, limpa imediatamente as sugestões e o estado de loading.
-  // + Quando há termo, define "loading" e executa "searchClientesAdmin", atualizando "sugestoes"
-  //   e "loadingPopup" dentro do callback para manter estados consistentes e evitar condições
-  //   de corrida do React ( Que é o estado atualizado apenas quando a resposta chega).
-  // + O timeout é cancelado no cleanup para que múltiplas digitações rápidas não disparem
-  //   várias requisições simultâneas.
-  useEffect(() => {
-    const termo = inputBusca.trim();
-    const timer = setTimeout(
-      () => {
-        if (!termo) {
-          setSugestoes([]);
-          setLoadingPopup(false);
-          return;
-        }
-        setLoadingPopup(true);
-        searchClientesAdmin(termo, 8).then((res) => {
-          setSugestoes(res.status === 200 ? res.data : []);
-          setLoadingPopup(false);
-        });
-      },
-      termo ? 180 : 0,
-    );
-    return () => clearTimeout(timer);
-  }, [inputBusca]);
+  // Até oito sugestões no autocomplete
+  const sugestoes = useMemo(() => {
+    if (!inputBusca.trim()) return [];
 
-  // Fecha popup ao clicar fora
+    return clientesEncontrados.slice(0, 8);
+  }, [clientesEncontrados, inputBusca]);
+
+  // Fecha o popup ao clicar fora
   useEffect(() => {
     const handler = (e) => {
-      if (inputWrapRef.current && !inputWrapRef.current.contains(e.target))
+      if (inputWrapRef.current && !inputWrapRef.current.contains(e.target)) {
         setMostrarPopup(false);
+      }
     };
+
     document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+
+    return () => {
+      document.removeEventListener("mousedown", handler);
+    };
   }, []);
 
-  // Carrega mais itens | lazyLoading
+  // Mostra mais clientes da lista já carregada
   const carregarMais = useCallback(() => {
-    if (loadingMore || !hasMore) return;
-    setLoadingMore(true);
-    getClientesAdminPaginado(offsetRef.current, LIMITE_MAIS).then((res) => {
-      if (res.status === 200) {
-        setItens((prev) => [...prev, ...res.data]);
-        setHasMore(res.hasMore);
-        offsetRef.current += LIMITE_MAIS;
-      }
-      setLoadingMore(false);
-    });
-  }, [loadingMore, hasMore]);
+    setLimiteVisivel((atual) => Math.min(atual + LIMITE_MAIS, clientes.length));
+  }, [clientes.length]);
 
-  // Scroll desktop | carrega mais no fim da lista (LazyLoading sem botão "Carregar mais")
+  // Lazy loading visual no desktop
   const handleScroll = (e) => {
-    if (modoFiltro || loadingMore || !hasMore) return;
+    if (modoFiltro) return;
+
+    const hasMore = limiteVisivel < clientes.length;
+
+    if (!hasMore) return;
+
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
-    if (scrollTop + clientHeight >= scrollHeight - 48) carregarMais();
+
+    if (scrollTop + clientHeight >= scrollHeight - 48) {
+      carregarMais();
+    }
   };
 
-  // Enter para busca completa
+  // Aplica todos os resultados encontrados
   const handleEnter = () => {
     const termo = inputBusca.trim();
+
     if (!termo) {
       limparFiltro();
       return;
     }
+
     setMostrarPopup(false);
-    searchClientesAdmin(termo, 0).then((res) => {
-      if (res.status === 200 && res.data.length > 0) {
-        setClientesFiltro(res.data);
-        setModoFiltro(true);
-      } else {
-        // Nenhum resultado, abre popup para mostrar a mensagem
-        setMostrarPopup(true);
-      }
-    });
+
+    if (clientesEncontrados.length > 0) {
+      setClientesFiltro(clientesEncontrados);
+      setModoFiltro(true);
+    } else {
+      setMostrarPopup(true);
+    }
   };
 
-  // Seleção no popup
-  const selecionarCliente = (c) => {
-    setInputBusca(c.nome);
+  // Aplica apenas o cliente escolhido no autocomplete
+  const selecionarCliente = (cliente) => {
+    setInputBusca(cliente.nome);
     setMostrarPopup(false);
-    setClientesFiltro([c]);
+    setClientesFiltro([cliente]);
     setModoFiltro(true);
   };
 
-  // Limpar filtro e voltar para lista completa default
+  // Retorna à lista completa
   const limparFiltro = () => {
     setInputBusca("");
     setModoFiltro(false);
     setClientesFiltro([]);
-    setSugestoes([]);
     setMostrarPopup(false);
+    setLimiteVisivel(LIMITE_INICIAL);
   };
 
-  // Decide quais itens mostrar na tabela de acordo coma flag "MmodoFiltro"
-  const itensTabela = modoFiltro ? clientesFiltro : itens;
+  const itensSemFiltro = clientes.slice(0, limiteVisivel);
+
+  const itensTabela = modoFiltro ? clientesFiltro : itensSemFiltro;
+
+  const hasMore = !modoFiltro && limiteVisivel < clientes.length;
 
   return (
     <div className="flex flex-col w-full h-fit xl:h-full">
@@ -249,46 +236,38 @@ export default function ClientesAdminLista() {
         {mostrarPopup && inputBusca.trim() && (
           <div
             className="absolute top-full left-0 right-0 mt-1
-                       bg-brandDark border border-secundaryDark/60
-                       rounded-xl overflow-hidden shadow-2xl shadow-black/70 z-50"
+               bg-brandDark border border-secundaryDark/60
+               rounded-xl overflow-hidden shadow-2xl shadow-black/70 z-50"
           >
-            {loadingPopup && (
-              <div className="flex justify-center py-3">
-                <LoaderCircle
-                  size={20}
-                  className="text-secundary animate-spin"
-                />
-              </div>
-            )}
-
-            {!loadingPopup && sugestoes.length === 0 && (
+            {sugestoes.length === 0 ? (
               <div className="flex items-center gap-2 px-4 py-3 text-contrastDark font-inter text-sm select-none">
                 <UserRoundSearch size={16} className="shrink-0" />
                 {t(lang, "ClientesAdminLista.results.no_results")} &quot;
                 {inputBusca}&quot;
               </div>
-            )}
-
-            {!loadingPopup &&
+            ) : (
               sugestoes.map((s) => (
                 <button
                   key={s.cpf}
                   onMouseDown={() => selecionarCliente(s)}
                   className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-brand/30
-                             text-left transition-colors border-b border-secundaryDark/30 last:border-0"
+                     text-left transition-colors border-b border-secundaryDark/30 last:border-0"
                 >
                   <UserRoundSearch
                     size={15}
                     className="text-secundary shrink-0"
                   />
+
                   <span className="font-mono text-xs text-secundary shrink-0">
                     {cpfMask(s.cpf)}
                   </span>
+
                   <span className="font-inter text-sm text-contrast truncate">
                     {s.nome}
                   </span>
                 </button>
-              ))}
+              ))
+            )}
           </div>
         )}
 
@@ -306,22 +285,22 @@ export default function ClientesAdminLista() {
       {modoFiltro && <div className="flex-shrink-0 h-6" />}
 
       {/* Loading inicial */}
-      {loadingInit && (
+      {loading && (
         <div className="flex-1 flex items-center justify-center py-10 select-none">
           <LoaderCircle size={60} className="text-secundary animate-spin" />
         </div>
       )}
 
       {/* Erro */}
-      {erroLoad && (
+      {!loading && erro && (
         <div className="flex-1 flex flex-col items-center justify-center gap-3 text-red-400 font-inter py-10">
           <Bug size={60} className="select-none" />
-          <span className="text-center">{erroLoad}</span>
+          <span className="text-center">{erro}</span>
         </div>
       )}
 
       {/* Tabela */}
-      {!loadingInit && !erroLoad && (
+      {!loading && !erro && (
         <div className="xl:flex-1 xl:min-h-0 overflow-hidden px-3 pt-3 pb-3">
           <div className="xl:h-full rounded-xl border border-secundaryDark/40 overflow-hidden">
             <div
@@ -350,24 +329,29 @@ export default function ClientesAdminLista() {
                   </tr>
                 </thead>
                 <tbody>
-                  {itensTabela.map((c, idx) => (
-                    <LinhaCliente key={c.cpf} cliente={c} par={idx % 2 === 0} />
-                  ))}
+                  {itensTabela.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={5}
+                        className="py-10 text-center text-contrastDark font-inter"
+                      >
+                        {t(lang, "ClientesAdminLista.results.no_results")}
+                      </td>
+                    </tr>
+                  ) : (
+                    itensTabela.map((c, idx) => (
+                      <LinhaCliente
+                        key={c.cpf}
+                        cliente={c}
+                        par={idx % 2 === 0}
+                      />
+                    ))
+                  )}
                 </tbody>
               </table>
 
-              {/* Spinner de carregando mais */}
-              {loadingMore && (
-                <div className="flex justify-center py-4">
-                  <LoaderCircle
-                    size={22}
-                    className="text-secundary animate-spin select-none"
-                  />
-                </div>
-              )}
-
               {/* Botão "Carregar mais"| Mobile */}
-              {!modoFiltro && hasMore && !loadingMore && (
+              {!modoFiltro && hasMore && (
                 <div className="flex justify-center py-5 xl:hidden">
                   <button
                     onClick={carregarMais}
@@ -382,9 +366,9 @@ export default function ClientesAdminLista() {
               )}
 
               {/* Fim da lista */}
-              {!modoFiltro && !hasMore && itens.length > 0 && (
+              {!modoFiltro && !hasMore && clientes.length > 0 && (
                 <div className="py-6 text-center font-inter text-[10px] text-contrastDark/90 select-none">
-                  {itens.length} clientes carregados
+                  {clientes.length} clientes carregados
                 </div>
               )}
             </div>

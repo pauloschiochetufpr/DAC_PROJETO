@@ -13,6 +13,18 @@ export const GerenteService = {
     }
   },
 
+  listarDashboard: async () => {
+    try {
+      const response = await API.listarDashboardGerentes();
+
+      return response.data;
+    } catch (err) {
+      throw new Error(
+        getHttpErrorMessage(err, "Erro ao carregar o dashboard dos gerentes"),
+      );
+    }
+  },
+
   buscarPorCpf: async (cpf) => {
     try {
       const response = await API.buscarGerentePorCpf(cpf);
@@ -20,6 +32,16 @@ export const GerenteService = {
       return response.data;
     } catch (err) {
       throw new Error(getHttpErrorMessage(err, "Erro ao buscar gerente"));
+    }
+  },
+
+  criar: async (dados) => {
+    try {
+      const response = await API.criarGerente(dados);
+
+      return response.data;
+    } catch (err) {
+      throw new Error(getHttpErrorMessage(err, "Erro ao criar gerente"));
     }
   },
 

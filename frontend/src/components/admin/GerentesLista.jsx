@@ -1,14 +1,8 @@
-import { useState, useEffect } from "react";
+import { useMemo } from "react";
 
 // i18n
 import { useLanguage } from "../../hooks/useLanguage";
 import { t } from "../../lib/i18n";
-
-// Mock's
-import {
-  getGerentesAdmin,
-  getGerentesAdminOrdenado,
-} from "../../mocks/adminMockData";
 
 // Lucide
 import {
@@ -23,48 +17,38 @@ import {
 import WaveSimpleRed from "../WaveSimpleRed";
 
 // Formatadores
-const fmtBRL = (v) =>
-  Math.abs(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const fmtBRL = (valor) =>
+  Math.abs(Number(valor ?? 0)).toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  });
 
-const cpfMask = (cpf) =>
-  cpf.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
+const cpfMask = (cpf) => {
+  const valor = String(cpf ?? "");
+
+  return valor.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
+};
 
 export default function GerentesLista({
+  gerentes = [],
+  loading = false,
+  erro = null,
   onSelect = null,
   selectedId = null,
   modo = "ranking",
-  refreshKey = 0,
 }) {
   // State da língua
   const { lang } = useLanguage();
 
-  // State gerentes
-  const [gerentes, setGerentes] = useState([]);
+  const gerentesExibidos = useMemo(() => {
+    if (modo === "alfabetico") {
+      return [...gerentes].sort((a, b) =>
+        String(a.nome ?? "").localeCompare(String(b.nome ?? ""), "pt-BR"),
+      );
+    }
 
-  // States de interface
-  const [loading, setLoading] = useState(true);
-  const [erro, setErro] = useState(null);
-
-  // Simula GET /admin/gerentes
-  useEffect(() => {
-    let cancelado = false;
-    const fetchFn =
-      modo === "alfabetico" ? getGerentesAdminOrdenado : getGerentesAdmin;
-
-    fetchFn().then((res) => {
-      if (cancelado) return;
-      if (res.status === 200) {
-        setGerentes(res.data);
-        setErro(null);
-      } else {
-        setErro(res.message || "Erro ao buscar gerentes.");
-      }
-      setLoading(false);
-    });
-    return () => {
-      cancelado = true;
-    };
-  }, [modo, refreshKey]);
+    return gerentes;
+  }, [gerentes, modo]);
 
   return (
     <div className="flex flex-col w-full h-full gap-0">
@@ -113,18 +97,25 @@ export default function GerentesLista({
         {!loading && !erro && (
           <div
             className="h-full overflow-y-auto flex flex-col gap-3 pb-2 overscroll-none px-3
-                       scrollbar-thin scrollbar-thumb-secundary scrollbar-track-brandDark"
+               scrollbar-thin scrollbar-thumb-secundary scrollbar-track-brandDark"
           >
-            {gerentes.map((ger, idx) => (
-              <CardGerente
-                key={ger.id}
-                gerente={ger}
-                posicao={idx + 1}
-                onSelect={onSelect}
-                isSelected={selectedId === ger.id}
-                modo={modo}
-              />
-            ))}
+            {gerentesExibidos.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-contrastDark font-inter">
+                <Users size={55} className="mb-3 text-secundary" />
+                <span>Nenhum gerente encontrado.</span>
+              </div>
+            ) : (
+              gerentesExibidos.map((ger, idx) => (
+                <CardGerente
+                  key={ger.cpf}
+                  gerente={ger}
+                  posicao={idx + 1}
+                  onSelect={onSelect}
+                  isSelected={selectedId === ger.cpf}
+                  modo={modo}
+                />
+              ))
+            )}
           </div>
         )}
       </div>
@@ -167,7 +158,7 @@ function CardGerente({ gerente, posicao, onSelect, isSelected, modo }) {
             {gerente.nome}
           </div>
           <div className="font-inter text-contrastDark text-[10px] truncate">
-            {gerente.cidade}, {gerente.estado}
+            {[gerente.cidade, gerente.estado].filter(Boolean).join(", ") || "—"}
           </div>
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">

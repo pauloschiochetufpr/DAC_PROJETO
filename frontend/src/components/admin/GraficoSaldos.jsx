@@ -1,5 +1,6 @@
 import { useMemo } from "react";
-import { clientesAdminData } from "../../mocks/adminMockData";
+
+import { Bug, LoaderCircle } from "lucide-react";
 
 // Cores do gráfico
 const COR_POSITIVO = "#4ade80"; // green-400 (Tailwind css)
@@ -10,16 +11,23 @@ const COR_NEUTRO = "#a3a3a3"; // neutral-400 (Tailwind css)
 import { useLanguage } from "../../hooks/useLanguage";
 import { t } from "../../lib/i18n";
 
-// Dado pronto (derivado do mock, não muda em runtime nessa tela)
 function calcularTotais(clientes) {
-  let positivos = 0,
-    negativos = 0,
-    neutros = 0;
-  for (const c of clientes) {
-    if (c.saldo > 0) positivos++;
-    else if (c.saldo < 0) negativos++;
-    else neutros++;
+  let positivos = 0;
+  let negativos = 0;
+  let neutros = 0;
+
+  for (const cliente of clientes) {
+    const saldo = Number(cliente?.saldo ?? 0);
+
+    if (saldo > 0) {
+      positivos++;
+    } else if (saldo < 0) {
+      negativos++;
+    } else {
+      neutros++;
+    }
   }
+
   return { positivos, negativos, neutros };
 }
 
@@ -95,14 +103,18 @@ function PizzaSVG({ fatias }) {
   );
 }
 
-export default function GraficoSaldos() {
+export default function GraficoSaldos({
+  clientes = [],
+  loading = false,
+  erro = null,
+}) {
   //i18n
   const { lang } = useLanguage();
 
   // Outras variáveis
   const { positivos, negativos, neutros } = useMemo(
-    () => calcularTotais(clientesAdminData),
-    [],
+    () => calcularTotais(clientes),
+    [clientes],
   );
 
   const fatias = [
@@ -124,6 +136,32 @@ export default function GraficoSaldos() {
   ];
 
   const total = positivos + negativos + neutros;
+
+  if (loading) {
+    return (
+      <div
+        className="min-w-[20rem] min-h-[12rem] flex items-center justify-center
+                   bg-brandDark/90 backdrop-blur-lg rounded-2xl
+                   border border-secundary/70 shadow-black/100 shadow-inner"
+      >
+        <LoaderCircle size={45} className="text-secundary animate-spin" />
+      </div>
+    );
+  }
+
+  if (erro) {
+    return (
+      <div
+        className="min-w-[20rem] min-h-[12rem] flex flex-col gap-2 items-center justify-center
+                   bg-brandDark/90 backdrop-blur-lg rounded-2xl
+                   border border-secundary/70 shadow-black/100 shadow-inner
+                   text-red-400 px-4"
+      >
+        <Bug size={42} />
+        <span className="text-sm text-center">{erro}</span>
+      </div>
+    );
+  }
 
   return (
     <div

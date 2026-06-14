@@ -44,6 +44,18 @@ export const ClienteService = {
     }
   },
 
+  listarRelatorioAdmin: async () => {
+    try {
+      const response = await API.listarClientesRelatorioAdmin();
+
+      return response.data;
+    } catch (err) {
+      throw new Error(
+        getHttpErrorMessage(err, "Erro ao carregar relatório de clientes"),
+      );
+    }
+  },
+
   atualizarPerfil: async (cpf, dados) => {
     try {
       const response = await API.atualizarPerfilCliente(cpf, dados);

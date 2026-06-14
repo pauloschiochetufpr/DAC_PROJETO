@@ -1,9 +1,4 @@
-import { useState } from "react";
-import {
-  createGerente,
-  updateGerente,
-  deleteGerente,
-} from "../../mocks/adminMockData";
+import { useEffect, useState } from "react";
 
 // SVG's
 import WaveSimpleRedReverse from "../WaveSimpleRedReverse";
@@ -15,14 +10,27 @@ import { AlertCircle } from "lucide-react";
 import { useLanguage } from "../../hooks/useLanguage";
 import { t } from "../../lib/i18n";
 
+const FORM_VAZIO = {
+  nome: "",
+  cpf: "",
+  email: "",
+  telefone: "",
+  senha: "",
+};
+
 // Componente principal
 export default function GerenteForm({
   gerenteSelecionado,
-  onRefresh,
+  onCriar,
+  onAtualizar,
+  onExcluir,
   onClear,
 }) {
   // i18n
   const { lang } = useLanguage();
+
+  const [processando, setProcessando] = useState(false);
+  const [erro, setErro] = useState(null);
 
   // Formatadores
   const cpfMask = (cpf) =>
@@ -37,71 +45,113 @@ export default function GerenteForm({
     return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
   };
 
-  const [form, setForm] = useState({
-    id: null,
-    nome: "",
-    cpf: "",
-    email: "",
-    telefone: "",
-    senha: "",
-  });
+  const [form, setForm] = useState(FORM_VAZIO);
 
   const setGerenteSelecionado = () => {
     onClear?.();
   };
 
-  const [prevGerenteSelecionado, setPrevGerenteSelecionado] =
-    useState(gerenteSelecionado);
-  if (gerenteSelecionado !== prevGerenteSelecionado) {
-    setPrevGerenteSelecionado(gerenteSelecionado);
+  useEffect(() => {
+    setErro(null);
+
     if (gerenteSelecionado) {
       setForm({
-        ...gerenteSelecionado,
+        nome: gerenteSelecionado.nome ?? "",
+        cpf: gerenteSelecionado.cpf ?? "",
+        email: gerenteSelecionado.email ?? "",
+        telefone: gerenteSelecionado.telefone ?? "",
         senha: "",
       });
     } else {
-      setForm({
-        id: null,
-        nome: "",
-        cpf: "",
-        email: "",
-        telefone: "",
-        senha: "",
-      });
+      setForm(FORM_VAZIO);
     }
-  }
+  }, [gerenteSelecionado]);
+
+  const editando = Boolean(gerenteSelecionado?.cpf);
 
   const handleSalvar = async () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(form.email)) {
-      alert("E-mail inválido. Verifique o formato (ex: usuario@dominio.com)");
+
+    if (!form.nome.trim()) {
+      setErro("Informe o nome do gerente.");
       return;
     }
 
-    let res;
+    const cpf = form.cpf.replace(/\D/g, "");
 
-    if (form.id) {
-      res = await updateGerente(form.id, form);
-    } else {
-      res = await createGerente(form);
+    if (cpf.length !== 11) {
+      setErro("Informe um CPF válido.");
+      return;
     }
 
-    if (res.status === 200 || res.status === 201) {
-      onRefresh?.();
+    if (!emailRegex.test(form.email.trim())) {
+      setErro("E-mail inválido. Verifique o formato.");
+      return;
+    }
+
+    if (!editando && !form.senha.trim()) {
+      setErro("A senha é obrigatória para criar o gerente.");
+      return;
+    }
+
+    const dados = {
+      nome: form.nome.trim(),
+      email: form.email.trim(),
+      telefone: form.telefone.replace(/\D/g, ""),
+    };
+
+    if (!editando) {
+      dados.cpf = cpf;
+    }
+
+    // Na criação, a senha é obrigatória.
+    // Na atualização, só envia senha se uma nova tiver sido informada.
+    if (form.senha.trim()) {
+      dados.senha = form.senha;
+    }
+
+    try {
+      setProcessando(true);
+      setErro(null);
+
+      if (editando) {
+        await onAtualizar(gerenteSelecionado.cpf, dados);
+      } else {
+        await onCriar(dados);
+      }
+
+      setForm(FORM_VAZIO);
       onClear?.();
-    } else {
-      alert(res.message);
+    } catch (err) {
+      console.error("Erro ao salvar gerente:", err);
+      setErro(err.message || "Erro ao salvar gerente.");
+    } finally {
+      setProcessando(false);
     }
   };
 
   const handleExcluir = async () => {
-    const res = await deleteGerente(form.id);
+    if (!gerenteSelecionado?.cpf) return;
 
-    if (res.status === 200) {
-      onRefresh?.();
+    const confirmou = window.confirm(
+      `Deseja realmente excluir o gerente ${form.nome}? Esta ação não poderá ser desfeita.`,
+    );
+
+    if (!confirmou) return;
+
+    try {
+      setProcessando(true);
+      setErro(null);
+
+      await onExcluir(gerenteSelecionado.cpf);
+
+      setForm(FORM_VAZIO);
       onClear?.();
-    } else {
-      alert(res.message);
+    } catch (err) {
+      console.error("Erro ao excluir gerente:", err);
+      setErro(err.message || "Erro ao excluir gerente.");
+    } finally {
+      setProcessando(false);
     }
   };
 
@@ -129,7 +179,7 @@ export default function GerenteForm({
         md:w-fit w-[14rem] h-fit select-none z-[200] left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2"
         >
           <h2 className="font-orienta text-xl md:text-3xl text-secundary">
-            {form.id
+            {editando
               ? t(lang, "GerenteForm.title_edit")
               : t(lang, "GerenteForm.title_create")}
           </h2>
@@ -150,8 +200,13 @@ export default function GerenteForm({
             <Input
               label={t(lang, "GerenteForm.fields.cpf")}
               value={form.cpf ? cpfMask(form.cpf) : ""}
-              disabled={!!form.id}
-              onChange={(v) => setForm({ ...form, cpf: v })}
+              disabled={editando}
+              onChange={(valor) =>
+                setForm({
+                  ...form,
+                  cpf: valor.replace(/\D/g, "").slice(0, 11),
+                })
+              }
             />
 
             <Input
@@ -190,31 +245,46 @@ export default function GerenteForm({
             />
           </div>
         </div>
+        {erro && (
+          <div className="flex items-center gap-2 rounded-sm border border-red-500/50 bg-red-900/30 px-4 py-3 text-red-300">
+            <AlertCircle size={18} className="shrink-0" />
+            <span className="font-inter text-sm">{erro}</span>
+          </div>
+        )}
         <div className="flex gap-3 mt-4">
           <button
             onClick={handleSalvar}
-            className="bg-secundaryDark hover:bg-secundary px-4 py-2 h-[2.6rem] rounded-sm text-white font-semibold"
+            disabled={processando}
+            className="bg-secundaryDark hover:bg-secundary px-4 py-2 h-[2.6rem]
+             rounded-sm text-white font-semibold
+             disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {form.id
-              ? t(lang, "GerenteForm.actions.update")
-              : t(lang, "GerenteForm.actions.create")}
+            {processando
+              ? "Processando..."
+              : editando
+                ? t(lang, "GerenteForm.actions.update")
+                : t(lang, "GerenteForm.actions.create")}
           </button>
 
-          {form.id && (
+          {editando && (
             <button
               onClick={handleExcluir}
-              className="bg-brand/20 px-4 py-2 h-[2.6rem] hover:bg-brand border border-brand
-              rounded-sm text-white"
+              disabled={processando}
+              className="bg-brand/20 px-4 py-2 h-[2.6rem] hover:bg-brand
+               border border-brand rounded-sm text-white
+               disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {t(lang, "GerenteForm.actions.delete")}
             </button>
           )}
-          {form.id != null && (
+          {editando && (
             <button
-              onClick={() => setGerenteSelecionado()}
-              className="bg-secundary/20 hover:bg-secundary/80 px-4 py-2 h-[2.6rem] rounded-sm border border-secundary/80
-              active:bg-secundary
-              text-white font-semibold"
+              onClick={setGerenteSelecionado}
+              disabled={processando}
+              className="bg-secundary/20 hover:bg-secundary/80 px-4 py-2 h-[2.6rem]
+             rounded-sm border border-secundary/80 active:bg-secundary
+             text-white font-semibold
+             disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {t(lang, "GerenteForm.actions.new_manager")}
             </button>

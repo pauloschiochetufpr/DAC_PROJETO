@@ -150,6 +150,10 @@ export const API = {
   /** GET /clientes requestParams para_aprovar */
   listarPendentes: () => API.listarComFiltro("para_aprovar"),
 
+  /** GET /clientes?filtro=adm_relatorio_clientes */
+  listarClientesRelatorioAdmin: () =>
+    API.listarComFiltro("adm_relatorio_clientes"),
+
   /** PUT /clientes/:cpf */
   atualizarPerfilCliente: (cpf, dados) =>
     axiosAuth.put(`/clientes/${cpf}`, dados),
@@ -167,8 +171,17 @@ export const API = {
   /** GET /gerentes */
   listarGerentes: () => axiosAuth.get("/gerentes"),
 
+  /** GET /gerentes?filtro=dashboard */
+  listarDashboardGerentes: () =>
+    axiosAuth.get("/gerentes", {
+      params: { filtro: "dashboard" },
+    }),
+
   /** GET /gerentes/:cpf */
   buscarPorCpf: (cpf) => axiosAuth.get(`/gerentes/${cpf}`),
+
+  /** POST /gerentes */
+  criarGerente: (dados) => axiosAuth.post("/gerentes", dados),
 
   /** PUT /gerentes/:cpf */
   atualizar: (cpf, data) => axiosAuth.put(`/gerentes/${cpf}`, data),
