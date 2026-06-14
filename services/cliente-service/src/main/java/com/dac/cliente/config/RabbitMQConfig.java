@@ -17,6 +17,7 @@ public class RabbitMQConfig {
     public static final String SAGA_EXCHANGE      = "saga.exchange";
     public static final String AUTH_EXCHANGE      = "auth.exchange";
     public static final String FILA_SAGA_APROVAR  = "saga.aprovar_cliente";
+    public static final String FILA_SAGA_REJEITAR = "saga.rejeitar_cliente";
     public static final String FILA_CONTA_LIMITE  = "conta.limite";
     public static final String FILA_AUTH_CRIAR    = "auth.criar";
     public static final String FILA_AUTH_REMOVER  = "auth.remover";
@@ -39,6 +40,11 @@ public class RabbitMQConfig {
     @Bean
     public Queue filaSagaAprovar() {
         return new Queue(FILA_SAGA_APROVAR, true);
+    }
+
+    @Bean
+    public Queue filaSagaRejeitar() {
+        return new Queue(FILA_SAGA_REJEITAR, true);
     }
 
     @Bean

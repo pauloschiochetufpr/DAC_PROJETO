@@ -86,4 +86,10 @@ public class ClienteController {
         service.rejeitarCliente(cpf, dto.getMotivo());
         return ResponseEntity.ok("Cliente rejeitado com sucesso.");
     }
+
+    @PostMapping("/{cpf}/compensar-aprovacao")
+    public ResponseEntity<?> compensarAprovacao(@PathVariable String cpf) {
+        service.compensarAprovacao(cpf);
+        return ResponseEntity.ok("Cliente revertido para pendente.");
+    }
 }

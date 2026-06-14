@@ -20,4 +20,9 @@ public class AutocadastroSagaListener {
     public void aprovarCliente(Map<String, Object> evento) {
         autocadastroSagaService.processarAprovacao(evento);
     }
+
+    @RabbitListener(queues = RabbitMQConfig.FILA_REJEITAR)
+    public void rejeitarCliente(Map<String, Object> evento) {
+        autocadastroSagaService.processarRejeicao(evento);
+    }
 }

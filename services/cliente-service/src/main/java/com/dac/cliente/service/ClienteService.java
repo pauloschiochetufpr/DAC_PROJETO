@@ -43,9 +43,6 @@ public class ClienteService {
     @Value("${saga.services.conta:http://conta-service:8080}")
     private String contaUrl;
 
-    @Value("${saga.services.saga:http://saga-service:8080}")
-    private String sagaUrl;
-
     private final HttpClient httpClient = HttpClient.newHttpClient();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -317,19 +314,25 @@ public class ClienteService {
             limite = c.getSalario() / 2;
         }
 
-        // Chama saga-service sincronamente para criar conta + selecionar gerente + criar auth
+        // Publica a aprovacao para a saga via RabbitMQ
         try {
             Map<String, Object> sagaEvento = new HashMap<>();
             sagaEvento.put("cpf", cpf);
             sagaEvento.put("nome", c.getNome());
             sagaEvento.put("email", c.getEmail());
+            sagaEvento.put("salario", c.getSalario());
             sagaEvento.put("limite", limite);
-            httpPost(sagaUrl + "/saga/aprovar", objectMapper.writeValueAsString(sagaEvento));
+            sagaEvento.put("dataAprovacao", c.getDataAprovacao() != null ? c.getDataAprovacao().toString() : null);
+            rabbitTemplate.convertAndSend(
+                RabbitMQConfig.SAGA_EXCHANGE,
+                RabbitMQConfig.FILA_SAGA_APROVAR,
+                sagaEvento
+            );
         } catch (Exception e) {
-            System.err.println("cliente-service: erro na aprovação síncrona via saga: "
+            System.err.println("cliente-service: erro ao publicar evento de aprovacao para a saga: "
                 + e.getMessage());
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                "Falha ao criar conta para o cliente: " + e.getMessage());
+                "Falha ao iniciar a saga de aprovacao: " + e.getMessage());
         }
 
         return toDadosClienteDTO(c);
@@ -337,7 +340,7 @@ public class ClienteService {
 
     // -------------------------
     // R11 — Rejeitar cliente
-    // Remove do banco e publica para auth-service remover usuário
+    // Mantem a remocao atual para compatibilidade, mas publica o evento para a saga.
     // -------------------------
     @Transactional
     public void rejeitarCliente(String cpf, String motivo) {
@@ -348,6 +351,30 @@ public class ClienteService {
         if (c.getStatus() != StatusCliente.PENDENTE) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                 "Cliente não está pendente de aprovação");
+        }
+
+        if (estaVazio(motivo)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                "Motivo da rejeicao obrigatorio");
+        }
+
+        try {
+            Map<String, Object> sagaEvento = new HashMap<>();
+            sagaEvento.put("cpf", cpf);
+            sagaEvento.put("nome", c.getNome());
+            sagaEvento.put("email", c.getEmail());
+            sagaEvento.put("motivo", normalizarTexto(motivo));
+            sagaEvento.put("dataRejeicao", LocalDateTime.now().toString());
+            rabbitTemplate.convertAndSend(
+                RabbitMQConfig.SAGA_EXCHANGE,
+                RabbitMQConfig.FILA_SAGA_REJEITAR,
+                sagaEvento
+            );
+        } catch (Exception e) {
+            System.err.println("cliente-service: erro ao publicar evento de rejeicao para a saga: "
+                + e.getMessage());
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                "Falha ao iniciar a saga de rejeicao: " + e.getMessage());
         }
 
         // Deleta o cliente em vez de apenas marcar como REJEITADO,
@@ -364,6 +391,18 @@ public class ClienteService {
             System.err.println("cliente-service: aviso - não foi possível publicar evento auth.remover: "
                 + e.getMessage());
         }
+    }
+
+    @Transactional
+    public void compensarAprovacao(String cpf) {
+        Cliente c = repository.findById(cpf)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                "Cliente nao encontrado"));
+
+        c.setStatus(StatusCliente.PENDENTE);
+        c.setDataAprovacao(null);
+        c.setMotivoRejeicao(null);
+        repository.save(c);
     }
 
 
@@ -398,19 +437,6 @@ public class ClienteService {
             .uri(URI.create(url))
             .header("Content-Type", "application/json")
             .PUT(HttpRequest.BodyPublishers.ofString(jsonBody))
-            .build();
-        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        if (response.statusCode() >= 400) {
-            throw new RuntimeException("HTTP " + response.statusCode() + ": " + response.body());
-        }
-        return response.body();
-    }
-
-    private String httpPost(String url, String jsonBody) throws Exception {
-        HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create(url))
-            .header("Content-Type", "application/json")
-            .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
             .build();
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() >= 400) {
@@ -550,3 +576,5 @@ public class ClienteService {
         }
     }
 }
+
+

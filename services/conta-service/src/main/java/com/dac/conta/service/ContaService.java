@@ -346,6 +346,16 @@ public class ContaService {
         return dto;
     }
 
+    @Transactional
+    public void removerContaPorCliente(String clienteCpf) {
+        ContaCUD conta = contaCUDRepository.findByClienteCpf(clienteCpf)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                "Conta nao encontrada para cliente: " + clienteCpf));
+
+        contaCUDRepository.delete(conta);
+        contaRRepository.findByClienteCpf(clienteCpf).ifPresent(contaRRepository::delete);
+    }
+
     // -------------------------
     // PUT /contas/limite
     // -------------------------

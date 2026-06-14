@@ -119,6 +119,12 @@ public class ContaController {
         return ResponseEntity.status(201).body(contaService.criarConta(request));
     }
 
+    @DeleteMapping("/por-cliente/{cpf}")
+    public ResponseEntity<Void> removerContaPorCliente(@PathVariable String cpf) {
+        contaService.removerContaPorCliente(cpf);
+        return ResponseEntity.noContent().build();
+    }
+
     // -------------------------
     // Endpoint interno para atualização de limite (R4)
     // -------------------------

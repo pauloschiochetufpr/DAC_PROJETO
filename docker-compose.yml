@@ -140,6 +140,12 @@ services:
     build: ./services/saga-service
     container_name: saga-service
     restart: unless-stopped
+    environment:
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_FROM: ${MAIL_FROM}
     depends_on:
       auth-service:
         condition: service_healthy

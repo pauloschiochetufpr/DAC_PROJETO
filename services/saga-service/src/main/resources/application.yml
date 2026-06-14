@@ -14,12 +14,26 @@ spring:
     username: guest
     password: guest
 
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
 saga:
   services:
     cliente: http://cliente-service:8080
     gerente: http://gerente-service:8080
     conta:   http://conta-service:8080
     auth:    http://auth-service:8080
+  email:
+    from: ${MAIL_FROM:${MAIL_USERNAME:no-reply@bantads.local}}
 
 management:
   endpoints:
