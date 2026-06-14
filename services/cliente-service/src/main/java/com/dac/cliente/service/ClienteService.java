@@ -43,6 +43,9 @@ public class ClienteService {
     @Value("${saga.services.conta:http://conta-service:8080}")
     private String contaUrl;
 
+    @Value("${saga.services.saga:http://saga-service:8080}")
+    private String sagaUrl;
+
     private final HttpClient httpClient = HttpClient.newHttpClient();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -262,27 +265,19 @@ public class ClienteService {
                 + e.getMessage());
         }
 
-        // R4: se salário mudou, notifica conta-service para recalcular limite
+        // R4: se salário mudou, dispara a SAGA de alteração de perfil (orquestrada pelo
+        // saga-service), que coordena o recálculo do limite no conta-service.
         if (salarioAlterado) {
-            try {
-                Map<String, Object> limiteEvento = new HashMap<>();
-                limiteEvento.put("clienteCpf", cpf);
-                limiteEvento.put("novoSalario", dto.getSalario());
-                rabbitTemplate.convertAndSend(RabbitMQConfig.FILA_CONTA_LIMITE, limiteEvento);
-            } catch (Exception e) {
-                System.err.println("cliente-service: aviso - não foi possível publicar evento conta.limite: "
-                    + e.getMessage());
-            }
-
-            // Chamada síncrona para atualizar limite imediatamente (PyTest não espera mensageria)
+            // Se a saga (recálculo de limite na conta) falhar, propaga para que o @Transactional
+            // reverta a alteração dos dados do cliente já aplicada acima (compensação local).
             try {
                 Map<String, Object> body = new HashMap<>();
-                body.put("clienteCpf", cpf);
+                body.put("cpf", cpf);
                 body.put("novoSalario", dto.getSalario());
-                httpPut(contaUrl + "/contas/limite", objectMapper.writeValueAsString(body));
+                httpPost(sagaUrl + "/saga/alterar-perfil", objectMapper.writeValueAsString(body));
             } catch (Exception e) {
-                System.err.println("cliente-service: aviso - falha na atualização síncrona de limite: "
-                    + e.getMessage());
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Falha na saga de alteração de perfil: " + e.getMessage());
             }
         }
 
@@ -314,25 +309,19 @@ public class ClienteService {
             limite = c.getSalario() / 2;
         }
 
-        // Publica a aprovacao para a saga via RabbitMQ
+        // Chama saga-service sincronamente para criar conta + selecionar gerente + criar auth
         try {
             Map<String, Object> sagaEvento = new HashMap<>();
             sagaEvento.put("cpf", cpf);
             sagaEvento.put("nome", c.getNome());
             sagaEvento.put("email", c.getEmail());
-            sagaEvento.put("salario", c.getSalario());
             sagaEvento.put("limite", limite);
-            sagaEvento.put("dataAprovacao", c.getDataAprovacao() != null ? c.getDataAprovacao().toString() : null);
-            rabbitTemplate.convertAndSend(
-                RabbitMQConfig.SAGA_EXCHANGE,
-                RabbitMQConfig.FILA_SAGA_APROVAR,
-                sagaEvento
-            );
+            httpPost(sagaUrl + "/saga/aprovar", objectMapper.writeValueAsString(sagaEvento));
         } catch (Exception e) {
-            System.err.println("cliente-service: erro ao publicar evento de aprovacao para a saga: "
+            System.err.println("cliente-service: erro na aprovação síncrona via saga: "
                 + e.getMessage());
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                "Falha ao iniciar a saga de aprovacao: " + e.getMessage());
+                "Falha ao criar conta para o cliente: " + e.getMessage());
         }
 
         return toDadosClienteDTO(c);
@@ -437,6 +426,19 @@ public class ClienteService {
             .uri(URI.create(url))
             .header("Content-Type", "application/json")
             .PUT(HttpRequest.BodyPublishers.ofString(jsonBody))
+            .build();
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() >= 400) {
+            throw new RuntimeException("HTTP " + response.statusCode() + ": " + response.body());
+        }
+        return response.body();
+    }
+
+    private String httpPost(String url, String jsonBody) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create(url))
+            .header("Content-Type", "application/json")
+            .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
             .build();
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() >= 400) {
@@ -576,5 +578,4 @@ public class ClienteService {
         }
     }
 }
-
 

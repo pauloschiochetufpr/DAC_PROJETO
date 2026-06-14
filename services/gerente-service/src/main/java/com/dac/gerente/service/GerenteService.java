@@ -20,7 +20,6 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +36,12 @@ public class GerenteService {
 
     @Value("${saga.services.conta}")
     private String contaUrl;
+
+    @Value("${saga.services.saga}")
+    private String sagaUrl;
+
+    @Value("${saga.services.auth}")
+    private String authUrl;
 
     private final HttpClient httpClient = HttpClient.newHttpClient();
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -185,26 +190,20 @@ public class GerenteService {
 
         gerenteRepository.save(gerente);
 
-        if (gerente.getTipo() == TipoGerente.GERENTE) {
-            try {
-                redistribuirParaNovoGerente(dto.getCpf(), dto.getNome());
-            } catch (Exception e) {
-                System.err.println("Aviso: redistribuição R17 falhou: " + e.getMessage());
-            }
-        }
-
-        Map<String, String> authEvent = new HashMap<>();
-        authEvent.put("acao", "criar");
-        authEvent.put("cpf", dto.getCpf());
-        authEvent.put("nome", dto.getNome());
-        authEvent.put("email", dto.getEmail());
-        authEvent.put("senha", dto.getSenha());
-        authEvent.put("tipo", tipoNormalizado);
-
+        // Dispara a SAGA de inserção de gerente (orquestrada pelo saga-service): cria o usuário
+        // no auth e atribui uma conta ao novo gerente. Se a saga falhar, a exceção propaga e o
+        // @Transactional reverte o registro do gerente recém-salvo (compensação local).
         try {
-            rabbitTemplate.convertAndSend("auth.exchange", "auth.criar", authEvent);
+            Map<String, Object> body = new HashMap<>();
+            body.put("gerenteCpf", dto.getCpf());
+            body.put("gerenteNome", dto.getNome());
+            body.put("gerenteEmail", dto.getEmail());
+            body.put("gerenteSenha", dto.getSenha());
+            body.put("gerenteTipo", tipoNormalizado);
+            httpPost(sagaUrl + "/saga/inserir-gerente", objectMapper.writeValueAsString(body));
         } catch (Exception e) {
-            System.err.println("Aviso: não foi possível publicar evento no RabbitMQ: " + e.getMessage());
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                "Falha na saga de inserção de gerente: " + e.getMessage());
         }
 
         return toDTO(gerente);
@@ -221,10 +220,15 @@ public class GerenteService {
         }
 
         if (gerente.getTipo() == TipoGerente.GERENTE) {
+            // A SAGA redistribui as contas ANTES da remoção. Se falhar, propaga e a deleção
+            // destrutiva abaixo não acontece (compensação por gating: aborta sem remover).
             try {
-                redistribuirContasDoGerente(cpf);
+                Map<String, Object> body = new HashMap<>();
+                body.put("gerenteCpf", cpf);
+                httpPost(sagaUrl + "/saga/remover-gerente", objectMapper.writeValueAsString(body));
             } catch (Exception e) {
-                System.err.println("Aviso: redistribuição R18 falhou: " + e.getMessage());
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Falha na saga de remoção de gerente: " + e.getMessage());
             }
         }
 
@@ -241,65 +245,6 @@ public class GerenteService {
         }
 
         return toDTO(gerente);
-    }
-
-    private void redistribuirParaNovoGerente(String novoGerenteCpf, String novoGerenteNome) throws Exception {
-        String contagemJson = httpGet(contaUrl + "/contas/contagem-por-gerente");
-        Map<String, Long> contagem = objectMapper.readValue(
-                contagemJson, new TypeReference<Map<String, Long>>() {});
-
-        if (contagem.isEmpty()) return;
-
-        long maxContas = contagem.values().stream().mapToLong(Long::longValue).max().orElse(0);
-
-        if (maxContas <= 1 && contagem.size() == 1) return;
-
-        List<String> candidatos = contagem.entrySet().stream()
-                .filter(e -> e.getValue() == maxContas)
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toList());
-
-        String gerenteOrigem;
-
-        if (candidatos.size() == 1) {
-            gerenteOrigem = candidatos.get(0);
-        } else {
-            gerenteOrigem = candidatos.stream()
-                    .min(Comparator.naturalOrder())
-                    .orElse(candidatos.get(0));
-        }
-
-        String body = String.format(
-                "{\"gerenteOrigemCpf\":\"%s\",\"gerenteDestinoCpf\":\"%s\",\"gerenteDestinoNome\":\"%s\",\"quantidade\":1}",
-                gerenteOrigem, novoGerenteCpf, novoGerenteNome);
-
-        httpPost(contaUrl + "/contas/redistribuir", body);
-        System.out.println("R17: 1 conta redistribuída de " + gerenteOrigem + " para " + novoGerenteCpf);
-    }
-
-    private void redistribuirContasDoGerente(String gerenteRemovidoCpf) throws Exception {
-        String contagemJson = httpGet(contaUrl + "/contas/contagem-por-gerente");
-        Map<String, Long> contagem = objectMapper.readValue(
-                contagemJson, new TypeReference<Map<String, Long>>() {});
-
-        contagem.remove(gerenteRemovidoCpf);
-
-        if (contagem.isEmpty()) return;
-
-        String gerenteDestinoCpf = contagem.entrySet().stream()
-                .min(Map.Entry.comparingByValue())
-                .map(Map.Entry::getKey)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Nenhum gerente disponível para redistribuição"));
-
-        Gerente gerenteDestino = gerenteRepository.findById(gerenteDestinoCpf)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Gerente destino não encontrado: " + gerenteDestinoCpf));
-
-        String body = String.format(
-                "{\"gerenteOrigemCpf\":\"%s\",\"gerenteDestinoCpf\":\"%s\",\"gerenteDestinoNome\":\"%s\",\"quantidade\":-1}",
-                gerenteRemovidoCpf, gerenteDestinoCpf, gerenteDestino.getNome());
-
-        httpPost(contaUrl + "/contas/redistribuir", body);
-        System.out.println("R18: todas as contas de " + gerenteRemovidoCpf + " redistribuídas para " + gerenteDestinoCpf);
     }
 
     private String httpGet(String url) throws Exception {

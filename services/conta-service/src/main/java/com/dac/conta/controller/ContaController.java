@@ -28,10 +28,6 @@ public class ContaController {
     @Autowired
     private ContaService contaService;
 
-    // -------------------------
-    // Operações de conta do cliente
-    // -------------------------
-
     @GetMapping("/{numero}/saldo")
     public ResponseEntity<SaldoResponseDTO> saldo(@PathVariable String numero) {
         return ResponseEntity.ok(contaService.consultarSaldo(numero));
@@ -58,7 +54,6 @@ public class ContaController {
         return ResponseEntity.ok(contaService.transferir(numero, request));
     }
 
-    // GET /{numero}/extrato?dataInicio=2025-01-01&dataFim=2025-12-31
     @GetMapping("/{numero}/extrato")
     public ResponseEntity<ExtratoResponseDTO> extrato(
             @PathVariable String numero,
@@ -71,10 +66,6 @@ public class ContaController {
         return ResponseEntity.ok(contaService.consultarExtrato(numero, inicio, fim));
     }
 
-    // -------------------------
-    // Consultas de conta
-    // -------------------------
-
     @GetMapping("/por-cliente/{cpf}")
     public ResponseEntity<ContaResponseDTO> contaPorCliente(@PathVariable String cpf) {
         return ResponseEntity.ok(contaService.consultarContaPorCliente(cpf));
@@ -84,10 +75,6 @@ public class ContaController {
     public ResponseEntity<List<ContaResponseDTO>> contasPorGerente(@PathVariable String cpf) {
         return ResponseEntity.ok(contaService.consultarContasPorGerente(cpf));
     }
-
-    // -------------------------
-    // Endpoints internos para o gerente-service (R17/R18)
-    // -------------------------
 
     @GetMapping("/contagem-por-gerente")
     public ResponseEntity<Map<String, Long>> contagemPorGerente() {
@@ -110,10 +97,6 @@ public class ContaController {
         return ResponseEntity.ok().build();
     }
 
-    // -------------------------
-    // Endpoint interno para o saga-service (R10)
-    // -------------------------
-
     @PostMapping("/criar")
     public ResponseEntity<ContaResponseDTO> criarConta(@RequestBody CriarContaRequestDTO request) {
         return ResponseEntity.status(201).body(contaService.criarConta(request));
@@ -125,13 +108,15 @@ public class ContaController {
         return ResponseEntity.noContent().build();
     }
 
-    // -------------------------
-    // Endpoint interno para atualização de limite (R4)
-    // -------------------------
-
     @PutMapping("/limite")
     public ResponseEntity<Void> atualizarLimite(@RequestBody AtualizarLimiteRequestDTO request) {
         contaService.atualizarLimite(request);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/remover")
+    public ResponseEntity<Void> remover(@RequestBody Map<String, String> body) {
+        contaService.removerContaPorCliente(body.get("clienteCpf"));
         return ResponseEntity.ok().build();
     }
 }

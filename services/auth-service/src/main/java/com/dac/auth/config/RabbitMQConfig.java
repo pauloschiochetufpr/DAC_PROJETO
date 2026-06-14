@@ -18,9 +18,34 @@ public class RabbitMQConfig {
     public static final String FILA_AUTH_ATUALIZAR = "auth.atualizar.queue";
     public static final String FILA_AUTH_REMOVER = "auth.remover.queue";
 
+    // Comando/resposta da saga (orquestrador -> auth -> orquestrador)
+    public static final String COMANDO_EXCHANGE  = "saga.comando";
+    public static final String RESPOSTA_EXCHANGE = "saga.resposta";
+    public static final String FILA_COMANDO_AUTH = "auth.comando.queue";
+
     @Bean
     public Queue filaReset() {
         return new Queue(FILA_RESET, true);
+    }
+
+    @Bean
+    public TopicExchange comandoExchange() {
+        return new TopicExchange(COMANDO_EXCHANGE);
+    }
+
+    @Bean
+    public TopicExchange respostaExchange() {
+        return new TopicExchange(RESPOSTA_EXCHANGE);
+    }
+
+    @Bean
+    public Queue filaComandoAuth() {
+        return new Queue(FILA_COMANDO_AUTH, true);
+    }
+
+    @Bean
+    public Binding bindingComandoAuth(Queue filaComandoAuth, TopicExchange comandoExchange) {
+        return BindingBuilder.bind(filaComandoAuth).to(comandoExchange).with("comando.auth.#");
     }
 
     @Bean

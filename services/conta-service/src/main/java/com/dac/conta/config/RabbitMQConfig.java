@@ -1,6 +1,9 @@
 package com.dac.conta.config;
 
+import org.springframework.amqp.core.Binding;
+import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -17,9 +20,34 @@ public class RabbitMQConfig {
     public static final String FILA_MOVIMENTACAO_CRIADA = "conta.movimentacao.criada";
     public static final String FILA_LIMITE              = "conta.limite";
 
+    // Comando/resposta da saga (orquestrador -> conta -> orquestrador)
+    public static final String COMANDO_EXCHANGE   = "saga.comando";
+    public static final String RESPOSTA_EXCHANGE  = "saga.resposta";
+    public static final String FILA_COMANDO_CONTA = "conta.comando.queue";
+
     @Bean
     public Queue filaReset() {
         return new Queue(FILA_RESET, true);
+    }
+
+    @Bean
+    public TopicExchange comandoExchange() {
+        return new TopicExchange(COMANDO_EXCHANGE);
+    }
+
+    @Bean
+    public TopicExchange respostaExchange() {
+        return new TopicExchange(RESPOSTA_EXCHANGE);
+    }
+
+    @Bean
+    public Queue filaComandoConta() {
+        return new Queue(FILA_COMANDO_CONTA, true);
+    }
+
+    @Bean
+    public Binding bindingComandoConta(Queue filaComandoConta, TopicExchange comandoExchange) {
+        return BindingBuilder.bind(filaComandoConta).to(comandoExchange).with("comando.conta.#");
     }
 
     @Bean

@@ -19,10 +19,10 @@ import com.dac.conta.entity.MovimentacaoCUD;
 import com.dac.conta.entity.TipoMovimentacao;
 import com.dac.conta.read.entity.ContaR;
 import com.dac.conta.read.entity.MovimentacaoR;
-import com.dac.conta.repository.ContaCUDRepository;
-import com.dac.conta.repository.MovimentacaoCUDRepository;
 import com.dac.conta.read.repository.ContaRRepository;
 import com.dac.conta.read.repository.MovimentacaoRRepository;
+import com.dac.conta.repository.ContaCUDRepository;
+import com.dac.conta.repository.MovimentacaoCUDRepository;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -57,9 +57,6 @@ public class ContaService {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
-    // -------------------------
-    // GET /contas/{numero}/saldo
-    // -------------------------
     public SaldoResponseDTO consultarSaldo(String numero) {
         return contaRRepository.findById(numero)
             .map(conta -> {
@@ -72,9 +69,6 @@ public class ContaService {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Conta não encontrada"));
     }
 
-    // -------------------------
-    // POST /contas/{numero}/depositar
-    // -------------------------
     @Transactional
     public OperacaoResponseDTO depositar(String numero, DepositoRequestDTO request) {
         ContaCUD conta = buscarContaCUD(numero);
@@ -83,11 +77,10 @@ public class ContaService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Valor deve ser positivo");
         }
 
-        conta.setSaldo(java.math.BigDecimal.valueOf(conta.getSaldo()).add(java.math.BigDecimal.valueOf(request.getValor())).doubleValue());
+        conta.setSaldo(BigDecimal.valueOf(conta.getSaldo()).add(BigDecimal.valueOf(request.getValor())).doubleValue());
         contaCUDRepository.save(conta);
 
-        MovimentacaoCUD mov = criarMovimentacao(
-            TipoMovimentacao.DEPOSITO, numero, null, request.getValor());
+        MovimentacaoCUD mov = criarMovimentacao(TipoMovimentacao.DEPOSITO, numero, null, request.getValor());
 
         sincronizarContaR(conta);
         criarMovimentacaoR(mov, conta.getClienteCpf(), null);
@@ -96,9 +89,6 @@ public class ContaService {
         return montarOperacaoResponse(numero, mov.getData(), conta.getSaldo());
     }
 
-    // -------------------------
-    // POST /contas/{numero}/sacar
-    // -------------------------
     @Transactional
     public OperacaoResponseDTO sacar(String numero, SaqueRequestDTO request) {
         ContaCUD conta = buscarContaCUD(numero);
@@ -110,11 +100,10 @@ public class ContaService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Saldo insuficiente");
         }
 
-        conta.setSaldo(java.math.BigDecimal.valueOf(conta.getSaldo()).subtract(java.math.BigDecimal.valueOf(request.getValor())).doubleValue());
+        conta.setSaldo(BigDecimal.valueOf(conta.getSaldo()).subtract(BigDecimal.valueOf(request.getValor())).doubleValue());
         contaCUDRepository.save(conta);
 
-        MovimentacaoCUD mov = criarMovimentacao(
-            TipoMovimentacao.SAQUE, numero, null, request.getValor());
+        MovimentacaoCUD mov = criarMovimentacao(TipoMovimentacao.SAQUE, numero, null, request.getValor());
 
         sincronizarContaR(conta);
         criarMovimentacaoR(mov, conta.getClienteCpf(), null);
@@ -123,9 +112,6 @@ public class ContaService {
         return montarOperacaoResponse(numero, mov.getData(), conta.getSaldo());
     }
 
-    // -------------------------
-    // POST /contas/{numero}/transferir
-    // -------------------------
     @Transactional
     public TransferenciaResponseDTO transferir(String numero, TransferenciaRequestDTO request) {
         if (numero.equals(request.getDestino())) {
@@ -133,7 +119,7 @@ public class ContaService {
                 "Transferência para a mesma conta não permitida");
         }
 
-        ContaCUD origem  = buscarContaCUD(numero);
+        ContaCUD origem = buscarContaCUD(numero);
         ContaCUD destino = buscarContaCUD(request.getDestino());
 
         if (request.getValor() == null || request.getValor() <= 0) {
@@ -143,8 +129,8 @@ public class ContaService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Saldo insuficiente");
         }
 
-        origem.setSaldo(java.math.BigDecimal.valueOf(origem.getSaldo()).subtract(java.math.BigDecimal.valueOf(request.getValor())).doubleValue());
-        destino.setSaldo(java.math.BigDecimal.valueOf(destino.getSaldo()).add(java.math.BigDecimal.valueOf(request.getValor())).doubleValue());
+        origem.setSaldo(BigDecimal.valueOf(origem.getSaldo()).subtract(BigDecimal.valueOf(request.getValor())).doubleValue());
+        destino.setSaldo(BigDecimal.valueOf(destino.getSaldo()).add(BigDecimal.valueOf(request.getValor())).doubleValue());
         contaCUDRepository.save(origem);
         contaCUDRepository.save(destino);
 
@@ -166,12 +152,7 @@ public class ContaService {
         return dto;
     }
 
-    // -------------------------
-    // GET /contas/{numero}/extrato?inicio=...&fim=...
-    // -------------------------
-    public ExtratoResponseDTO consultarExtrato(String numero,
-                                               LocalDateTime inicio,
-                                               LocalDateTime fim) {
+    public ExtratoResponseDTO consultarExtrato(String numero, LocalDateTime inicio, LocalDateTime fim) {
         return contaRRepository.findById(numero)
             .map(conta -> {
                 List<MovimentacaoR> movs;
@@ -203,9 +184,6 @@ public class ContaService {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Conta não encontrada"));
     }
 
-    // -------------------------
-    // GET /contas/por-cliente/{cpf}
-    // -------------------------
     public ContaResponseDTO consultarContaPorCliente(String clienteCpf) {
         return contaRRepository.findByClienteCpf(clienteCpf)
             .map(conta -> {
@@ -215,17 +193,13 @@ public class ContaService {
                 dto.setSaldo(conta.getSaldo() != null ? conta.getSaldo().doubleValue() : 0.0);
                 dto.setLimite(conta.getLimite() != null ? conta.getLimite().doubleValue() : 0.0);
                 dto.setGerente(conta.getGerenteCpf());
-                dto.setCriacao(conta.getDataCriacao() != null
-                    ? conta.getDataCriacao().atStartOfDay() : null);
+                dto.setCriacao(conta.getDataCriacao() != null ? conta.getDataCriacao().atStartOfDay() : null);
                 return dto;
             })
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                 "Conta não encontrada para cliente: " + clienteCpf));
     }
 
-    // -------------------------
-    // GET /contas/por-gerente/{cpf}
-    // -------------------------
     public List<ContaResponseDTO> consultarContasPorGerente(String gerenteCpf) {
         List<ContaR> contas = contaRRepository.findByGerenteCpf(gerenteCpf);
         return contas.stream().map(conta -> {
@@ -235,15 +209,11 @@ public class ContaService {
             dto.setSaldo(conta.getSaldo() != null ? conta.getSaldo().doubleValue() : 0.0);
             dto.setLimite(conta.getLimite() != null ? conta.getLimite().doubleValue() : 0.0);
             dto.setGerente(conta.getGerenteCpf());
-            dto.setCriacao(conta.getDataCriacao() != null
-                ? conta.getDataCriacao().atStartOfDay() : null);
+            dto.setCriacao(conta.getDataCriacao() != null ? conta.getDataCriacao().atStartOfDay() : null);
             return dto;
         }).collect(Collectors.toList());
     }
 
-    // -------------------------
-    // GET /contas/contagem-por-gerente
-    // -------------------------
     public Map<String, Long> contagemPorGerente() {
         List<Object[]> rows = contaCUDRepository.contarContasPorGerente();
         Map<String, Long> resultado = new HashMap<>();
@@ -253,9 +223,6 @@ public class ContaService {
         return resultado;
     }
 
-    // -------------------------
-    // GET /contas/saldo-positivo-por-gerente
-    // -------------------------
     public Map<String, Double> saldoPositivoPorGerente() {
         List<Object[]> rows = contaCUDRepository.somarSaldosPositivosPorGerente();
         Map<String, Double> resultado = new HashMap<>();
@@ -265,9 +232,6 @@ public class ContaService {
         return resultado;
     }
 
-    // -------------------------
-    // GET /contas/saldo-negativo-por-gerente
-    // -------------------------
     public Map<String, Double> saldoNegativoPorGerente() {
         List<Object[]> rows = contaCUDRepository.somarSaldosNegativosPorGerente();
         Map<String, Double> resultado = new HashMap<>();
@@ -277,13 +241,9 @@ public class ContaService {
         return resultado;
     }
 
-    // -------------------------
-    // POST /contas/redistribuir
-    // -------------------------
     @Transactional
     public void redistribuir(RedistribuirRequestDTO request) {
-        List<ContaCUD> contas = contaCUDRepository
-            .findByGerenteCpfOrdenado(request.getGerenteOrigemCpf());
+        List<ContaCUD> contas = contaCUDRepository.findByGerenteCpfOrdenado(request.getGerenteOrigemCpf());
 
         if (contas.isEmpty()) return;
 
@@ -302,9 +262,6 @@ public class ContaService {
             + request.getGerenteOrigemCpf() + " para " + request.getGerenteDestinoCpf());
     }
 
-    // -------------------------
-    // POST /contas/criar
-    // -------------------------
     @Transactional
     public ContaResponseDTO criarConta(CriarContaRequestDTO request) {
         validarCriacaoContaRequest(request);
@@ -316,8 +273,7 @@ public class ContaService {
         Double limite = request.getLimite() != null ? request.getLimite() : 0.0;
 
         contaCUDRepository.findByClienteCpf(clienteCpf).ifPresent(c -> {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                "Cliente já possui uma conta");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Cliente já possui uma conta");
         });
 
         String numero = gerarNumeroConta();
@@ -346,19 +302,21 @@ public class ContaService {
         return dto;
     }
 
-    @Transactional
     public void removerContaPorCliente(String clienteCpf) {
-        ContaCUD conta = contaCUDRepository.findByClienteCpf(clienteCpf)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                "Conta nao encontrada para cliente: " + clienteCpf));
-
-        contaCUDRepository.delete(conta);
-        contaRRepository.findByClienteCpf(clienteCpf).ifPresent(contaRRepository::delete);
+        String cpf = normalizarDocumento(clienteCpf);
+        try {
+            contaCUDRepository.findByClienteCpf(cpf).ifPresent(contaCUDRepository::delete);
+        } catch (Exception e) {
+            System.err.println("conta-service: aviso - remover conta CUD falhou: " + e.getMessage());
+        }
+        try {
+            contaRRepository.findByClienteCpf(cpf).ifPresent(contaRRepository::delete);
+        } catch (Exception e) {
+            System.err.println("conta-service: aviso - remover conta R falhou: " + e.getMessage());
+        }
+        System.out.println("conta-service: conta removida (compensação saga) para cliente " + cpf);
     }
 
-    // -------------------------
-    // PUT /contas/limite
-    // -------------------------
     @Transactional
     public void atualizarLimite(AtualizarLimiteRequestDTO request) {
         ContaCUD conta = contaCUDRepository.findByClienteCpf(request.getClienteCpf())
@@ -379,8 +337,7 @@ public class ContaService {
         sincronizarContaR(conta);
         publicarEventoConta(conta);
 
-        System.out.println("Limite atualizado para cliente " + request.getClienteCpf()
-            + ": R$ " + novoLimite);
+        System.out.println("Limite atualizado para cliente " + request.getClienteCpf() + ": R$ " + novoLimite);
     }
 
     private void validarCriacaoContaRequest(CriarContaRequestDTO request) {
@@ -418,13 +375,10 @@ public class ContaService {
 
     private ContaCUD buscarContaCUD(String numero) {
         return contaCUDRepository.findById(numero)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                "Conta não encontrada: " + numero));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Conta não encontrada: " + numero));
     }
 
-    private MovimentacaoCUD criarMovimentacao(TipoMovimentacao tipo,
-                                              String origem, String destino,
-                                              Double valor) {
+    private MovimentacaoCUD criarMovimentacao(TipoMovimentacao tipo, String origem, String destino, Double valor) {
         MovimentacaoCUD mov = new MovimentacaoCUD();
         mov.setTipo(tipo);
         mov.setOrigem(origem);
@@ -434,9 +388,7 @@ public class ContaService {
         return movimentacaoCUDRepository.save(mov);
     }
 
-    private OperacaoResponseDTO montarOperacaoResponse(String numero,
-                                                       LocalDateTime data,
-                                                       Double saldo) {
+    private OperacaoResponseDTO montarOperacaoResponse(String numero, LocalDateTime data, Double saldo) {
         OperacaoResponseDTO dto = new OperacaoResponseDTO();
         dto.setConta(numero);
         dto.setData(data);
@@ -462,9 +414,7 @@ public class ContaService {
         }
     }
 
-    private void criarMovimentacaoR(MovimentacaoCUD mov,
-                                     String clienteOrigemCpf,
-                                     String clienteDestinoCpf) {
+    private void criarMovimentacaoR(MovimentacaoCUD mov, String clienteOrigemCpf, String clienteDestinoCpf) {
         try {
             MovimentacaoR movR = new MovimentacaoR();
             movR.setTipo(mov.getTipo().name());
@@ -508,7 +458,6 @@ public class ContaService {
         return numero;
     }
 
-    // Mapeia tipo de movimentação do enum para texto em português com acentos
     private String mapearTipoMovimentacao(String tipo) {
         if (tipo == null) return null;
         return switch (tipo.toUpperCase()) {
