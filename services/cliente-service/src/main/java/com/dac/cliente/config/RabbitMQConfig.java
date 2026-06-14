@@ -19,7 +19,6 @@ public class RabbitMQConfig {
     public static final String FILA_SAGA_APROVAR  = "saga.aprovar_cliente";
     public static final String FILA_SAGA_REJEITAR = "saga.rejeitar_cliente";
     public static final String FILA_CONTA_LIMITE  = "conta.limite";
-    public static final String FILA_AUTH_CRIAR    = "auth.criar";
     public static final String FILA_AUTH_REMOVER  = "auth.remover";
 
     @Bean
@@ -50,11 +49,6 @@ public class RabbitMQConfig {
     @Bean
     public Queue filaContaLimite() {
         return new Queue(FILA_CONTA_LIMITE, true);
-    }
-
-    @Bean
-    public Queue filaAuthCriar() {
-        return new Queue(FILA_AUTH_CRIAR, true);
     }
 
     @Bean

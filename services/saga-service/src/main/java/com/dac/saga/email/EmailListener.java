@@ -15,6 +15,10 @@ public class EmailListener {
 
     @RabbitListener(queues = RabbitMQConfig.FILA_EMAIL_SEND)
     public void enviarEmail(EmailPayload payload) {
+        System.out.println("email-listener: mensagem recebida na fila email.send"
+            + " | tipo=" + payload.getTipo()
+            + " | destinatario=" + payload.getDestinatario()
+            + " | cpf=" + payload.getCpf());
         emailService.enviar(payload);
     }
 }

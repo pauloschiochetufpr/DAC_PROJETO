@@ -14,7 +14,6 @@ public class RabbitMQConfig {
 
     public static final String FILA_RESET = "saga.reset";
     public static final String AUTH_EXCHANGE = "auth.exchange";
-    public static final String FILA_AUTH_CRIAR = "auth.criar.queue";
     public static final String FILA_AUTH_ATUALIZAR = "auth.atualizar.queue";
     public static final String FILA_AUTH_REMOVER = "auth.remover.queue";
 
@@ -54,11 +53,6 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public Queue filaAuthCriar() {
-        return new Queue(FILA_AUTH_CRIAR, true);
-    }
-
-    @Bean
     public Queue filaAuthAtualizar() {
         return new Queue(FILA_AUTH_ATUALIZAR, true);
     }
@@ -66,11 +60,6 @@ public class RabbitMQConfig {
     @Bean
     public Queue filaAuthRemover() {
         return new Queue(FILA_AUTH_REMOVER, true);
-    }
-
-    @Bean
-    public Binding bindingCriar(Queue filaAuthCriar, TopicExchange authExchange) {
-        return BindingBuilder.bind(filaAuthCriar).to(authExchange).with("auth.criar");
     }
 
     @Bean

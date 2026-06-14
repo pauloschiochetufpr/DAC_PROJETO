@@ -73,7 +73,6 @@ public class AutocadastroSagaService {
             criarUsuarioNoAuthSincrono(cpf, nome, email, senhaTemporaria);
             compensacao.registrar("remover usuário auth do cliente " + cpf, () -> removerUsuarioNoAuth(cpf));
 
-            publicarUsuarioNoAuth(cpf, nome, email, senhaTemporaria);
             publicarEmailAprovacao(email, nome, cpf, numeroConta, senhaTemporaria, gerenteNome);
         } catch (RuntimeException e) {
             System.err.println("Saga autocadastro: falha - executando compensação. Causa: " + e.getMessage());
@@ -159,17 +158,6 @@ public class AutocadastroSagaService {
         payload.put("senha", senhaTemporaria);
         payload.put("tipo", "cliente");
         commandBus.enviarEAguardar("comando.auth.criar", "criar_usuario", payload);
-    }
-
-    private void publicarUsuarioNoAuth(String cpf, String nome, String email, String senhaTemporaria) {
-        Map<String, String> authEvento = new HashMap<>();
-        authEvento.put("acao", "criar");
-        authEvento.put("cpf", cpf);
-        authEvento.put("nome", nome);
-        authEvento.put("email", email.toLowerCase(Locale.ROOT));
-        authEvento.put("senha", senhaTemporaria);
-        authEvento.put("tipo", "cliente");
-        rabbitTemplate.convertAndSend("auth.exchange", "auth.criar", authEvento);
     }
 
     private void removerContaNoConta(String cpf) {

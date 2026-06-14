@@ -1,16 +1,10 @@
 package com.dac.auth.consumer;
 
-// config RabbitMQ
 import com.dac.auth.config.RabbitMQConfig;
-// entidades
 import com.dac.auth.entity.Usuario;
-// repositórios
 import com.dac.auth.repository.UsuarioRepository;
-// service
 import com.dac.auth.service.UsuarioService;
-// util
 import com.dac.auth.util.DevLog;
-// Spring AMQP / RabbitMQ
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -27,21 +21,7 @@ public class AuthConsumer {
     @Autowired
     private UsuarioService usuarioService;
 
-    // criarUsuario | recebe mensagem do gerente-service ou saga-service e persiste novo usuário.
-    // Delega ao UsuarioService (idempotente) — o mesmo usado pelo endpoint interno síncrono.
-    @RabbitListener(queues = RabbitMQConfig.FILA_AUTH_CRIAR)
-    public void criarUsuario(Map<String, String> msg) {
-        DevLog.log("criarUsuario - recebido CPF: " + msg.get("cpf") + ", email: " + msg.get("email") + ", tipo: " + msg.get("tipo"));
-        usuarioService.criarUsuario(
-            msg.get("cpf"),
-            msg.get("nome"),
-            msg.get("email"),
-            msg.get("senha"),
-            msg.get("tipo")
-        );
-    }
-
-    // atualizarUsuario | atualiza campos de um usuário existente com os dados recebidos via fila
+    // atualizarUsuario | atualiza campos de um usuario existente com os dados recebidos via fila
     @RabbitListener(queues = RabbitMQConfig.FILA_AUTH_ATUALIZAR)
     public void atualizarUsuario(Map<String, String> msg) {
         String cpf = msg.get("cpf");
@@ -64,7 +44,7 @@ public class AuthConsumer {
         DevLog.log("atualizarUsuario OK - CPF: " + cpf);
     }
 
-    // removerUsuario | exclui o usuário do banco a partir do CPF recebido via fila
+    // removerUsuario | exclui o usuario do banco a partir do CPF recebido via fila
     @RabbitListener(queues = RabbitMQConfig.FILA_AUTH_REMOVER)
     public void removerUsuario(Map<String, String> msg) {
         String cpf = msg.get("cpf");

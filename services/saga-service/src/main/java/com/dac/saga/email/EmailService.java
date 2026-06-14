@@ -18,12 +18,36 @@ public class EmailService {
     }
 
     public void enviar(EmailPayload payload) {
+        String assunto = montarAssunto(payload);
+        String corpo = montarCorpo(payload);
+
+        System.out.println("email-service: preparando envio"
+            + " | tipo=" + safe(payload.getTipo())
+            + " | destinatario=" + safe(payload.getDestinatario())
+            + " | assunto=" + assunto
+            + " | from=" + safe(from));
+
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(from);
         message.setTo(payload.getDestinatario());
-        message.setSubject(montarAssunto(payload));
-        message.setText(montarCorpo(payload));
-        mailSender.send(message);
+        message.setSubject(assunto);
+        message.setText(corpo);
+
+        try {
+            mailSender.send(message);
+            System.out.println("email-service: envio concluido com sucesso"
+                + " | tipo=" + safe(payload.getTipo())
+                + " | destinatario=" + safe(payload.getDestinatario())
+                + " | assunto=" + assunto);
+        } catch (Exception e) {
+            System.err.println("email-service: falha no envio"
+                + " | tipo=" + safe(payload.getTipo())
+                + " | destinatario=" + safe(payload.getDestinatario())
+                + " | assunto=" + assunto
+                + " | erro=" + e.getClass().getSimpleName()
+                + ": " + safe(e.getMessage()));
+            throw e;
+        }
     }
 
     private String montarAssunto(EmailPayload payload) {
