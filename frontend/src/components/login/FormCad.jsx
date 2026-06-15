@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { API } from "../../config";
+import { ClienteService } from "../../services/ClienteService";
 
 // i18n
 import { useLanguage } from "../../hooks/useLanguage";
@@ -30,9 +30,13 @@ function formatCEP(value) {
 }
 
 function formatSalary(value) {
-  const cleaned = value.replace(/\D/g, "");
-  const number = (Number(cleaned) / 100).toFixed(2);
-  return `R$ ${number}`;
+  const digits = onlyDigits(value);
+  const number = Number(digits || 0) / 100;
+
+  return number.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  });
 }
 
 function onlyDigits(value) {
@@ -42,11 +46,6 @@ function onlyDigits(value) {
 function parseSalary(value) {
   const digits = onlyDigits(value);
   return digits ? Number(digits) / 100 : 0;
-}
-
-function buildEndereco({ logradouro, numero, complemento }) {
-  const base = [logradouro?.trim(), numero?.trim()].filter(Boolean).join(", ");
-  return complemento?.trim() ? `${base} - ${complemento.trim()}` : base;
 }
 
 function Field({
@@ -95,6 +94,7 @@ export default function FormCad() {
     logradouro: "",
     numero: "",
     complemento: "",
+    bairro: "",
     cidade: "",
     estado: "",
     salario: "",
@@ -117,7 +117,12 @@ export default function FormCad() {
     }
     if (step === 2) {
       return (
-        form.cep && form.logradouro && form.numero && form.cidade && form.estado
+        form.cep &&
+        form.logradouro &&
+        form.numero &&
+        form.bairro &&
+        form.cidade &&
+        form.estado
       );
     }
     if (step === 3) {
@@ -140,28 +145,61 @@ export default function FormCad() {
 
     if (!canNext()) return;
 
+    const cpf = onlyDigits(form.cpf);
+    const telefone = onlyDigits(form.telefone);
+    const cep = onlyDigits(form.cep);
+    const salario = parseSalary(form.salario);
+
+    if (cpf.length !== 11) {
+      setError("Informe um CPF válido.");
+      return;
+    }
+
+    if (telefone.length < 10) {
+      setError("Informe um telefone válido.");
+      return;
+    }
+
+    if (cep.length !== 8) {
+      setError("Informe um CEP válido.");
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+      setError("Informe um e-mail válido.");
+      return;
+    }
+
+    if (salario <= 0) {
+      setError("Informe um salário válido.");
+      return;
+    }
+
     setLoading(true);
 
     try {
       const payload = {
         nome: form.nome.trim(),
-        cpf: onlyDigits(form.cpf),
-        email: form.email.trim(),
-        telefone: onlyDigits(form.telefone),
-        cep: onlyDigits(form.cep),
-        endereco: buildEndereco(form),
+        cpf,
+        email: form.email.trim().toLowerCase(),
+        telefone,
+        salario,
+
+        logradouro: form.logradouro.trim(),
+        numero: form.numero.trim(),
+        complemento: form.complemento.trim(),
+        bairro: form.bairro.trim(),
+        cep,
         cidade: form.cidade.trim(),
         estado: form.estado.trim().toUpperCase(),
-        salario: parseSalary(form.salario),
       };
 
-      await API.autocadastroCliente(payload);
+      await ClienteService.autocadastrar(payload);
+
       setStep(4);
     } catch (err) {
       setError(
-        err?.response?.data?.message ||
-          err?.response?.data?.error ||
-          t(lang, "LoginPage.register.errors.submit_error"),
+        err.message || t(lang, "LoginPage.register.errors.submit_error"),
       );
     } finally {
       setLoading(false);
@@ -169,7 +207,7 @@ export default function FormCad() {
   }
 
   return (
-    <form className="flex flex-col gap-6">
+    <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
       {/* STEP INDICATOR */}
       <div className="flex justify-center gap-4 text-sm">
         {[1, 2, 3].map((s) => (
@@ -277,7 +315,17 @@ export default function FormCad() {
             autoComplete="address-line2"
             full
           />
-
+          <Field
+            label={t(lang, "LoginPage.register.fields.bairro.label")}
+            placeholder={t(
+              lang,
+              "LoginPage.register.fields.bairro.placeholder",
+            )}
+            name="bairro"
+            value={form.bairro}
+            onChange={handleChange}
+            autoComplete="address-level3"
+          />
           <Field
             label={t(lang, "LoginPage.register.fields.cidade.label")}
             placeholder={t(
@@ -364,10 +412,11 @@ export default function FormCad() {
             </button>
           ) : (
             <button
-              type="button"
-              onClick={handleSubmit}
+              type="submit"
               disabled={loading || !canNext()}
-              className="ml-auto px-6 py-3 border-2 border-secundaryDark text-secundary rounded-full hover:shadow-lg hover:shadow-brandDark disabled:opacity-50"
+              className="ml-auto px-6 py-3 border-2 border-secundaryDark
+             text-secundary rounded-full hover:shadow-lg
+             hover:shadow-brandDark disabled:opacity-50"
             >
               {loading
                 ? t(lang, "LoginPage.register.actions.loading")

@@ -167,6 +167,9 @@ export const API = {
       motivo,
     }),
 
+  /** POST /clientes — autocadastro público */
+  autocadastrarCliente: (dados) => axiosPublic.post("/clientes", dados),
+
   //GERENTE
   /** GET /gerentes */
   listarGerentes: () => axiosAuth.get("/gerentes"),

@@ -88,6 +88,7 @@ public class GerenteService {
             // "gerente" é um objeto aninhado com cpf, nome, email, tipo
             Map<String, String> gerenteObj = new HashMap<>();
             gerenteObj.put("cpf", g.getCpf());
+            gerenteObj.put("telefone", g.getTelefone());
             gerenteObj.put("nome", g.getNome());
             gerenteObj.put("email", g.getEmail());
             gerenteObj.put("tipo", g.getTipo());

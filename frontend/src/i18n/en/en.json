@@ -253,6 +253,10 @@
           "label": "Number",
           "placeholder": "123"
         },
+        "bairro": {
+          "label": "District",
+          "placeholder": "District"
+        },
         "logradouro": {
           "label": "Street",
           "placeholder": "Street..."

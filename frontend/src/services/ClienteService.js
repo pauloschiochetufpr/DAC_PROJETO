@@ -12,6 +12,18 @@ export const ClienteService = {
     }
   },
 
+  autocadastrar: async (dados) => {
+    try {
+      const response = await API.autocadastrarCliente(dados);
+
+      return response.data;
+    } catch (err) {
+      throw new Error(
+        getHttpErrorMessage(err, "Erro ao realizar autocadastro"),
+      );
+    }
+  },
+
   listar: async () => {
     try {
       const response = await API.listarClientes();
