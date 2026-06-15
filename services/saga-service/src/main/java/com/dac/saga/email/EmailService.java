@@ -40,13 +40,14 @@ public class EmailService {
                 + " | destinatario=" + safe(payload.getDestinatario())
                 + " | assunto=" + assunto);
         } catch (Exception e) {
-            System.err.println("email-service: falha no envio"
+            // best-effort: email é secundário; uma falha aqui NÃO pode derrubar o fluxo
+            // nem fazer a mensagem ser reprocessada em loop. Apenas registra o erro.
+            System.err.println("email-service: falha no envio (ignorada)"
                 + " | tipo=" + safe(payload.getTipo())
                 + " | destinatario=" + safe(payload.getDestinatario())
                 + " | assunto=" + assunto
                 + " | erro=" + e.getClass().getSimpleName()
                 + ": " + safe(e.getMessage()));
-            throw e;
         }
     }
 

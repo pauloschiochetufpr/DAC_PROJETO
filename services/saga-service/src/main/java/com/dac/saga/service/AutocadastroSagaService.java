@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class AutocadastroSagaService {
@@ -36,10 +37,17 @@ public class AutocadastroSagaService {
     private final SagaCommandBus commandBus;
     private final HttpClient httpClient = HttpClient.newHttpClient();
     private final ObjectMapper objectMapper = new ObjectMapper();
+    // Guarda a senha gerada na aprovação, indexada por CPF. Usado pelo endpoint de dev
+    // GET /saga/senha/{cpf} que o teste (test_dac) consulta para fazer o primeiro login.
+    private final Map<String, String> senhasPorCpf = new ConcurrentHashMap<>();
 
     public AutocadastroSagaService(RabbitTemplate rabbitTemplate, SagaCommandBus commandBus) {
         this.rabbitTemplate = rabbitTemplate;
         this.commandBus = commandBus;
+    }
+
+    public String getSenhaPorCpf(String cpf) {
+        return senhasPorCpf.get(cpf);
     }
 
     public void processarAprovacao(Map<String, Object> evento) {
@@ -63,6 +71,7 @@ public class AutocadastroSagaService {
         String gerenteNome = texto((String) gerente.get("nome"));
 
         String senhaTemporaria = gerarSenha();
+        senhasPorCpf.put(cpf, senhaTemporaria);   // disponibiliza a senha para o GET /saga/senha/{cpf}
         SagaCompensacao compensacao = new SagaCompensacao();
         String numeroConta = null;
 
@@ -72,13 +81,19 @@ public class AutocadastroSagaService {
 
             criarUsuarioNoAuthSincrono(cpf, nome, email, senhaTemporaria);
             compensacao.registrar("remover usuário auth do cliente " + cpf, () -> removerUsuarioNoAuth(cpf));
-
-            publicarEmailAprovacao(email, nome, cpf, numeroConta, senhaTemporaria, gerenteNome);
         } catch (RuntimeException e) {
             System.err.println("Saga autocadastro: falha - executando compensação. Causa: " + e.getMessage());
             compensacao.compensar();
             publicarEventoSaga("autocadastro.falha", cpf);
             throw e;
+        }
+
+        // Email é best-effort: fica FORA do try de compensação. Se falhar, NÃO derruba a aprovação
+        // (conta e usuário já foram criados com sucesso).
+        try {
+            publicarEmailAprovacao(email, nome, cpf, numeroConta, senhaTemporaria, gerenteNome);
+        } catch (Exception e) {
+            System.err.println("Saga autocadastro: falha ao publicar email (ignorada): " + e.getMessage());
         }
 
         System.out.println("Saga aprovação: conta criada e senha enviada para " + email + " - Senha: " + senhaTemporaria);
