@@ -1,6 +1,5 @@
 import { API } from "../config.js";
 import { getHttpErrorMessage } from "../utils/httpError.js";
-import { getCpfUsuario } from "../utils/auth";
 
 export const GerenteService = {
   listar: async () => {

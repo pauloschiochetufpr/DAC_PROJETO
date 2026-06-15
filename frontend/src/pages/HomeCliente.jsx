@@ -26,6 +26,8 @@ import Credito from "../components/emprestimo/Credito";
 import Extrato from "../components/listas/Extrato";
 /// Extrato mobyle
 import MiniExtratoMob from "../components/listas/MiniExtratoMob";
+// Logout
+import BotaoLogout from "../components/BotaoLogout";
 
 export default function HomeCliente() {
   const { lang } = useLanguage();
@@ -128,12 +130,13 @@ export default function HomeCliente() {
 
   return (
     <div className="relative flex flex-col items-center">
-      <div className="absolute right-6 top-10 z-[20000]">
+      <div className="absolute right-6 top-10 z-[20000] flex items-center gap-3">
         <Link to="/perfil">
           <button className="bg-secundary text-white px-4 py-2 rounded-lg hover:bg-secundaryHover transition">
             Perfil
           </button>
         </Link>
+        <BotaoLogout />
       </div>
       {/* Primeira parte */}
       <div

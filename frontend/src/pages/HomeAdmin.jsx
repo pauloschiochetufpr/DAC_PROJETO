@@ -5,6 +5,7 @@ import GerentesLista from "../components/admin/GerentesLista";
 import GraficoSaldos from "../components/admin/GraficoSaldos";
 import ClientesAdminLista from "../components/admin/ClientesAdminLista";
 import BotaoPergaminho from "../components/UI/BotaoPergaminho";
+import BotaoLogout from "../components/BotaoLogout";
 
 // Lucide
 import { Construction, UserRoundSearch } from "lucide-react";
@@ -147,6 +148,9 @@ export default function HomeAdmin() {
       className="relative flex flex-col items-center w-full min-h-screen
                  pt-[12rem] md:pt-[12.5rem] 2xl:pt-[13rem] pb-12 px-2 md:px-4 gap-6"
     >
+      <div className="absolute right-6 top-10 z-[20000]">
+        <BotaoLogout />
+      </div>
       {/* Fundo gradiente */}
       <div
         className="absolute top-0 left-0 z-[0] inset-0 w-full h-full

@@ -8,20 +8,13 @@ import App from "./App";
 import { ThemeProvider } from "./context/theme.provider";
 import { LanguageProvider } from "./context/language.provider";
 import { AuthProvider } from "./context/auth.provider";
-import { BancoProvider } from "./context/banco.provider";
-import { GerenteProvider } from "./context/gerente.provider";
-
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
       <ThemeProvider>
         <LanguageProvider>
           <AuthProvider>
-            <BancoProvider>
-              <GerenteProvider>
-                <App />
-              </GerenteProvider>
-            </BancoProvider>
+            <App />
           </AuthProvider>
         </LanguageProvider>
       </ThemeProvider>

@@ -5,6 +5,7 @@ import ListaAprovacao from "../components/gerente/ListaAprovacao";
 import ListaClientes from "../components/gerente/ListaClientes";
 import Podium from "../components/listas/Podium";
 import BotaoPergaminho from "../components/UI/BotaoPergaminho";
+import BotaoLogout from "../components/BotaoLogout";
 
 // Lucide
 import { UserRoundSearch } from "lucide-react";
@@ -152,6 +153,9 @@ export default function HomeGerente() {
       className="relative flex flex-col items-center w-full min-h-screen
                   pt-[12rem] md:pt-[14rem] pb-12 gap-12"
     >
+      <div className="absolute right-6 top-10 z-[20000]">
+        <BotaoLogout />
+      </div>
       {/* Fundo gradiente */}
       <div
         className=" absolute top-0 left-0 z-[0] inset-0 w-full h-full
