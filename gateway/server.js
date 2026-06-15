@@ -172,8 +172,12 @@ async function authenticate(req, res, next) {
   next();
 }
 
-// CORS_ORIGIN | origem permitida para credenciais (frontend em dev)
-const CORS_ORIGIN = process.env.CORS_ORIGIN || "http://localhost:5173";
+// CORS_ORIGIN | origens permitidas para credenciais. Aceita lista separada por vírgula
+// (ex: front dockerizado em :8080 e o vite dev em :5173).
+const CORS_ORIGIN = (process.env.CORS_ORIGIN || "http://localhost:8080,http://localhost:5173")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
 
 app.use(
   cors({

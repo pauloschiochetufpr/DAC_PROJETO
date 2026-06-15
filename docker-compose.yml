@@ -176,7 +176,7 @@ services:
         condition: service_healthy
     environment:
       JWT_SECRET: "lç\\|fo,.,jwief:>23(*&{+{=§}})"
-      CORS_ORIGIN: "http://localhost:8080"
+      CORS_ORIGIN: "http://localhost:8080,http://localhost:5173"
     ports:
       - "3000:3000"
     healthcheck:
