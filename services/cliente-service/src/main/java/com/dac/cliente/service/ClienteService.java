@@ -513,6 +513,9 @@ public class ClienteService {
         if (estaVazio(dto.getEmail()))    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email obrigatório");
         if (estaVazio(dto.getEndereco()) && estaVazio(dto.getLogradouro()))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Endereço obrigatório");
+        if (estaVazio(dto.getEndereco())
+            && (estaVazio(dto.getLogradouro()) || estaVazio(dto.getNumero()) || estaVazio(dto.getBairro())))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Endereço obrigatório");
         if (estaVazio(dto.getCep()))      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CEP obrigatório");
         if (estaVazio(dto.getCidade()))   throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cidade obrigatória");
         if (estaVazio(dto.getEstado()))   throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Estado obrigatório");
