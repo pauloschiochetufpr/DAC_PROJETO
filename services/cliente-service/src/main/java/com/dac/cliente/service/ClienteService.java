@@ -73,7 +73,16 @@ public class ClienteService {
         c.setEmail(normalizarEmail(dto.getEmail()));
         c.setTelefone(normalizarTexto(dto.getTelefone()));
         c.setSalario(dto.getSalario());
-        c.setEndereco(normalizarTexto(dto.getEndereco()));
+        String enderecoFinal = normalizarTexto(dto.getEndereco());
+        if (estaVazio(enderecoFinal)) {
+            // veio só granular: compõe o endereço completo a partir das partes
+            enderecoFinal = comporEndereco(dto.getLogradouro(), dto.getNumero(), dto.getComplemento());
+        }
+        c.setEndereco(enderecoFinal);
+        c.setLogradouro(normalizarTexto(dto.getLogradouro()));
+        c.setNumero(normalizarTexto(dto.getNumero()));
+        c.setComplemento(normalizarTexto(dto.getComplemento()));
+        c.setBairro(normalizarTexto(dto.getBairro()));
         c.setCep(normalizarDocumento(dto.getCep()));
         c.setCidade(normalizarTexto(dto.getCidade()));
         c.setEstado(normalizarUf(dto.getEstado()));
@@ -143,6 +152,10 @@ public class ClienteService {
         dto.setEmail(c.getEmail());
         dto.setTelefone(c.getTelefone());
         dto.setEndereco(c.getEndereco());
+        dto.setLogradouro(c.getLogradouro());
+        dto.setNumero(c.getNumero());
+        dto.setComplemento(c.getComplemento());
+        dto.setBairro(c.getBairro());
         dto.setCep(c.getCep());
         dto.setCidade(c.getCidade());
         dto.setEstado(c.getEstado());
@@ -247,7 +260,11 @@ public class ClienteService {
         if (dto.getNome() != null)     c.setNome(normalizarTexto(dto.getNome()));
         if (dto.getEmail() != null)    c.setEmail(normalizarEmail(dto.getEmail()));
         if (dto.getSalario() != null)  c.setSalario(dto.getSalario());
-        if (dto.getEndereco() != null) c.setEndereco(normalizarTexto(dto.getEndereco()));
+        if (dto.getEndereco() != null)    c.setEndereco(normalizarTexto(dto.getEndereco()));
+        if (dto.getLogradouro() != null)  c.setLogradouro(normalizarTexto(dto.getLogradouro()));
+        if (dto.getNumero() != null)      c.setNumero(normalizarTexto(dto.getNumero()));
+        if (dto.getComplemento() != null) c.setComplemento(normalizarTexto(dto.getComplemento()));
+        if (dto.getBairro() != null)      c.setBairro(normalizarTexto(dto.getBairro()));
         if (dto.getCep() != null)      c.setCep(normalizarDocumento(dto.getCep()));
         if (dto.getCidade() != null)   c.setCidade(normalizarTexto(dto.getCidade()));
         if (dto.getEstado() != null)   c.setEstado(normalizarUf(dto.getEstado()));
@@ -475,12 +492,27 @@ public class ClienteService {
     // Validação de autocadastro
     // -------------------------
 
+    // comporEndereco | monta o endereço completo a partir das partes (espelha o front)
+    private String comporEndereco(String logradouro, String numero, String complemento) {
+        String l = normalizarTexto(logradouro);
+        String n = normalizarTexto(numero);
+        String c = normalizarTexto(complemento);
+        String base = java.util.stream.Stream.of(l, n)
+            .filter(s -> s != null && !s.isBlank())
+            .collect(java.util.stream.Collectors.joining(", "));
+        if (c != null && !c.isBlank()) {
+            return base.isBlank() ? c : base + " - " + c;
+        }
+        return base;
+    }
+
     private void validarAutocadastro(AutocadastroRequestDTO dto) {
         if (dto == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Dados obrigatórios");
         if (estaVazio(dto.getCpf()))      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CPF obrigatório");
         if (estaVazio(dto.getNome()))     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nome obrigatório");
         if (estaVazio(dto.getEmail()))    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email obrigatório");
-        if (estaVazio(dto.getEndereco())) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Endereço obrigatório");
+        if (estaVazio(dto.getEndereco()) && estaVazio(dto.getLogradouro()))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Endereço obrigatório");
         if (estaVazio(dto.getCep()))      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CEP obrigatório");
         if (estaVazio(dto.getCidade()))   throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cidade obrigatória");
         if (estaVazio(dto.getEstado()))   throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Estado obrigatório");
@@ -547,6 +579,10 @@ public class ClienteService {
         dto.setTelefone(c.getTelefone());
         dto.setEmail(c.getEmail());
         dto.setEndereco(c.getEndereco());
+        dto.setLogradouro(c.getLogradouro());
+        dto.setNumero(c.getNumero());
+        dto.setComplemento(c.getComplemento());
+        dto.setBairro(c.getBairro());
         dto.setCep(c.getCep());
         dto.setCidade(c.getCidade());
         dto.setEstado(c.getEstado());
