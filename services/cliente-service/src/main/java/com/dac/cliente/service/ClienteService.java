@@ -43,6 +43,9 @@ public class ClienteService {
     @Value("${saga.services.conta:http://conta-service:8080}")
     private String contaUrl;
 
+    @Value("${saga.services.gerente:http://gerente-service:8080}")
+    private String gerenteUrl;
+
     @Value("${saga.services.saga:http://saga-service:8080}")
     private String sagaUrl;
 
@@ -132,6 +135,7 @@ public class ClienteService {
                         dto.setSaldo(doubleVal(conta.get("saldo")));
                         dto.setLimite(doubleVal(conta.get("limite")));
                         dto.setGerente(stringVal(conta.get("gerente")));
+                        preencherDadosDoGerente(dto, stringVal(conta.get("gerente")));
                     }
                     return dto;
                 })
@@ -598,11 +602,28 @@ public class ClienteService {
             dto.setSaldo(doubleVal(conta.get("saldo")));
             dto.setLimite(doubleVal(conta.get("limite")));
             dto.setGerente(stringVal(conta.get("gerente")));
+            preencherDadosDoGerente(dto, stringVal(conta.get("gerente")));
         }
         return dto;
     }
 
     // Helpers para conversão de tipos
+   private void preencherDadosDoGerente(DadosClienteResponseDTO dto, String gerenteCpf) {
+    String cpf = normalizarDocumento(gerenteCpf);
+    if (dto == null || cpf == null || cpf.isBlank()) {
+    return;
+    }
+    try {
+        String json = httpGet(gerenteUrl + "/gerentes/" + cpf);
+        Map<String, Object> gerente = objectMapper.readValue(json, new TypeReference<Map<String, Object>>() {});
+        dto.setGerente_nome(stringVal(gerente.get("nome")));
+        dto.setGerente_email(stringVal(gerente.get("email")));
+    } catch (Exception e) {
+        dto.setGerente_nome(null);
+        dto.setGerente_email(null);
+    }
+}
+
     private String stringVal(Object v) {
         return v == null ? null : v.toString();
     }
