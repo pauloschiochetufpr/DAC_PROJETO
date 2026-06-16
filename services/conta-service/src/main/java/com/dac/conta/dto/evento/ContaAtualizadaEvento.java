@@ -2,6 +2,8 @@ package com.dac.conta.dto.evento;
 
 import java.math.BigDecimal;
 
+// ContaAtualizadaEvento | DTO que viaja na fila 'conta.atualizada' (CUD -> R).
+// A escrita publica esse evento e o listener usa ele pra atualizar o banco de leitura.
 public class ContaAtualizadaEvento {
 
     private String numero;

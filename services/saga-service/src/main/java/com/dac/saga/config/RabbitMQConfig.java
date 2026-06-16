@@ -80,6 +80,8 @@ public class RabbitMQConfig {
         return new Queue(FILA_RESPOSTA, true);
     }
 
+    // "resposta.#" captura a resposta de qualquer serviço (resposta.conta, resposta.gerente, ...)
+    // numa fila única, de onde o RespostaSagaListener consome.
     @Bean
     public Binding bindingResposta(Queue filaResposta, TopicExchange respostaExchange) {
         return BindingBuilder.bind(filaResposta).to(respostaExchange).with("resposta.#");

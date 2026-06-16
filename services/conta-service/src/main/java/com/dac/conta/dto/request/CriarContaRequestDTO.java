@@ -1,5 +1,8 @@
 package com.dac.conta.dto.request;
 
+// CriarContaRequestDTO | dados que a saga manda pro conta criar a conta.
+// Database per Service: o nome do cliente/gerente vem DENTRO do pedido - o conta NÃO
+// consulta o cliente_db, ele recebe o dado pronto.
 public class CriarContaRequestDTO {
     private String clienteCpf;
     private String clienteNome;

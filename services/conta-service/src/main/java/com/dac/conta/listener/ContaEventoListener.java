@@ -11,6 +11,8 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+// ContaEventoListener | lado consumidor do CQRS: escuta as filas e grava no banco de LEITURA (R).
+// É a sincronização por mensageria exigida pela especificação (CUD publica, R consome).
 @Component
 public class ContaEventoListener {
 
@@ -20,10 +22,12 @@ public class ContaEventoListener {
     @Autowired
     private MovimentacaoRRepository movimentacaoRRepository;
 
+    // roda quando chega um evento na fila 'conta.atualizada' e replica os dados no conta_r_db
     @RabbitListener(queues = RabbitMQConfig.FILA_CONTA_ATUALIZADA,
                     containerFactory = "rabbitListenerContainerFactory")
     public void onContaAtualizada(ContaAtualizadaEvento evento) {
         try {
+            // pega a conta no banco R (ou cria nova) e sobrescreve com o que veio no evento
             ContaR contaR = contaRRepository.findById(evento.getNumero())
                 .orElse(new ContaR());
             contaR.setNumero(evento.getNumero());

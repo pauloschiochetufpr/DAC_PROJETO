@@ -17,6 +17,8 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import javax.sql.DataSource;
 import java.util.Properties;
 
+// DataSourceConfig | lado da ESCRITA do CQRS (conta_cud_db).
+// É o @Primary: EntityManager + TransactionManager próprios, ligados aos repositórios CUD.
 @Configuration
 @EnableTransactionManagement
 @EnableJpaRepositories(

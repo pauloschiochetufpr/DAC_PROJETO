@@ -42,6 +42,7 @@ import java.util.stream.Collectors;
 @Service
 public class ContaService {
 
+    // Só repositórios DE CONTA (CUD e R) - não existe ClienteRepository aqui (Database per Service)
     @Autowired
     private ContaCUDRepository contaCUDRepository;
 
@@ -78,13 +79,13 @@ public class ContaService {
         }
 
         conta.setSaldo(BigDecimal.valueOf(conta.getSaldo()).add(BigDecimal.valueOf(request.getValor())).doubleValue());
-        contaCUDRepository.save(conta);
+        contaCUDRepository.save(conta);              // 1) grava na ESCRITA (CUD)
 
         MovimentacaoCUD mov = criarMovimentacao(TipoMovimentacao.DEPOSITO, numero, null, request.getValor());
 
-        sincronizarContaR(conta);
+        sincronizarContaR(conta);                    // 2) atualiza a LEITURA na hora (síncrono) - garantia
         criarMovimentacaoR(mov, conta.getClienteCpf(), null);
-        publicarEventoConta(conta);
+        publicarEventoConta(conta);                  // 3) publica evento no RabbitMQ (sync por mensageria)
 
         return montarOperacaoResponse(numero, mov.getData(), conta.getSaldo());
     }
@@ -396,6 +397,8 @@ public class ContaService {
         return dto;
     }
 
+    // sincronizarContaR | copia o estado do CUD pro banco de LEITURA na mesma hora (síncrono).
+    // Garante leitura consistente mesmo se a mensagem do RabbitMQ atrasar.
     private void sincronizarContaR(ContaCUD conta) {
         try {
             ContaR contaR = contaRRepository.findById(conta.getNumero()).orElse(new ContaR());
@@ -430,6 +433,8 @@ public class ContaService {
         }
     }
 
+    // publicarEventoConta | monta o DTO de evento e joga na fila 'conta.atualizada';
+    // o ContaEventoListener consome e atualiza o banco R (sincronização por mensageria).
     private void publicarEventoConta(ContaCUD conta) {
         ContaAtualizadaEvento evento = new ContaAtualizadaEvento();
         evento.setNumero(conta.getNumero());

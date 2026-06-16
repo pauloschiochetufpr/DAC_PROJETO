@@ -16,9 +16,11 @@ public class RespostaSagaListener {
         this.bus = bus;
     }
 
+    // roda quando um serviço devolve a resposta na fila 'saga.resposta.queue'
     @SuppressWarnings("unchecked")
     @RabbitListener(queues = RabbitMQConfig.FILA_RESPOSTA, containerFactory = "rabbitListenerContainerFactory")
     public void onResposta(Map<String, Object> msg) {
+        // remonta o objeto de resposta a partir da mensagem JSON
         RespostaComando resposta = new RespostaComando();
         resposta.setCorrelationId((String) msg.get("correlationId"));
         resposta.setSucesso(Boolean.TRUE.equals(msg.get("sucesso")));
@@ -27,6 +29,6 @@ public class RespostaSagaListener {
         if (dados instanceof Map) {
             resposta.setDados((Map<String, Object>) dados);
         }
-        bus.completar(resposta);
+        bus.completar(resposta);   // entrega ao bus, que destrava a saga que aguardava esse correlationId
     }
 }

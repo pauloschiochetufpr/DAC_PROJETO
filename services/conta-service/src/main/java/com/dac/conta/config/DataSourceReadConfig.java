@@ -15,6 +15,9 @@ import org.springframework.transaction.PlatformTransactionManager;
 import javax.sql.DataSource;
 import java.util.Properties;
 
+// DataSourceReadConfig | lado da LEITURA do CQRS (conta_r_db).
+// Cada banco precisa do SEU EntityManager + TransactionManager; aqui ligo os repositórios
+// de leitura (read.repository) ao conta_r_db, separado do banco de escrita.
 @Configuration
 @EnableJpaRepositories(
     basePackages = "com.dac.conta.read.repository",

@@ -12,11 +12,14 @@ import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+// RabbitMQConfig | filas, exchanges e bindings do conta-service.
+// Converte msg em JSON (Jackson) e define a fila de sincronização do CQRS (conta.atualizada)
+// e a fila de comandos da saga (conta.comando.queue).
 @Configuration
 public class RabbitMQConfig {
 
     public static final String FILA_RESET               = "saga.reset";
-    public static final String FILA_CONTA_ATUALIZADA    = "conta.atualizada";
+    public static final String FILA_CONTA_ATUALIZADA    = "conta.atualizada"; // sincronização CUD -> R
     public static final String FILA_MOVIMENTACAO_CRIADA = "conta.movimentacao.criada";
     public static final String FILA_LIMITE              = "conta.limite";
 

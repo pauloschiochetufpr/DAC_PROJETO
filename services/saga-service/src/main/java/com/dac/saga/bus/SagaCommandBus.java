@@ -19,9 +19,10 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class SagaCommandBus {
 
-    private static final long TIMEOUT_MS = 10000;
+    private static final long TIMEOUT_MS = 10000;   // espera no máx. 10s pela resposta
 
     private final RabbitTemplate rabbitTemplate;
+    // mapa de comandos em aberto: correlationId -> "futuro" que será completado quando a resposta chegar
     private final Map<String, CompletableFuture<RespostaComando>> pendentes = new ConcurrentHashMap<>();
 
     public SagaCommandBus(RabbitTemplate rabbitTemplate) {
@@ -29,16 +30,17 @@ public class SagaCommandBus {
     }
 
     public RespostaComando enviarEAguardar(String routingKey, String tipo, Map<String, Object> payload) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = UUID.randomUUID().toString();   // id único pra casar comando <-> resposta
         CompletableFuture<RespostaComando> futuro = new CompletableFuture<>();
-        pendentes.put(correlationId, futuro);
+        pendentes.put(correlationId, futuro);                  // registra como pendente antes de enviar
         try {
             Map<String, Object> comando = new HashMap<>();
             comando.put("correlationId", correlationId);
             comando.put("tipo", tipo);
             comando.put("payload", payload);
-            rabbitTemplate.convertAndSend(RabbitMQConfig.COMANDO_EXCHANGE, routingKey, comando);
+            rabbitTemplate.convertAndSend(RabbitMQConfig.COMANDO_EXCHANGE, routingKey, comando); // publica o COMANDO (não espera aqui)
 
+            // BLOQUEIA a thread até o RespostaSagaListener completar o futuro (ou estourar o timeout)
             RespostaComando resposta = futuro.get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
             if (!resposta.isSucesso()) {
                 throw new RuntimeException("Comando '" + tipo + "' falhou no serviço: " + resposta.getErro());
@@ -49,16 +51,17 @@ public class SagaCommandBus {
         } catch (Exception e) {
             throw new RuntimeException("Falha/timeout aguardando resposta do comando '" + tipo + "': " + e.getMessage(), e);
         } finally {
-            pendentes.remove(correlationId);
+            pendentes.remove(correlationId);                  // limpa o pendente (sucesso, erro ou timeout)
         }
     }
 
-    // completar | chamado pelo listener de respostas quando uma resposta correlacionada chega
+    // completar | chamado pelo RespostaSagaListener quando uma resposta chega.
+    // Acha o futuro pelo correlationId e o completa - isso DESBLOQUEIA o enviarEAguardar.
     public void completar(RespostaComando resposta) {
         if (resposta.getCorrelationId() == null) return;
         CompletableFuture<RespostaComando> futuro = pendentes.get(resposta.getCorrelationId());
         if (futuro != null) {
-            futuro.complete(resposta);
+            futuro.complete(resposta);   // libera a thread que estava travada no futuro.get(...)
         }
     }
 }

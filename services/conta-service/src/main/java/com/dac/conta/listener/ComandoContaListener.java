@@ -25,12 +25,13 @@ public class ComandoContaListener {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
+    // roda quando chega um comando na fila 'conta.comando.queue'
     @SuppressWarnings("unchecked")
     @RabbitListener(queues = RabbitMQConfig.FILA_COMANDO_CONTA,
                     containerFactory = "rabbitListenerContainerFactory")
     public void onComando(Map<String, Object> msg) {
-        String correlationId = (String) msg.get("correlationId");
-        String tipo = (String) msg.get("tipo");
+        String correlationId = (String) msg.get("correlationId");   // mesmo id volta na resposta
+        String tipo = (String) msg.get("tipo");                     // qual ação executar
         Map<String, Object> payload = (Map<String, Object>) msg.getOrDefault("payload", new HashMap<>());
 
         Map<String, Object> resposta = new HashMap<>();
@@ -38,6 +39,7 @@ public class ComandoContaListener {
         Map<String, Object> dados = new HashMap<>();
 
         try {
+            // despacha o comando pro método certo do ContaService conforme o 'tipo'
             switch (tipo) {
                 case "criar_conta": {
                     CriarContaRequestDTO req = new CriarContaRequestDTO();
@@ -83,11 +85,13 @@ public class ComandoContaListener {
             resposta.put("sucesso", true);
             resposta.put("dados", dados);
         } catch (Exception e) {
+            // deu erro: devolve sucesso=false + mensagem; a saga vai compensar a partir disso
             resposta.put("sucesso", false);
             resposta.put("erro", e.getMessage());
             System.err.println("conta-service: comando '" + tipo + "' falhou: " + e.getMessage());
         }
 
+        // devolve a RESPOSTA correlacionada pro orquestrador (exchange saga.resposta)
         rabbitTemplate.convertAndSend(RabbitMQConfig.RESPOSTA_EXCHANGE, "resposta.conta", resposta);
     }
 }

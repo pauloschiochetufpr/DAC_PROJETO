@@ -5,13 +5,14 @@ spring:
   application:
     name: conta-service
 
-  datasource:
+  # CQRS: o conta só conecta nos 2 bancos DELE (nenhuma conexão com cliente_db)
+  datasource:               # banco de ESCRITA (CUD)
     jdbc-url: jdbc:postgresql://postgres:5432/conta_cud_db
     username: dac
     password: dac
     driver-class-name: org.postgresql.Driver
 
-  datasource-read:
+  datasource-read:          # banco de LEITURA (R)
     jdbc-url: jdbc:postgresql://postgres:5432/conta_r_db
     username: dac
     password: dac
